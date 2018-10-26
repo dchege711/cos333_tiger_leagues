@@ -1,1 +1,1 @@
-gunicorn tiger_leagues:app
+web: gunicorn tiger_leagues.wsgi:app
