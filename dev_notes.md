@@ -4,4 +4,4 @@
 
 ## Overall App Structure
 
-* The app is organized according to a [functional blueprint structure](http://exploreflask.com/en/latest/blueprints.html#what-is-a-blueprint). We anticipate that we'll have major routes like `/league/fixtures, /league/standings, /account/settings`, etc.
+* The app is organized using the [Flask Tutorial](http://flask.pocoo.org/docs/1.0/tutorial/). We anticipate that we'll have major routes like `/league/fixtures, /league/standings, /account/settings`, etc.
