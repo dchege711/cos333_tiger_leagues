@@ -1,8 +1,8 @@
 from setuptools import setup
 
 setup(
-    name='flaskr',
-    packages=['flaskr'],
+    name='tiger_leagues',
+    packages=['tiger_leagues'],
     include_package_data=True,
     install_requires=[
         'flask',
