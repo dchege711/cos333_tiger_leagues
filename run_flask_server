@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# Set variables needed by the Flask server
+export FLASK_APP=tiger_leagues
+export FLASK_ENV=development
+flask run

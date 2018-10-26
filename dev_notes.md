@@ -1,7 +1,10 @@
 # Contents
 
-1. [Overall App Structure](#overall-app-structure)
+1. [Setup Notes](#setup-notes)
 
-## Overall App Structure
+## Setup Notes
 
-* The app is organized using the [Flask Tutorial](http://flask.pocoo.org/docs/1.0/tutorial/). We anticipate that we'll have major routes like `/league/fixtures, /league/standings, /account/settings`, etc.
+* We modelled the application after this [tutorial](http://flask.pocoo.org/docs/1.0/tutorial/).
+* Installing `Flask` usually installs `ItsDangerous` v1.0.0 as a prerequisite. However, Heroku cannot install v1.0.0. For this reason, `./requirements.txt` should have `ItsDangerous==0.24`.
+* To run the application as it would on Heroku, run `$ heroku local web`.
+* To run the application using the Flask server, run `$ ./run_flask_server`
