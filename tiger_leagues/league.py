@@ -38,5 +38,11 @@ def league_standings():
             "goals_diff": goal_diff
         })
 
-    render_template("/league/standings.html", standings=standings)
+    return render_template("/league/standings.html", standings=standings)
+
+@bp.route("/")
+@bp.route("/home")
+def home():
+    return render_template("/base.html")
+
     
