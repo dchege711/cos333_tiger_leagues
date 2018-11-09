@@ -12,6 +12,7 @@ More info: http://flask.pocoo.org/docs/1.0/tutorial/factory/
 import os
 
 from flask import Flask
+from . import league
 
 def create_app(test_config=None):
     """
@@ -41,5 +42,8 @@ def create_app(test_config=None):
     @app.route('/hello')
     def hello():
         return 'Hello, World!'
+
+    # Register blueprints
+    app.register_blueprint(league.bp)
 
     return app
