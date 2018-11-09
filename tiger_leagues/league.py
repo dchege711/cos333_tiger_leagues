@@ -38,5 +38,5 @@ def league_standings():
             "goals_diff": goal_diff
         })
 
-    render_template("/league/standings", standings=standings)
+    render_template("/league/standings.html", standings=standings)
     
