@@ -35,7 +35,8 @@ def league_standings():
             "losses": losses,
             "goals_formed": goals_formed,
             "goals_allowed": goals_allowed,
-            "goals_diff": goal_diff
+            "goal_diff": goal_diff,
+            "points": (wins * 3) + draws 
         })
 
     return render_template("/league/standings.html", standings=standings)
