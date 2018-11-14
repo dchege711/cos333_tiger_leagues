@@ -11,7 +11,7 @@ More info: http://flask.pocoo.org/docs/1.0/tutorial/factory/
 
 import os
 
-from flask import Flask
+from flask import Flask, render_template
 from . import league
 
 def create_app(test_config=None):
@@ -38,10 +38,14 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    # a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
+    @app.route('/')
+    @app.route("/login")
+    def login():
+        """
+        Renders a template that takes the user to Princeton's CAS login.
+
+        """
+        return render_template("login.html")
 
     # Register blueprints
     app.register_blueprint(league.bp)
