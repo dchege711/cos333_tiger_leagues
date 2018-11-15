@@ -20,56 +20,55 @@
 
         <div class="w3-container">
 
-            <form class="w3-container" id="create_league_form" action="league/create" method="POST">
+            <form class="w3-container" id="create_league_form" action="/league/create" method="POST">
+
                 <h5>Tell us more about your league</h5>
                 <hr>
 
-                <label for="league_name">What is the name of the league?</label>
+                <label for="LeagueName">What is the name of the league?</label>
                 <input 
-                    type="text" name="league_name" id="league_name" maxlength="20" required>
+                    type="text" name="LeagueName" id="LeagueName" maxlength="50" value="FIFA League" required>
                 <br>
 
-                <label for="league_description">Describe the league in 1-3 sentences</label>
+                <label for="Descrip">Describe the league in 1-3 sentences</label>
                 <br>
-                <input id="league_description" type="text" name="league_description">
+                <input id="Descrip" type="text" name="Descrip" value="We play FIFA">
                 <br>
 
-                <label for="points_per_win">How many points is a win worth?</label>
+                <label for="WinPoints">How many points is a win worth?</label>
                 <input 
-                    type="number" name="points_per_win" id="points_per_win" required>
+                    type="number" name="WinPoints" id="WinPoints" value="4" required>
                 <br>
 
-                <label for="points_per_draw">How many points is a draw worth?</label>
+                <label for="DrawPoints">How many points is a draw worth?</label>
                 <input 
-                    type="number" name="points_per_draw" id="points_per_draw" required>
+                    type="number" name="DrawPoints" id="DrawPoints" value="2" required>
                 <br>
 
-                <label for="points_per_loss">How many points is a loss worth?</label>
+                <label for="LossPoints">How many points is a loss worth?</label>
                 <input 
-                    type="number" name="points_per_loss" id="points_per_loss" required>
+                    type="number" name="LossPoints" id="LossPoints" value="0" required>
                 <br>
                 <br>
 
-                <p><strong>Indicate if you need any of this information...</strong></p>
-                <input type="checkbox" id="need_phone_num" name="need_phone_num">
-                <label for="need_phone_num">Phone Number</label>
+                <p><strong>Indicate if your league needs any of this information:</strong></p>
+                <input type="checkbox" id="needsPhoneNum" name="needsPhoneNum" checked>
+                <label for="needsPhoneNum">Phone Number</label>
                 <br>
 
-                <input type="checkbox" id="need_room_num" name="need_room_num">
-                <label for="need_room_num">Campus Room (e.g. Henry Hall 115)</label>
+                <input type="checkbox" id="needsRoomNum" name="needsRoomNum">
+                <label for="needsRoomNum">Campus Room (e.g. Henry Hall 115)</label>
                 <br>
                 <hr>
 
                 <div id="additional_questions_container"></div>
 
                 <input class="w3-btn w3-green" type="submit" value="Create League">
-
+                
             </form>
-            
-            <hr>
-            <div class="w3-container">
 
-                <p><strong>Add a question that you'd like players to answer before they join</strong></p>
+            <div class="w3-container">
+                <p><strong>Add a question that you'd like players to answer before they join your league</strong></p>
                 <hr>
 
                 <p>Question</p>
@@ -80,10 +79,8 @@
                 <input type="text" placeholder="e.g. Xbox One, PlayStation 4, None" id="valid_responses" value="Xbox One, PlayStation 4, None">
                 <br>
 
-                <button class="w3-btn w3-blue" onclick="addNewQuestion()">Add Field</button>
-
+                <button class="w3-btn w3-blue" onclick="addNewQuestion()">Add Question</button>
             </div>
-            <hr>
 
         </div>
         
@@ -92,32 +89,44 @@
     <script>
 
         let state = {
-            additionalQsnID: 0
+            additionalQsnID: 0,
+            createLeagueForm: document.getElementById("create_league_form"),
+            additionalQuestionsContainer: document.getElementById("additional_questions_container")
         }
 
         function addNewQuestion() {
             let question =  document.getElementById("additional_question").value;
-            let validOptions = document.getElementById("valid_responses").value.split(",");
-            let validOptionsHTML = "";
-            for (let i = 0; i < validOptions.length; i++) {
-                validOption = validOptions[i].trim();
-                validOptionsHTML += `<input type='checkbox' name='${validOption}'><label for='${validOption}'> ${validOption}</label><br>`;
-            }
+            let validOptionsString = document.getElementById("valid_responses").value;
+            let questionID = state.additionalQsnID;
 
-            document.getElementById("additional_questions_container").insertAdjacentHTML(
+            state.additionalQuestionsContainer.insertAdjacentHTML(
                 "beforeend",
-                `<div id='extraQsn${state.additionalQsnID}'>
+                `
+                <div id='extraQsn${questionID}'>
                     <div>
                         <button 
-                            onclick="document.getElementById('additional_questions_container').removeChild(document.getElementById('extraQsn${state.additionalQsnID}'));"
+                            onclick="removeQuestion(${questionID})"
                             class='w3-button w3-hover-red w3-right'>Delete Field
                         </button>
                     </div>
-                <p><strong>${question}</strong></p>${validOptionsHTML}<hr></div>`
+                    <input type='text' value='${question}' style='display: none;'
+                        name='question${questionID}' id='question${questionID}'>
+                    <input type='text' value='${validOptionsString}' style='display: none;'
+                        name='options${questionID}' id='options${questionID}'>
+                    <p>[Question]: <em>${question}</em></p>
+                    <p>[Options]: <em>${validOptionsString}</em></p>
+                    <hr>
+                </div>`
             );
 
-            state.additionalQsnID = state.additionalQsnID + 1;
+            state.additionalQsnID = questionID + 1;
             
+        }
+
+        function removeQuestion(questionID) {
+            state.additionalQuestionsContainer.removeChild(
+                document.getElementById(`extraQsn${questionID}`)
+            );
         }
     </script>
 
