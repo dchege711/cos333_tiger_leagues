@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block header %}
+<h1>{% block title %}League Standings{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <div class="w3-container">
+
+        <div class="w3-container w3-twothird">
+
+            <div class="w3-container">
+
+            </div>
+
+            <div class="w3-container">
+                <table class="w3-table-all">
+                    <tr>
+                        <th>Player Name</th>
+                        <th>W</th>
+                        <th>L</th>
+                        <th>D</th>
+                        <th>GF</th>
+                        <th>GA</th>
+                        <th>GD</th>
+                        <th>PTS</th>
+                    </tr>
+                    {% for standing in standings %}
+                        <tr>
+                            <td>{{ standing["player_name"] }}</td>
+                            <td>{{ standing["wins"] }}</td>
+                            <td>{{ standing["losses"] }}</td>
+                            <td>{{ standing["draws"] }}</td>
+                            <td>{{ standing["goals_formed"] }}</td>
+                            <td>{{ standing["goals_allowed"] }}</td>
+                            <td>{{ standing["goal_diff"] }}</td>
+                            <td>{{ standing["points"] }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+
+        </div>
+
+        <div class="w3-container w3-third">
+            
+            <!-- Display the coming fixtures -->
+            <div class="w3-container">
+                <h4>Your Upcoming Matches</h4>
+                <hr>
+
+                <table class="w3-table-all">
+                    <tr>
+                        <th>Versus</th>
+                        <th>Deadline</th>
+                        <th>Venue</th>
+                        <th>League</th>
+                    </tr>
+                    {% for match in upcoming_matches %}
+                        <tr>
+                            <td>{{ match["opponent"] }}</td>
+                            <td>{{ match["deadline"] }}</td>
+                            <td>{{ match["venue"] }}</td>
+                            <td>{{ match["league_name"] }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+
+            </div>
+
+            <!-- Display reported scores-->
+            <div class="w3-container">
+                <h4>Reported Scores</h4>
+                <hr>
+
+                <table class="w3-table-all">
+                    <tr>
+                        <th>Versus</th>
+                        <th>You</th>
+                        <th>Them</th>
+                        <th>Approved?</th>
+                    </tr>
+
+                    {% for match in past_matches %}
+                        <tr>
+                            <td>{{ match["opponent"] }}</td>
+                            <td>{{ match["my_score"] }}</td>
+                            <td>{{ match["opponent_score"] }}</td>
+                            <td>{{ match["score_approved"] }}</td>
+                        </tr>
+                    {% endfor %}
+
+
+                </table>
+
+            </div>
+
+        </div>
+        
+        
+        
+    </div>
+
+{% endblock %}
