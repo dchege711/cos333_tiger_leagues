@@ -12,6 +12,7 @@ import subprocess
 
 APP_ENV = environ["TIGER_LEAGUES_ENVIRONMENT"]
 
+DATABASE_URL = ""
 if APP_ENV == "development":
     # ... then we're on our local machines and should ask Heroku for the URL
     results = subprocess.run(["heroku", "config:get", "DATABASE_URL"], capture_output=True)

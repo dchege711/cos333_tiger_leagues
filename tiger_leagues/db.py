@@ -6,7 +6,7 @@ This file acts as the central access to the database.
 """
 
 import psycopg2
-import config.py
+import config
 
 import click
 from flask import current_app, g
@@ -40,7 +40,7 @@ def launch(self):
 # leagueinfo must be a list, dict or tuple that contains info from a form
 # knowing the particularily order of the elements in the tuple is VERY IMPORTANT
 
-def isMember(self, netid)
+def isMember(self, netid):
 	stmtstr1 = 'SELECT UserId FROM Player_Accounts WHERE NetId = netid'
 	cursor = self._connection.cursor()
 	cursor.execute(stmtstr1)
