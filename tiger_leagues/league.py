@@ -5,11 +5,12 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 
 """
 
-from flask import Blueprint, render_template
 from random import randint
+from flask import Blueprint, render_template
 
 bp = Blueprint("league", __name__, url_prefix="/league")
 
+@bp.route("/")
 @bp.route("/1/standings")
 def league_standings():
     """
@@ -39,11 +40,15 @@ def league_standings():
             "points": (wins * 3) + draws 
         })
 
-    return render_template("/league/standings.html", standings=standings)
+    return render_template(
+        "/league/home.html", 
+        standings=standings, upcoming_matches=[],
+        past_matches=[]
+    )
 
-@bp.route("/")
-@bp.route("/home")
-def home():
-    return render_template("/base.html")
+@bp.route("/create")
+def create_league():
+    return render_template("/league/create_league.html")
+
 
     
