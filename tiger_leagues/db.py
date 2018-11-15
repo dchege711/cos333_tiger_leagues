@@ -109,26 +109,27 @@ def createLeague(self, leagueinfo):
 	stmtstr3 = stmtstr3 + ")"
 
 	cursor.execute(stmtstr3)
+	return None
 
-def joinLeague(self, playerinfo):
-
-
-def getRequests(self, leagueid):
-	stmtstr = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS"
-
-def leaveLeague(self):
+# def joinLeague(self, playerinfo):
 
 
-def submitScore(self):
+# def getRequests(self, leagueid):
+# 	stmtstr = "SELECT * FROM INFORMATION_SCHEMA.COLUMNS"
+
+# def leaveLeague(self):
 
 
-def confirmScore(self):
+# def submitScore(self):
 
 
-def confirmPlayer(self):
+# def confirmScore(self):
 
 
-def removePlayer(self):
+# def confirmPlayer(self):
 
 
-def changeScore(self):
+# def removePlayer(self):
+
+
+# def changeScore(self):
