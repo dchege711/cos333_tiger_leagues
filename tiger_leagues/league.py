@@ -7,8 +7,9 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 
 from random import randint
 from flask import Blueprint, render_template, request
-import db
+from . import db
 
+database = db.Database()
 bp = Blueprint("league", __name__, url_prefix="/league")
 
 @bp.route("/")
@@ -52,4 +53,7 @@ def create_league():
     if request.method == "GET":
         return render_template("/league/create_league.html")
     elif request.method == "POST":
-        
+        createLeagueInfo = request.json
+        createLeagueInfo["UserId"] = 0
+        database.createLeague(createLeagueInfo)
+        return "OK"
