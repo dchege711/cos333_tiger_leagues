@@ -88,13 +88,28 @@
 
     <script>
 
+        /**
+         * @description Helpful global variables
+         */
         let state = {
             additionalQsnID: 0,
             additionalQuestionsJSON: {},
-            createLeagueForm: document.getElementById("create_league_form"),
+            inputElements: [
+                document.getElementById("LeagueName"),
+                document.getElementById("Descrip"),
+                document.getElementById("WinPoints"),
+                document.getElementById("DrawPoints"),
+                document.getElementById("LossPoints"),
+                document.getElementById("needsRoomNum"),
+                document.getElementById("needsPhoneNum")
+            ],
             additionalQuestionsContainer: document.getElementById("additional_questions_container")
         }
 
+        /**
+         * @description Register a new question that will new league members will 
+         * have to answer.
+         */
         function addNewQuestion() {
             let question =  document.getElementById("additional_question").value;
             let validOptionsString = document.getElementById("valid_responses").value;
@@ -124,6 +139,10 @@
             
         }
 
+        /**
+         * @description De-register a question that new league members would 
+         * have had to answer.
+         */
         function removeQuestion(questionID) {
             state.additionalQuestionsContainer.removeChild(
                 document.getElementById(`extraQsn${questionID}`)
@@ -131,42 +150,31 @@
             delete state.additionalQuestionsJSON[`question${questionID}`];
         }
 
+        /**
+         * @description Collect the info needed to create a league. Send it to 
+         * the server for further processing.
+         */
         function sendCreateLeagueForm() {
-            /*
-            let payload = {
-                additionalQuestions: state.additionalQuestionsJSON
-            };
-            let formElements = state.createLeagueForm.children;
-            let element = null;
-            for (let i = 0; i < formElements.length; i++) {
-                element = formElements[i];
-                if (element.type === "checkbox") {
-                    payload[element.name] = element.checked;
+
+            let payload = {};
+            for (let i = 0; i < state.inputElements.length; i++) {
+                if (state.inputElements[i].checkValidity()) {
+                    let element = state.inputElements[i];
+                    if (element.type === "checkbox") {
+                        payload[element.name] = element.checked;
+                    } else {
+                        payload[element.name] = element.value;
+                    }
                 } else {
-                    payload[element.name] = element.value;
+                    state.inputElements[i].reportValidity();
+                    return;
                 }
             }
-            */
+            payload.AdditionalQuestions = state.additionalQuestionsJSON;
 
-            payload = {
-                "LeagueName": "FIFA League",
-                "Descrip": "We play on weekends",
-                "WinPoints": 3, DrawPoints: 1, LossPoints: 0,
-                AdditionalQuestions: {
-                    question1: {
-                        question: "What did the fox say?",
-                        options: "Yum, Nope, Grr"
-                    },
-                    question2: {
-                        question: "What did the sheep say?",
-                        options: "Meh, Nope, Grr"
-                    }
-                }
-            };
-
-            sendHTTPRequest("POST", "/league/create", payload)
-                .then((results) => {
-                    console.log(results);
+            sendHTTPRequest("POST", "/league/create", payload, contentType="application/json")
+                .then((response) => {
+                    console.log(response);
                 })
                 .catch((err) => { console.error(err); });
         }
