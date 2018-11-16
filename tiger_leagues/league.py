@@ -98,4 +98,4 @@ def join_league(leagueID):
         receivedInfo = request.form
         for key, val in receivedInfo.items():
             print(key, "->", val)
-        return redirect(url_for(".league_standings", alertMsg="Request submitted!"))
+        return redirect(url_for(".league_homepage", leagueID=1, alertMsg="Request submitted!"))

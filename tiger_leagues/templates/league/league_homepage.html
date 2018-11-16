@@ -7,11 +7,14 @@
         <li>
             {% if league_info["status"] == "joined" %}
                 <a href="{{url_for('league.league_homepage', leagueID=league_info['leagueID'])}}">{{league_info["Leaguename"]}}</a>
-            {% else if league_info["status"] == "pending" %}
+            {% endif %}
+            {% if league_info["status"] == "pending" %}
                 <a href="{{url_for('league.league_homepage', leagueID=league_info['leagueID'])}}">{{league_info["Leaguename"]}} (Pending)</a>
-            {% else if league_info["status"] == "rejected" %}
+            {% endif %}
+            {% if league_info["status"] == "rejected" %}
                 <a href="{{url_for('league.join_league', leagueID=league_info['leagueID'])}}">{{league_info["Leaguename"]}} (Rejoin?)</a>
-            {% else %}
+            {% endif %}
+            {% if league_info["status"] == "" %}
                 <a href="{{url_for('league.join_league', leagueID=league_info['leagueID'])}}">{{league_info["Leaguename"]}} (Join)</a>
             {% endif %}
         </li>
