@@ -20,7 +20,7 @@
 
         <div class="w3-container">
 
-            <form class="w3-container" id="create_league_form" action="/league/create" method="POST">
+            <div class="w3-container" id="create_league_form">
 
                 <h5>Tell us more about your league</h5>
                 <hr>
@@ -63,9 +63,9 @@
 
                 <div id="additional_questions_container"></div>
 
-                <input class="w3-btn w3-green" type="submit" value="Create League">
+                <button class="w3-btn w3-green" onclick="sendCreateLeagueForm();">Create League</button>
                 
-            </form>
+            </div>
 
             <div class="w3-container">
                 <p><strong>Add a question that you'd like players to answer before they join your league</strong></p>
@@ -90,6 +90,7 @@
 
         let state = {
             additionalQsnID: 0,
+            additionalQuestionsJSON: {},
             createLeagueForm: document.getElementById("create_league_form"),
             additionalQuestionsContainer: document.getElementById("additional_questions_container")
         }
@@ -109,15 +110,15 @@
                             class='w3-button w3-hover-red w3-right'>Delete Field
                         </button>
                     </div>
-                    <input type='text' value='${question}' style='display: none;'
-                        name='question${questionID}' id='question${questionID}'>
-                    <input type='text' value='${validOptionsString}' style='display: none;'
-                        name='options${questionID}' id='options${questionID}'>
                     <p>[Question]: <em>${question}</em></p>
                     <p>[Options]: <em>${validOptionsString}</em></p>
                     <hr>
                 </div>`
             );
+
+            state.additionalQuestionsJSON[`question${questionID}`] = {
+                question: question, options: validOptionsString
+            };
 
             state.additionalQsnID = questionID + 1;
             
@@ -127,7 +128,49 @@
             state.additionalQuestionsContainer.removeChild(
                 document.getElementById(`extraQsn${questionID}`)
             );
+            delete state.additionalQuestionsJSON[`question${questionID}`];
         }
+
+        function sendCreateLeagueForm() {
+            /*
+            let payload = {
+                additionalQuestions: state.additionalQuestionsJSON
+            };
+            let formElements = state.createLeagueForm.children;
+            let element = null;
+            for (let i = 0; i < formElements.length; i++) {
+                element = formElements[i];
+                if (element.type === "checkbox") {
+                    payload[element.name] = element.checked;
+                } else {
+                    payload[element.name] = element.value;
+                }
+            }
+            */
+
+            payload = {
+                "LeagueName": "FIFA League",
+                "Descrip": "We play on weekends",
+                "WinPoints": 3, DrawPoints: 1, LossPoints: 0,
+                AdditionalQuestions: {
+                    question1: {
+                        question: "What did the fox say?",
+                        options: "Yum, Nope, Grr"
+                    },
+                    question2: {
+                        question: "What did the sheep say?",
+                        options: "Meh, Nope, Grr"
+                    }
+                }
+            };
+
+            sendHTTPRequest("POST", "/league/create", payload)
+                .then((results) => {
+                    console.log(results);
+                })
+                .catch((err) => { console.error(err); });
+        }
+
     </script>
 
 {% endblock %}
