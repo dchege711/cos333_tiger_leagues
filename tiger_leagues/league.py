@@ -13,14 +13,29 @@ database = db.Database()
 bp = Blueprint("league", __name__, url_prefix="/league")
 
 @bp.route("/")
-@bp.route("/<int:leagueID>/standings")
-def league_standings():
+@bp.route("/<int:leagueID>/")
+def league_homepage(leagueID):
     """
     @returns [List] where each item has the fields `player_name, wins, draws, 
     losses, goals_formed, goals_allowed, goal_diff, points' (sorted by points)
     """
     standings = []
     total_num_games = 40
+
+    league_info_list = [
+        {
+            "status": "joined", "leagueID": 1, "Leaguename": "FIFA League F2018"
+        },
+        {
+            "status": "pending", "leagueID": 2, "Leaguename": "Ping Pong F2018"
+        },
+        {
+            "status": "", "leagueID": 3, "Leaguename": "3v3 Basketball F2018"
+        },
+        {
+            "status": "", "leagueID": 4, "Leaguename": "Indoor Soccer F2018"
+        }
+    ]
 
     for _ in range(20): 
 
@@ -43,9 +58,9 @@ def league_standings():
         })
 
     return render_template(
-        "/league/home.html", 
+        "/league/league_homepage.html", 
         standings=standings, upcoming_matches=[],
-        past_matches=[]
+        past_matches=[], league_info_list=league_info_list
     )
 
 @bp.route("/create", methods=("GET", "POST"))

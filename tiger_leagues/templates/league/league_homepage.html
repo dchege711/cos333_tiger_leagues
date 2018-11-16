@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 
-{% block header %}
-<h1>{% block title %}League Standings{% endblock %}</h1>
+{% block title %}League Standings{% endblock %}
+
+{% block dropdown_league_list %}
+    {% for league_info in league_info_list %}
+        <li>
+            {% if league_info["status"] == "joined" %}
+                <a href="{{url_for('league.league_homepage', leagueID=league_info['leagueID'])}}">{{league_info["Leaguename"]}}</a>
+            {% else if league_info["status"] == "pending" %}
+                <a href="{{url_for('league.league_homepage', leagueID=league_info['leagueID'])}}">{{league_info["Leaguename"]}} (Pending)</a>
+            {% else if league_info["status"] == "rejected" %}
+                <a href="{{url_for('league.join_league', leagueID=league_info['leagueID'])}}">{{league_info["Leaguename"]}} (Rejoin?)</a>
+            {% else %}
+                <a href="{{url_for('league.join_league', leagueID=league_info['leagueID'])}}">{{league_info["Leaguename"]}} (Join)</a>
+            {% endif %}
+        </li>
+    {% endfor %}
 {% endblock %}
 
 {% block content %}
@@ -10,10 +24,7 @@
         <div class="w3-container w3-twothird">
 
             <div class="w3-container">
-
-            </div>
-
-            <div class="w3-container">
+                <h4>League Standings</h4>
                 <table class="w3-table-all">
                     <tr>
                         <th>Player Name</th>
@@ -38,6 +49,9 @@
                         </tr>
                     {% endfor %}
                 </table>
+            </div>
+
+            <div class="w3-container">
             </div>
 
         </div>
@@ -96,9 +110,7 @@
             </div>
 
         </div>
-        
-        
-        
+           
     </div>
 
 {% endblock %}
