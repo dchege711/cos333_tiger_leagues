@@ -5,6 +5,8 @@ This file acts as the central access to the database.
 
 """
 
+# add a helper function that catchs database errors
+
 from psycopg2 import connect, ProgrammingError
 from . import config
 
@@ -36,13 +38,25 @@ class Database:
 		cursor.execute(stmtstr1)
 		cursor.execute(stmtstr2)
 
+	def _executeHelper(self, stmtstr, option = None):
+		cursor = self._connection.cursor()
+		try:
+			if option is not None:
+				cursor.execute(stmtstr, option)
+			else:
+				cursor.execute(stmtstr)
+			self._connection.commit()
+		except ProgrammingError as error:
+			print(error)
+			self._connection.rollback()
+
 	# leagueinfo must be a list, dict or tuple that contains info from a form
 	# knowing the particularily order of the elements in the tuple is VERY IMPORTANT
 
 	def isMember(self, netid):
 		stmtstr1 = 'SELECT UserId FROM Player_Accounts WHERE NetId = netid'
 		cursor = self._connection.cursor()
-		cursor.execute(stmtstr1)
+		self._executeHelper(stmtstr1)
 		userid = cursor.fetchone()
 
 		if userid == None:
@@ -66,13 +80,13 @@ class Database:
 		stmtstr2 = 'INSERT INTO Player_Accounts (UserId, Name, NetId, Email, PhoneNum, Room) ' +\
 					'VALUES (%s, %s, %s, %s, %s, %s)'
 
-		cursor.execute(stmtstr2, accountinfo)
+		self._executeHelper(stmtstr2, accountinfo)
 
 
 	def createLeague(self, leagueinfo):
 		stmtstr1 = 'SELECT max(LeagueId) FROM League_Info2'
 		cursor = self._connection.cursor()
-		cursor.execute(stmtstr1)
+		self._executeHelper(stmtstr1)
 		results = cursor.fetchone()
 		if results and results[0] is not None: leagueid = results[0] + 1
 		else: leagueid = 1
@@ -98,7 +112,7 @@ class Database:
 		stmtstr2 = 'INSERT INTO League_Info2 (LeagueId, LeagueName, Descrip, WinPoints, DrawPoints, LossPoints, AdditionalQuestions) ' + \
 					'Values (%s, %s, %s, %s, %s, %s, %s)'
 
-		cursor.execute(stmtstr2, leaguebasics)
+		self._executeHelper(stmtstr2, leaguebasics)
 
 		# questions provided by the creator of league, given as the keys in leagueinfo
 
@@ -110,7 +124,7 @@ class Database:
 
 		print("Statement 3:", stmtstr3)
 
-		cursor.execute(stmtstr3)
+		self._executeHelper(stmtstr3)
 		self._connection.commit()
 
 		return None
