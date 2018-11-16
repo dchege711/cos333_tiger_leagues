@@ -6,7 +6,7 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 """
 
 from random import randint
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from . import db
 
 database = db.Database()
@@ -22,22 +22,9 @@ def league_homepage(leagueID):
     standings = []
     total_num_games = 40
 
-    league_info_list = [
-        {
-            "status": "joined", "leagueID": 1, "Leaguename": "FIFA League F2018"
-        },
-        {
-            "status": "pending", "leagueID": 2, "Leaguename": "Ping Pong F2018"
-        },
-        {
-            "status": "", "leagueID": 3, "Leaguename": "3v3 Basketball F2018"
-        },
-        {
-            "status": "", "leagueID": 4, "Leaguename": "Indoor Soccer F2018"
-        }
-    ]
+    league_info_list = database.getLeagueInfoList(userID=1)
 
-    for _ in range(20): 
+    for _ in range(10): 
 
         goals_formed = randint(0, 60)
         goals_allowed = randint(0, 40)
@@ -70,29 +57,18 @@ def create_league():
     elif request.method == "POST":
         createLeagueInfo = request.json
         createLeagueInfo["UserId"] = 0
-        return database.createLeague(createLeagueInfo)
+        results = database.createLeague(createLeagueInfo)
+        if results["success"]:
+            return jsonify(results)
+        else:
+            return "500. Internal Server Error"
 
 @bp.route("/<int:leagueID>/join", methods=("GET", "POST"))
 def join_league(leagueID):
     if request.method == "GET":
-        leagueInfo = {
-            "Leaguename": "FIFA League",
-            "Descrip": "We play on weekends",
-            "Winpoints": 3, "Losspoints": 0, "Drawpoints": 1,
-            "Leagueid": leagueID, "creatorName": "Chege Gitau",
-            "AdditionalQuestions": {
-                "question0": {
-                    "question": "Which console do you have?", 
-                    "options": "Xbox One, PlayStation 4, None"
-                }, 
-                "question1": {
-                    "question": "How good at FIFA do you consider yourself?", 
-                    "options": "Beginner, Intermediate, Advanced"
-                }
-            }
-        }
+        leagueInfo = database.getJoinLeagueInfo(leagueID)
         return render_template(
-            "/league/join_league.html", leagueInfo=leagueInfo
+            "/league/join_league.html", leagueInfo=leagueInfo["message"]
         )
     elif request.method == "POST":
         receivedInfo = request.form
