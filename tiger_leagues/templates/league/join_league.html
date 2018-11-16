@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="w3-container large_portrait_margins w3-center">
+
+        <p class="w3-container">
+            <strong>Join {{ leagueInfo.Leaguename }}</strong>
+            <hr>
+            <strong>Description: </strong><em>{{leagueInfo.Descrip}}</em>
+            <br>
+            <br>
+            <strong>Scoring (pts): </strong>
+            <em>
+                win = {{ leagueInfo.Winpoints }}, 
+                draw = {{ leagueInfo.Drawpoints }}, 
+                loss = {{ leagueInfo.Losspoints }}, 
+            </em>
+            <br>
+            <br>
+            <p>Created by {{ leagueInfo.creatorName }}</p>
+            <hr>
+        </p>
+
+        <form class="w3-container" method="POST">
+
+            {% if leagueInfo.AdditionalQuestions %}
+
+            <p>Please answer the following questions</p>
+
+                {% for questionId, questionObj in leagueInfo.AdditionalQuestions.items() %}
+                    
+                    <p>{{questionObj["question"]}}</p>
+                    
+                    {% for option in questionObj["options"].split(", ") %}
+                        <input type="radio" name="{{questionId}}" id="{{option}}" value="{{option}}" required>
+                        <label for="{{option}}">{{option}}</label>
+                    {% endfor %}
+
+                    <hr>
+                    
+                {% endfor %}
+
+            {% endif %}
+
+            <button class="w3-button w3-btn w3-green">Request to Join League</button>
+            <hr>
+
+            <p>Once the admin approves, you'll be added to the league.</p>
+
+        </form>
+        
+    </div>
+
+{% endblock %}
