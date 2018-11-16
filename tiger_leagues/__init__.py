@@ -40,6 +40,6 @@ def create_app(test_config=None):
 
     # Register blueprints
     app.register_blueprint(auth.bp)
-    app.register_blueprint(league.bp)
+    app.register_blueprint(league.bp) 
 
     return app

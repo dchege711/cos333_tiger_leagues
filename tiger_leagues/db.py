@@ -124,13 +124,15 @@ class Database:
 		self._executeHelper(stmtstr2, leaguebasics)
 
 		# questions provided by the creator of league, given as the keys in leagueinfo
-
-		stmtstr3 = 'CREATE TABLE LeagueResponses{} (UserId int PRIMARY KEY, Status VARCHAR(255) {}'.format(
-			leagueid, ", ".join([
-				"{} VARCHAR(255)".format(x) for x in sanitizedAdditionalQuestions.keys()
-			])
-		)
-		stmtstr3 = "".join([stmtstr3, ")"])
+		if sanitizedAdditionalQuestions:
+			stmtstr3 = 'CREATE TABLE LeagueResponses{} (UserId int PRIMARY KEY, Status VARCHAR(255), {})'.format(
+				leagueid, ", ".join([
+					"{} VARCHAR(255)".format(x) for x in sanitizedAdditionalQuestions.keys()
+				])
+			)
+		else:
+			stmtstr3 = "CREATE TABLE LeagueResponses{} (UserId int PRIMARY KEY, Status VARCHAR(255))".format(leagueid)
+			
 		self._executeHelper(stmtstr3)
 
 		return {
