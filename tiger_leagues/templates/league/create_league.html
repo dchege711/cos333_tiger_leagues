@@ -14,45 +14,43 @@
 
     </style>
 
-    <div class="w3-container">
-
-        <h3 class="w3-container">{% block title %}Create League{% endblock %}</h3>
+    <div class="w3-container large_portrait_margins">
 
         <div class="w3-container">
 
-            <div class="w3-container" id="create_league_form">
+            <h3 class="w3-container">{% block title %}Create New League{% endblock %}</h3>
+            <hr>
 
-                <h5>Tell us more about your league</h5>
-                <hr>
+            <div class="w3-container" id="create_league_form">
 
                 <label for="LeagueName">What is the name of the league?</label>
                 <input 
-                    type="text" name="LeagueName" id="LeagueName" maxlength="50" value="FIFA League" required>
+                    type="text" name="LeagueName" id="LeagueName" maxlength="50" placeholder="e.g. Badminton Fall 2018" required>
                 <br>
 
                 <label for="Descrip">Describe the league in 1-3 sentences</label>
                 <br>
-                <input id="Descrip" type="text" name="Descrip" value="We play FIFA">
+                <input id="Descrip" type="text" name="Descrip" placeholder="We play badminton at Dillon Gym every weekend.">
                 <br>
 
                 <label for="WinPoints">How many points is a win worth?</label>
                 <input 
-                    type="number" name="WinPoints" id="WinPoints" value="4" required>
+                    type="number" name="WinPoints" id="WinPoints" required>
                 <br>
 
                 <label for="DrawPoints">How many points is a draw worth?</label>
                 <input 
-                    type="number" name="DrawPoints" id="DrawPoints" value="2" required>
+                    type="number" name="DrawPoints" id="DrawPoints" required>
                 <br>
 
                 <label for="LossPoints">How many points is a loss worth?</label>
                 <input 
-                    type="number" name="LossPoints" id="LossPoints" value="0" required>
+                    type="number" name="LossPoints" id="LossPoints" required>
                 <br>
                 <br>
 
                 <p><strong>Indicate if your league needs any of this information:</strong></p>
-                <input type="checkbox" id="needsPhoneNum" name="needsPhoneNum" checked>
+                <input type="checkbox" id="needsPhoneNum" name="needsPhoneNum">
                 <label for="needsPhoneNum">Phone Number</label>
                 <br>
 
@@ -64,7 +62,9 @@
                 <div id="additional_questions_container"></div>
 
                 <button class="w3-btn w3-green" onclick="sendCreateLeagueForm();">Create League</button>
-                
+                <br>
+                <br>
+
             </div>
 
             <div class="w3-container">
@@ -72,11 +72,11 @@
                 <hr>
 
                 <p>Question</p>
-                <input type="text" placeholder="e.g. Which type of console do you have?" id="additional_question" value="Which console do you have?">
+                <input type="text" placeholder="e.g. Do you own a racket?" id="additional_question">
                 <br>
 
                 <p>Valid Responses (separate them using comas)</p>
-                <input type="text" placeholder="e.g. Xbox One, PlayStation 4, None" id="valid_responses" value="Xbox One, PlayStation 4, None">
+                <input type="text" placeholder="e.g. Yes, No" id="valid_responses">
                 <br>
 
                 <button class="w3-btn w3-blue" onclick="addNewQuestion()">Add Question</button>
@@ -103,7 +103,9 @@
                 document.getElementById("needsRoomNum"),
                 document.getElementById("needsPhoneNum")
             ],
-            additionalQuestionsContainer: document.getElementById("additional_questions_container")
+            additionalQuestionsContainer: document.getElementById("additional_questions_container"),
+            additionalQuestionElement: document.getElementById("additional_question"),
+            additionalOptionsElement: document.getElementById("valid_responses")
         }
 
         /**
@@ -111,8 +113,8 @@
          * have to answer.
          */
         function addNewQuestion() {
-            let question =  document.getElementById("additional_question").value;
-            let validOptionsString = document.getElementById("valid_responses").value;
+            let question = state.additionalQuestionElement.value;
+            let validOptionsString = state.additionalOptionsElement.value;
             let questionID = state.additionalQsnID;
 
             state.additionalQuestionsContainer.insertAdjacentHTML(
@@ -136,7 +138,9 @@
             };
 
             state.additionalQsnID = questionID + 1;
-            
+
+            state.additionalQuestionElement.value = "";
+            state.additionalOptionsElement.value = "";
         }
 
         /**
@@ -174,7 +178,13 @@
 
             sendHTTPRequest("POST", "/league/create", payload, contentType="application/json")
                 .then((response) => {
-                    console.log(response);
+                    let responseObject = JSON.parse(response);
+                    if (responseObject.success) {
+                        alert(`League created. Invite Link: ${responseObject.message.inviteURL}`);
+                        window.location = `/league/${responseObject.message.leagueID}`
+                    } else {
+                        alert(`Error: ${responseObject.message}`);
+                    }
                 })
                 .catch((err) => { console.error(err); });
         }
