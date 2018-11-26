@@ -11,7 +11,7 @@ from flask import Blueprint, render_template, request
 bp = Blueprint("auth", __name__, url_prefix="")
 
 @bp.route("/")
-def login():
+def index():
     """
     @GET Render the login page if the person isn't logged in, otherwise 
     redirect them to the home page.
