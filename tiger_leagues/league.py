@@ -13,6 +13,17 @@ database = db.Database()
 bp = Blueprint("league", __name__, url_prefix="/league")
 
 @bp.route("/")
+def index():
+    """
+    GET REQUEST:
+
+    A user that already has an account will be redirected here. The user details 
+    will be present in the session object. The user might be in none or multiple 
+    leagues. We suspect that calling league_homepage(leagueid) might be useful.
+
+    """
+    return None
+
 @bp.route("/<int:leagueID>/")
 def league_homepage(leagueID):
     """
