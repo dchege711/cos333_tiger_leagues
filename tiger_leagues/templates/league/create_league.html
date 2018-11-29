@@ -23,47 +23,43 @@
 
             <div class="w3-container" id="create_league_form">
 
-                <label for="LeagueName">What is the name of the league?</label>
+                <label for="league_name">What is the name of the league?</label>
                 <input 
-                    type="text" name="LeagueName" id="LeagueName" maxlength="50" placeholder="e.g. Badminton Fall 2018" required>
-                <br>
+                    type="text" name="league_name" id="league_name" maxlength="50" placeholder="e.g. Badminton Fall 2018" required>
+                <br />
 
-                <label for="Descrip">Describe the league in 1-3 sentences</label>
-                <br>
-                <input id="Descrip" type="text" name="Descrip" placeholder="We play badminton at Dillon Gym every weekend.">
-                <br>
+                <label for="description">Describe the league in 1-3 sentences</label>
+                <br />
+                <input id="description" type="text" name="description" placeholder="We play badminton at Dillon Gym every weekend.">
+                <br />
 
-                <label for="WinPoints">How many points is a win worth?</label>
+                <label for="points_per_win">How many points is a win worth?</label>
                 <input 
-                    type="number" name="WinPoints" id="WinPoints" required>
-                <br>
+                    type="number" name="points_per_win" id="points_per_win" required>
+                <br />
 
-                <label for="DrawPoints">How many points is a draw worth?</label>
+                <label for="points_per_draw">How many points is a draw worth?</label>
                 <input 
-                    type="number" name="DrawPoints" id="DrawPoints" required>
-                <br>
+                    type="number" name="points_per_draw" id="points_per_draw" required>
+                <br />
 
-                <label for="LossPoints">How many points is a loss worth?</label>
+                <label for="points_per_loss">How many points is a loss worth?</label>
                 <input 
-                    type="number" name="LossPoints" id="LossPoints" required>
-                <br>
-                <br>
+                    type="number" name="points_per_loss" id="points_per_loss" required>
+                <br />
+                <br />
 
-                <p><strong>Indicate if your league needs any of this information:</strong></p>
-                <input type="checkbox" id="needsPhoneNum" name="needsPhoneNum">
-                <label for="needsPhoneNum">Phone Number</label>
-                <br>
-
-                <input type="checkbox" id="needsRoomNum" name="needsRoomNum">
-                <label for="needsRoomNum">Campus Room (e.g. Henry Hall 115)</label>
-                <br>
-                <hr>
+                <label for="registration_deadline">When is the registration deadline?</label>
+                <input 
+                    type="date" name="registration_deadline" id="registration_deadline" required>
+                <br />
+                <br />
 
                 <div id="additional_questions_container"></div>
 
                 <button class="w3-btn w3-green" onclick="sendCreateLeagueForm();">Create League</button>
-                <br>
-                <br>
+                <br />
+                <br />
 
             </div>
 
@@ -73,11 +69,11 @@
 
                 <p>Question</p>
                 <input type="text" placeholder="e.g. Do you own a racket?" id="additional_question">
-                <br>
+                <br />
 
                 <p>Valid Responses (separate them using comas)</p>
                 <input type="text" placeholder="e.g. Yes, No" id="valid_responses">
-                <br>
+                <br />
 
                 <button class="w3-btn w3-blue" onclick="addNewQuestion()">Add Question</button>
             </div>
@@ -95,13 +91,12 @@
             additionalQsnID: 0,
             additionalQuestionsJSON: {},
             inputElements: [
-                document.getElementById("LeagueName"),
-                document.getElementById("Descrip"),
-                document.getElementById("WinPoints"),
-                document.getElementById("DrawPoints"),
-                document.getElementById("LossPoints"),
-                document.getElementById("needsRoomNum"),
-                document.getElementById("needsPhoneNum")
+                document.getElementById("league_name"),
+                document.getElementById("description"),
+                document.getElementById("points_per_win"),
+                document.getElementById("points_per_draw"),
+                document.getElementById("points_per_loss"),
+                document.getElementById("registration_deadline")
             ],
             additionalQuestionsContainer: document.getElementById("additional_questions_container"),
             additionalQuestionElement: document.getElementById("additional_question"),
@@ -174,14 +169,14 @@
                     return;
                 }
             }
-            payload.AdditionalQuestions = state.additionalQuestionsJSON;
+            payload.additional_questions = state.additionalQuestionsJSON;
 
             sendHTTPRequest("POST", "/league/create", payload, contentType="application/json")
                 .then((response) => {
                     let responseObject = JSON.parse(response);
                     if (responseObject.success) {
-                        alert(`League created. Invite Link: ${responseObject.message.inviteURL}`);
-                        window.location = `/league/${responseObject.message.leagueID}`
+                        alert(`League created. Invite Link: ${responseObject.message.invite_url}`);
+                        window.location = `/league/${responseObject.message.league_id}`
                     } else {
                         alert(`Error: ${responseObject.message}`);
                     }

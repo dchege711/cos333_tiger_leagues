@@ -3,35 +3,35 @@
     <div class="w3-container large_portrait_margins w3-center">
 
         <p class="w3-container">
-            <strong>Join {{leagueInfo.LeagueName}}</strong>
+            <strong>Join {{league_info["league_name"]}}</strong>
             <hr>
-            <strong>Description: </strong><em>{{leagueInfo.Descrip}}</em>
-            <br>
-            <br>
+            <strong>Description: </strong><em>{{league_info["description"]}}</em>
+            <br />
+            <br />
             <strong>Scoring (pts): </strong>
             <em>
-                win = {{ leagueInfo.WinPoints }}, 
-                draw = {{ leagueInfo.DrawPoints }}, 
-                loss = {{ leagueInfo.LossPoints }}, 
+                win = {{ league_info["points_per_win"] }}, 
+                draw = {{ league_info["points_per_draw"] }}, 
+                loss = {{ league_info["points_per_loss"] }}, 
             </em>
-            <br>
-            <br>
-            <p>Created by Rui</p>
+            <br />
+            <br />
+            <p>Registration Deadline: {{ league_info["registration_deadline"] }}</p>
             <hr>
         </p>
 
         <form class="w3-container" method="POST">
 
-            {% if leagueInfo.AdditionalQuestions %}
+            {% if league_info["additional_questions"] %}
 
             <p>Please answer the following questions</p>
 
-                {% for questionId, questionObj in leagueInfo.AdditionalQuestions.items() %}
+                {% for question_id, question_object in league_info["additional_questions"].items() %}
                     
-                    <p>{{questionObj["question"]}}</p>
+                    <p>{{question_object["question"]}}</p>
                     
-                    {% for option in questionObj["options"].split(", ") %}
-                        <input type="radio" name="{{questionId}}" id="{{option}}" value="{{option}}" required>
+                    {% for option in question_object["options"].split(", ") %}
+                        <input type="radio" name="{{question_id}}" id="{{option}}" value="{{option}}" required>
                         <label for="{{option}}">{{option}}</label>
                     {% endfor %}
 
