@@ -15,7 +15,13 @@ APP_ENV = environ["TIGER_LEAGUES_ENVIRONMENT"]
 DATABASE_URL = ""
 if APP_ENV == "development":
     # ... then we're on our local machines and should ask Heroku for the URL
-    results = subprocess.run(["heroku", "config:get", "DATABASE_URL", "--app", "tiger-leagues"], capture_output=True)
+    results = subprocess.run(
+        ["heroku", "config:get", "DATABASE_URL", "--app", "tiger-leagues"], 
+        capture_output=True
+    )
+    if results.stderr:
+        raise RuntimeError(results.stderr.decode("utf-8").strip())
+
     DATABASE_URL = results.stdout.decode("utf-8").strip()
 elif APP_ENV == "production":
     # ... otherwise the app is running on Heroku and the URL is already set
@@ -24,4 +30,3 @@ else:
     raise RuntimeError(
         "Please set the `TIGER_LEAGUES_ENVIRONMENT` to either `development` or `production`"
     )
-
