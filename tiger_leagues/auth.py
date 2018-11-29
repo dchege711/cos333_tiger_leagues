@@ -6,9 +6,13 @@ Exposes a blueprint that handles requests made to `` endpoint
 
 """
 
-from flask import Blueprint, render_template, session, redirect, url_for
-from . import user
+import requests as python_requests
+from flask import (
+    Blueprint, render_template, session, redirect, url_for, request
+)
+from . import user, cas_client
 
+cas = cas_client.CASClient()
 bp = Blueprint("auth", __name__, url_prefix="")
 
 @bp.route("/", methods=["GET"])
@@ -20,11 +24,9 @@ def index():
     """
     return render_template("/auth/login.html")
 
-@bp.route("/cas", methods=["GET"])
+@bp.route("/cas", methods=["GET", "POST"])
 def cas_login():
     """
-    @todo: Implement this
-
     Use CAS to log in users This method will probably need more URLs/methods. Resources:
     https://www.cs.princeton.edu/courses/archive/fall18/cos333/lectures/14websecurity/PennyBottleCas/
 
@@ -45,9 +47,33 @@ def cas_login():
     Potentially useful files: ./user.py
 
     """
-    net_id_from_cas = "dgitau"
+    if request.method == "GET":
 
-    session["user"] = user.get_user(net_id_from_cas)
-    if session.get("user") is not None: 
-        return redirect(url_for("league.index"))
-    return redirect(url_for("user.display_user_profile"))
+        if request.args.get("ticket"):
+            print("Ticket:", request.url, "\n")
+            cas_response = python_requests.get(
+                "https://fed.princeton.edu/validate",
+                params={
+                    "service": url_for(".cas_login", _external=True),
+                    "ticket": request.args.get("ticket")
+                }
+            )
+            return cas_response.text
+
+        else:
+            print("Non-ticket URL:", request.url, "\n")
+            return redirect(
+                "https://fed.princeton.edu/cas/login?service={}".format(
+                    url_for(".cas_login", _external=True)
+                )
+            )
+
+
+    # cas.authenticate(request, redirect, session)
+
+    # if session.get("username"):
+    #     session["user"] = user.get_user(session.get("username"))
+    
+    # if session.get("user") is not None: 
+    #     return redirect(url_for("league.index"))
+    # return redirect(url_for("user.display_user_profile"))
