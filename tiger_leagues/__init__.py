@@ -12,7 +12,7 @@ More info: http://flask.pocoo.org/docs/1.0/tutorial/factory/
 import os
 
 from flask import Flask, render_template
-from . import league, auth
+from . import league, auth, user
 
 def create_app(test_config=None):
     """
@@ -41,5 +41,6 @@ def create_app(test_config=None):
     # Register blueprints
     app.register_blueprint(auth.bp)
     app.register_blueprint(league.bp) 
+    app.register_blueprint(user.bp)
 
     return app
