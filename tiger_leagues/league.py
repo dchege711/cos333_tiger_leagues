@@ -6,7 +6,6 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 """
 
 import json
-from datetime import date
 
 from flask import (
     Blueprint, render_template, request, url_for, jsonify, session
