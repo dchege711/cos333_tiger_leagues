@@ -8,7 +8,7 @@ This file acts as the central access to the database.
 # add a helper function that catchs database errors
 
 import sys
-from psycopg2 import connect, ProgrammingError
+from psycopg2 import connect, ProgrammingError, extras
 from . import config
 
 import click
@@ -47,7 +47,9 @@ class Database:
 		@returns `Cursor` after executing the SQL statement in `stmtstr` with 
 		placeholders substituted by the `values` tuple.
 		"""
-		cursor = self._connection.cursor()
+		cursor = self._connection.cursor(
+			cursor_factory=extras.DictCursor
+		)
 		try:
 			if values is not None:
 				cursor.execute(stmtstr, values)
