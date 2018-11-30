@@ -5,7 +5,7 @@ Exposes a blueprint that handles requests made to `/user/*` endpoint
 
 """
 
-from flask import Blueprint
+from flask import Blueprint, render_template, session
 from . import db, decorators
 
 database = db.Database()
@@ -52,7 +52,7 @@ def display_user_profile():
     Links to leagues that a user is involved in
 
     """
-    return "Display user profile"
+    return render_template("/user/user_profile.html", user=session.get("user"))
 
 @bp.route("/update", methods=["POST"])
 @decorators.login_required
