@@ -6,6 +6,7 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 """
 
 import json
+from datetime import date
 
 from flask import (
     Blueprint, render_template, request, url_for, jsonify, session
@@ -34,6 +35,7 @@ def index():
     """
     user = session.get("user")
     if user["associated_leagues"]:
+        print(user["associated_leagues"])
         return league_homepage(user["associated_leagues"][0]["league_id"])
     
     return "Display page for a user that's not in any league"
@@ -46,44 +48,38 @@ def league_homepage(league_id):
     template should include information such as `standings, media_feed, 
     score_reports, upcoming_games`, etc.
     """
-
+    associated_leagues = session.get("user")["associated_leagues"]
     cursor = database.execute(
         (
-            "SELECT points_per_win, points_per_draw, points_per_loss, "
+            "SELECT (points_per_win, points_per_draw, points_per_loss) "
             "FROM league_info WHERE league_id = %s"
         ),
         values=[league_id]
     )
 
     row = cursor.fetchone()
-
-    standings_info = {}
-
-    if row is None:
-        return standings_info
-    else:
-        points_per_win = row['points_per_win']
-        points_per_draw = row['points_per_draw']
-        points_per_loss = row['points_per_loss']
+    points_per_win = row['points_per_win']
+    points_per_draw = row['points_per_draw']
+    points_per_loss = row['points_per_loss']
 
     cursor = database.execute(
         (
-            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2, "
+            "SELECT (match_id, user_id_1, user_id_2, score_user_1, score_user_2) "
             "FROM match_info WHERE league_id = %s"
         ),
         values=[league_id]
     )
 
+    standings_info = {}
     row = cursor.fetchone()
-
     while row is not None:
         key1 = row['user_id_1']
         key2 = row['user_id_2']
 
-        if 'key1' not in standings_info:
-            standing_info[key1] = defaultdict(lambda:0)
-        if 'key2' not in standings_info:
-            standing_info[key2] = defaultdict(lambda:0)
+        if key1 not in standings_info:
+            standings_info[key1] = defaultdict(lambda: 0)
+        if key2 not in standings_info:
+            standings_info[key2] = defaultdict(lambda: 0)
 
         standings_info[key1]['goals_formed'] += row['score_user_1']
         standings_info[key2]['goals_formed'] += row['score_user_2']
@@ -94,7 +90,7 @@ def league_homepage(league_id):
             standings_info[key1]['points'] += points_per_win
             standings_info[key2]['losses'] += 1
             standings_info[key2]['points'] += points_per_loss
-        elif (row['score_user_1'] < row['score_user_2'])
+        elif (row['score_user_1'] < row['score_user_2']):
             standings_info[key2]['wins'] += 1
             standings_info[key2]['points'] += points_per_win
             standings_info[key1]['losses'] += 1
@@ -113,9 +109,13 @@ def league_homepage(league_id):
             ),
             values=key
         )
-        standings_info[key]['name'] = cursor.fetchone()
+        standings_info[key]['name'] = cursor.fetchone()['name']
+        standings_info[key]['goal_diff'] = standings_info[key]['goals_formed'] - standings_info[key]['goals_allowed']
 
-    return standings_info
+    return render_template(
+        "/league/league_homepage.html", 
+        standings=standings_info, associated_leagues=associated_leagues
+    )
 
 
 @bp.route("/create", methods=["GET", "POST"])
@@ -207,6 +207,35 @@ def __create_league(league_info):
             "league_id": league_id
         }
     }
+
+
+@bp.route("/browse", methods=["GET"])
+@decorators.login_required
+def browse_leagues():
+    """
+    @GET: Display leagues that the user can join.
+
+    """
+    ids_associated_leagues = set([
+        x["league_id"] for x in session.get("user")["associated_leagues"]
+    ])
+    cursor = database.execute((
+        "SELECT league_id, league_name, registration_deadline, description"
+        " FROM league_info;"
+    ))
+
+    unjoined_leagues, today = [], date.today()
+    for row in database.iterator(cursor):
+        if row["league_id"] not in ids_associated_leagues:
+            if today <= row["registration_deadline"]:
+                unjoined_leagues.append(row)
+
+    unjoined_leagues.sort(
+        key=lambda league_info: league_info["registration_deadline"]
+    )
+
+    return str(unjoined_leagues)
+
 
 @bp.route("/<int:league_id>/join", methods=["GET", "POST"])
 @decorators.login_required

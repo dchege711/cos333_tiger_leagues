@@ -46,7 +46,7 @@ class Database:
 
         self.execute((
             "CREATE TABLE IF NOT EXISTS match_info ("
-            "match_id SERIAL PRIMARY KEY, user_id_1 INT, user_id_2 INT, league_id INT "
+            "match_id SERIAL PRIMARY KEY, user_id_1 INT, user_id_2 INT, league_id INT, "
             "score_user_1 INT, score_user_2 INT, deadline DATE);"
         ))
 
@@ -77,3 +77,14 @@ class Database:
             self._connection.rollback()
             return None
             
+    def iterator(self, cursor):
+        """
+        @description Alternative to having the `x = cursor.fetchone()` ... 
+        `while x is not None` every time that we're iterating through DB results
+
+        @yields a row fetched from the cursor.
+        """
+        row = cursor.fetchone()
+        while row is not None:
+            yield row
+            row = cursor.fetchone()

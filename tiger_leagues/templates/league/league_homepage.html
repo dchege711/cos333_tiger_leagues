@@ -7,16 +7,16 @@
     {% for league_info in league_info_list %}
         <li>
             {% if league_info["status"] == "joined" %}
-                <a href="{{url_for('league.league_homepage', leagueID=league_info['LeagueId'])}}">{{league_info["LeagueName"]}}</a>
+                <a href="{{url_for('league.league_homepage', league_id=associated_leagues['league_id'])}}">{{associated_leagues["league_name"]}} ({{associated_leagues["status"]}})</a>
             {% endif %}
             {% if league_info["status"] == "pending" %}
-                <a href="{{url_for('league.league_homepage', leagueID=league_info['LeagueId'])}}">{{league_info["LeagueName"]}} (Pending)</a>
+                <a href="{{url_for('league.league_homepage', league_id=associated_leagues['league_id'])}}">{{associated_leagues["league_name"]}} ({{associated_leagues["status"]}})</a>
             {% endif %}
             {% if league_info["status"] == "rejected" %}
-                <a href="{{url_for('league.join_league', leagueID=league_info['LeagueId'])}}">{{league_info["LeagueName"]}} (Rejoin?)</a>
+                <a href="{{url_for('league.join_league', league_id=associated_leagues['league_id'])}}">{{associated_leagues["league_name"]}} ({{associated_leagues["status"]}})</a>
             {% endif %}
             {% if league_info["status"] == "" %}
-                <a href="{{url_for('league.join_league', leagueID=league_info['LeagueId'])}}">{{league_info["LeagueName"]}} (Join)</a>
+                <a href="{{url_for('league.join_league', league_id=associated_leagues['league_id'])}}">{{associated_leagues["league_name"]}} ({{associated_leagues["status"]}})</a>
             {% endif %}
         </li>
     {% endfor %}
@@ -42,7 +42,7 @@
                     </tr>
                     {% for standing in standings %}
                         <tr>
-                            <td>{{ standing["player_name"] }}</td>
+                            <td>{{ standing["name"] }}</td>
                             <td>{{ standing["wins"] }}</td>
                             <td>{{ standing["losses"] }}</td>
                             <td>{{ standing["draws"] }}</td>
