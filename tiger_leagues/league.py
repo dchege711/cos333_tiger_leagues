@@ -7,12 +7,12 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 
 import json
 from datetime import date
+from collections import defaultdict
 
 from flask import (
     Blueprint, render_template, request, url_for, jsonify, session
 )
 from . import db, decorators
-from collections import defaultdict
 
 generic_500_msg = {
     "success": False, "status": 500, "message": "Internal Server Error"
@@ -51,20 +51,20 @@ def league_homepage(league_id):
     associated_leagues = session.get("user")["associated_leagues"]
     cursor = database.execute(
         (
-            "SELECT (points_per_win, points_per_draw, points_per_loss) "
+            "SELECT points_per_win, points_per_draw, points_per_loss "
             "FROM league_info WHERE league_id = %s"
         ),
         values=[league_id]
     )
-
     row = cursor.fetchone()
+
     points_per_win = row['points_per_win']
     points_per_draw = row['points_per_draw']
     points_per_loss = row['points_per_loss']
 
     cursor = database.execute(
         (
-            "SELECT (match_id, user_id_1, user_id_2, score_user_1, score_user_2) "
+            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2 "
             "FROM match_info WHERE league_id = %s"
         ),
         values=[league_id]
@@ -208,6 +208,29 @@ def __create_league(league_info):
         }
     }
 
+def __get_join_league_info(league_id):
+    """
+    @returns `dict` Keys: `league_id`, `league_id`, `league_name`, `description`, 
+    `points_per_win`, `points_per_draw`, `points_per_loss`, 
+    `additional_questions`, `registration_deadline`
+
+    @returns `None` if the league_id is not found
+    """
+    cursor = database.execute(
+        (
+            "SELECT league_id, league_name, description, points_per_win, "
+            "points_per_draw, points_per_loss, additional_questions, "
+            "registration_deadline FROM league_info WHERE league_id = %s"
+        ), 
+        values=[league_id]
+    )
+    league_info = cursor.fetchone()
+    
+    if league_info is not None:
+        if league_info["additional_questions"]:
+            league_info["additional_questions"] = json.loads(league_info["additional_questions"])
+
+    return league_info
 
 @bp.route("/browse", methods=["GET"])
 @decorators.login_required
@@ -216,9 +239,9 @@ def browse_leagues():
     @GET: Display leagues that the user can join.
 
     """
-    ids_associated_leagues = set([
+    ids_associated_leagues = {
         x["league_id"] for x in session.get("user")["associated_leagues"]
-    ])
+    }
     cursor = database.execute((
         "SELECT league_id, league_name, registration_deadline, description"
         " FROM league_info;"
@@ -234,7 +257,7 @@ def browse_leagues():
         key=lambda league_info: league_info["registration_deadline"]
     )
 
-    return str(unjoined_leagues)
+    return "\n".join(str(x) for x in unjoined_leagues)
 
 
 @bp.route("/<int:league_id>/join", methods=["GET", "POST"])
@@ -247,32 +270,66 @@ def join_league(league_id):
     @POST: Process the information submitted by the form that is rendered by 
     the @GET request.
     """
-    if request.method == "GET":
-        league_info = __get_join_league_info(league_id)
-        return render_template(
-            "/league/join_league.html", league_info=league_info
+
+    league_info = __get_join_league_info(league_id)
+
+    # If the league doesn't exist, let the user know
+    if league_info is None:
+        return "League not found"
+
+    # If the league's deadline is already passed, communicate that to the user
+    today = date.today()
+    if today > league_info["registration_deadline"]:
+        return "The League's registration deadline ({}) has passed".format(
+            league_info["registration_deadline"].strftime("%A, %B %d, %Y")
         )
+
+    assert isinstance(league_id, int) # Because of SQL injection...
+
+    if request.method == "GET":
+        # If the user has submitted details before, re-populate them for editing
+        ids_associated_leagues = {
+            x["league_id"] for x in session.get("user")["associated_leagues"]
+        }
+        if league_id in ids_associated_leagues:
+            previous_responses = database.iterator(
+                database.execute(
+                    "SELECT * from {} WHERE user_id = %s", 
+                    dynamic_table_or_column_names=["league_responses_{}".format(league_id)],
+                    values=[session.get("user")["user_id"]]
+                )
+            )
+        else:
+            previous_responses = None
+
+        return render_template(
+            "/league/join_league.html", 
+            league_info=league_info, previous_responses=previous_responses
+        )
+
     if request.method == "POST":
-        return NotImplementedError()
+        received_data = request.form
+        user_id = session.get("user")["user_id"]
 
-def __get_join_league_info(league_id):
-    """
-    @returns `dict` if the league is found, `None` otherwise.
-    """
-    cursor = database.execute(
-        (
-            "SELECT league_id, league_name, description, points_per_win, "
-            "points_per_draw, points_per_loss, additional_questions, "
-            "registration_deadline FROM league_info WHERE league_id = %s"
-        ), 
-        values=[league_id]
-    )
-    league_info = cursor.fetchone()
-    
-    if league_info is not None:
-        if league_info["additional_questions"]:
-            league_info["additional_questions"] = json.loads(league_info["additional_questions"])
-        league_info["registration_deadline"] = league_info["registration_deadline"].strftime("%A, %B %d, %Y")
+        expected_info = {}
+        for key in league_info["additional_questions"]:
+            expected_info[key] = ""
 
-    return league_info
+        for key in expected_info:
+            if key not in received_data: 
+                return "Missing {} in the submitted form".format(key)
+            expected_info[key] = received_data[key]
+
+        expected_info["user_id"] = user_id
+        database.execute(
+            (
+                "INSERT INTO league_responses_{} ({}) VALUES ({}) ON CONFLICT (user_id) DO NOTHING;".format(
+                    league_id, ", ".join(key for key in expected_info), 
+                    ", ".join("%({})s".format(key) for key in expected_info)
+                )
+            ),
+            values=expected_info
+        )
+
+        return "Request Submitted!"
     
