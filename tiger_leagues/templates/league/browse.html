@@ -3,7 +3,12 @@
     <div class="w3-container large_portrait_margins w3-center">
 
         <p class="w3-container">
-            <h4>Choose a League to Join</h4>
+            <h4>Create a New League</h4>
+            <button class="w3-button w3-btn w3-green"
+            onclick="document.location = `{{ url_for('league.create_league', _external=True) }}`">
+            Create</button>
+            <hr>
+            <h4>Join an Existing League</h4>
             <table class="w3-table-all">
                 <tr>
                     <th>League Name</th>
