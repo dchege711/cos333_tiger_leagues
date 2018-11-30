@@ -108,6 +108,6 @@ def __get_user_league_info_list(user_id, league_ids):
         )
         info = cursor.fetchone()
         if info is not None:
-            league_info_list.append(info)
+            league_info_list.append(dict(**info))
         
     return league_info_list
