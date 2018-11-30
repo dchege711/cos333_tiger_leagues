@@ -7,9 +7,8 @@ This file acts as the central access to the database.
 
 # add a helper function that catchs database errors
 
-import sys
 import atexit
-from psycopg2 import connect, ProgrammingError, extras
+from psycopg2 import connect, extras, sql
 from . import config
 
 class Database:
@@ -58,9 +57,10 @@ class Database:
             "additional_questions TEXT);"
         ))
 
-    def execute(self, stmtstr, values=None, cursor_factory=extras.DictCursor):
+    def execute(self, statement, values=None, dynamic_table_or_column_names=None, 
+        cursor_factory=extras.DictCursor):
         """
-        @returns `Cursor` after executing the SQL statement in `stmtstr` with 
+        @returns `Cursor` after executing the SQL statement in `statement` with 
         placeholders substituted by the `values` tuple. 
         
         @returns `None` if the SQL transaction fails. The error is reported to 
@@ -68,14 +68,21 @@ class Database:
         """
         cursor = self._connection.cursor(cursor_factory=cursor_factory)
         try:
-            if values is not None: cursor.execute(stmtstr, values)
-            else: cursor.execute(stmtstr)
+            if dynamic_table_or_column_names:
+                cursor.execute(
+                    sql.SQL(statement).format(*[
+                        sql.Identifier(s) for s in dynamic_table_or_column_names
+                    ]),
+                    values
+                )
+            else: 
+                cursor.execute(statement, values)
             self._connection.commit()
             return cursor
-        except ProgrammingError as error:
-            print(error, file=sys.stderr)
+        except:
+            print("Last Query:", cursor.query)
             self._connection.rollback()
-            return None
+            raise
             
     def iterator(self, cursor):
         """
