@@ -26,12 +26,14 @@ def get_user(net_id):
 
     # Although psycopg2 allows us to change values already in the table, we 
     # cannot add new fields that weren't columns, thus the need for a new dict
-    mutable_user_data = dict(**user_data)
+    mutable_user_data = dict(**user_data) # https://www.python.org/dev/peps/pep-0448/#abstract
     if user_data["league_ids"] is None:
+        mutable_user_data["league_ids"] = []
         mutable_user_data["associated_leagues"] = []
     else:
+        mutable_user_data["league_ids"] = [int(x) for x in user_data["league_ids"].split(", ")]
         mutable_user_data["associated_leagues"] = __get_user_league_info_list(
-            [int(x) for x in user_data["league_ids"].split(", ")]
+            user_data["user_id"], mutable_user_data["league_ids"]
         )
     return mutable_user_data
 
@@ -82,9 +84,11 @@ def __create_user_profile(user_info):
         ]
     )
 
-def __get_user_league_info_list(league_ids):
+def __get_user_league_info_list(user_id, league_ids):
     """
-    @param List[int]: a list of all the league IDs that a user is associated with
+    @param int `user_id`: the ID of the associated user.
+
+    @param List[int] `league_ids`: a list of all the league IDs that a user is associated with
 
     @return `List[dict]` containing all leagues that a user is associated with. 
     Expected keys: `league_name`, `league_id`, `status`.
@@ -93,11 +97,10 @@ def __get_user_league_info_list(league_ids):
     for league_id in league_ids:
         cursor = database.execute(
             (
-                "SELECT league_name.league_id, league_name, status FROM league_info, {}"
-                "WHERE league_name.league_id = {}.league_id "
-                "AND league_name.league_id = %s"
+                "SELECT league_info.league_id, league_name, status FROM league_info, {} "
+                "WHERE {}.user_id = %s AND league_info.league_id = %s"
             ),
-            values=[league_id],
+            values=[user_id, league_id],
             dynamic_table_or_column_names=[
                 "league_responses_{}".format(league_id),
                 "league_responses_{}".format(league_id)

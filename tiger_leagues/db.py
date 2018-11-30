@@ -80,7 +80,7 @@ class Database:
             self._connection.commit()
             return cursor
         except:
-            print("Last Query:", cursor.query)
+            print("\nLast Query:", cursor.query, "\n")
             self._connection.rollback()
             raise
             
