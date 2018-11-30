@@ -54,6 +54,7 @@ def update_user_profile():
 def __create_user_profile(user_info):
     """
     Create a user from the supplied information and save them to the database.
+    Expected keys: `name`, `net_id`, `email`, `phone_num`, `room`.
 
     @returns `Cursor` if transaction is successful.
 
@@ -61,12 +62,12 @@ def __create_user_profile(user_info):
 
     return database.execute(
         (
-            "INSERT INTO users (name, net_id, email, phone_number, room) "
-            "VALUES (%s, %s, %s, %s, %s, %s);"
+            "INSERT INTO users (name, net_id, email, phone_num, room) "
+            "VALUES (%s, %s, %s, %s, %s);"
         ),
         values=[
             user_info["name"], user_info["net_id"], user_info["email"], 
-            user_info["phone_number"], user_info["room"]
+            user_info["phone_num"], user_info["room"]
         ]
     )
 
