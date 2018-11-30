@@ -12,11 +12,15 @@ from collections import defaultdict
 from flask import (
     Blueprint, render_template, request, url_for, jsonify, session
 )
-from . import db, decorators
+from . import db, decorators, user as user_client
 
 generic_500_msg = {
     "success": False, "status": 500, "message": "Internal Server Error"
 }
+
+STATUS_REQUESTED = "requested"
+STATUS_APPROVED = "approved"
+STATUS_DENIED = "denied"
 
 database = db.Database()
 bp = Blueprint("league", __name__, url_prefix="/league")
@@ -34,8 +38,9 @@ def index():
 
     """
     user = session.get("user")
+
     if user["associated_leagues"]:
-        print(user["associated_leagues"])
+        print(user)
         return league_homepage(user["associated_leagues"][0]["league_id"])
     
     return "Display page for a user that's not in any league"
@@ -309,7 +314,7 @@ def join_league(league_id):
 
     if request.method == "POST":
         received_data = request.form
-        user_id = session.get("user")["user_id"]
+        user = session.get("user")
 
         expected_info = {}
         for key in league_info["additional_questions"]:
@@ -320,7 +325,9 @@ def join_league(league_id):
                 return "Missing {} in the submitted form".format(key)
             expected_info[key] = received_data[key]
 
-        expected_info["user_id"] = user_id
+        # Record the response of the user
+        expected_info["user_id"] = user["user_id"]
+        expected_info["status"] = STATUS_REQUESTED
         database.execute(
             (
                 "INSERT INTO league_responses_{} ({}) VALUES ({}) ON CONFLICT (user_id) DO NOTHING;".format(
@@ -330,6 +337,15 @@ def join_league(league_id):
             ),
             values=expected_info
         )
+
+        # Indicate on the user object that they're involved in this league
+        if league_id not in user["league_ids"]:
+            user["league_ids"].append(league_id)
+            database.execute(
+                "UPDATE users SET league_ids = %s WHERE user_id = %s",
+                values=[", ".join(str(x) for x in user["league_ids"]), user["user_id"]]
+            )
+            session["user"] = user_client.get_user(user["net_id"])
 
         return "Request Submitted!"
     
