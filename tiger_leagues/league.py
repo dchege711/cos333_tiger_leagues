@@ -66,7 +66,9 @@ def create_league():
 
 def __create_league(league_info):
     """
-    Create a league from the submitted data.
+    Create a league from the submitted data. Expected keys: `league_name`, 
+    `description`, `points_per_win`, `points_per_draw`, `points_per_loss`, 
+    `registration_deadline` and `additional_questions`.
 
     @returns `dict`: `success` is set to `True` only if the league was created. 
     If `success` is `False`, the `message` field will contain a decriptive error.
