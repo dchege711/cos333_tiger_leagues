@@ -11,6 +11,7 @@ from flask import (
     Blueprint, render_template, request, url_for, jsonify, session
 )
 from . import db, decorators
+from collections import defaultdict
 
 generic_500_msg = {
     "success": False, "status": 500, "message": "Internal Server Error"
@@ -45,7 +46,77 @@ def league_homepage(league_id):
     template should include information such as `standings, media_feed, 
     score_reports, upcoming_games`, etc.
     """
-    return "Display league info such as standings, media_feed, score_reports & upcoming_games"
+
+    cursor = database.execute(
+        (
+            "SELECT points_per_win, points_per_draw, points_per_loss, "
+            "FROM league_info WHERE league_id = %s"
+        ),
+        values=[league_id]
+    )
+
+    row = cursor.fetchone()
+
+    standings_info = {}
+
+    if row is None:
+        return standings_info
+    else:
+        points_per_win = row['points_per_win']
+        points_per_draw = row['points_per_draw']
+        points_per_loss = row['points_per_loss']
+
+    cursor = database.execute(
+        (
+            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2, "
+            "FROM match_info WHERE league_id = %s"
+        ),
+        values=[league_id]
+    )
+
+    row = cursor.fetchone()
+
+    while row is not None:
+        key1 = row['user_id_1']
+        key2 = row['user_id_2']
+
+        if 'key1' not in standings_info:
+            standing_info[key1] = defaultdict(lambda:0)
+        if 'key2' not in standings_info:
+            standing_info[key2] = defaultdict(lambda:0)
+
+        standings_info[key1]['goals_formed'] += row['score_user_1']
+        standings_info[key2]['goals_formed'] += row['score_user_2']
+        standings_info[key1]['goals_allowed'] += row['score_user_2']
+        standings_info[key2]['goals_allowed'] += row['score_user_1']
+        if (row['score_user_1'] > row['score_user_2']):
+            standings_info[key1]['wins'] += 1
+            standings_info[key1]['points'] += points_per_win
+            standings_info[key2]['losses'] += 1
+            standings_info[key2]['points'] += points_per_loss
+        elif (row['score_user_1'] < row['score_user_2'])
+            standings_info[key2]['wins'] += 1
+            standings_info[key2]['points'] += points_per_win
+            standings_info[key1]['losses'] += 1
+            standings_info[key1]['points'] += points_per_loss
+        else:
+            standings_info[key1]['draws'] += 1
+            standings_info[key1]['points'] += points_per_draw
+            standings_info[key2]['draws'] += 1
+            standings_info[key2]['points'] += points_per_draw
+        row = cursor.fetchone()
+
+    for key in standings_info:
+        cursor = database.execute(
+            (
+                "SELECT name FROM users WHERE user_id = %s"
+            ),
+            values=key
+        )
+        standings_info[key]['name'] = cursor.fetchone()
+
+    return standings_info
+
 
 @bp.route("/create", methods=["GET", "POST"])
 @decorators.login_required
