@@ -6,6 +6,7 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 """
 
 import json
+import random
 from datetime import date
 
 from flask import (
@@ -254,6 +255,35 @@ def join_league(league_id):
         )
     if request.method == "POST":
         return NotImplementedError()
+
+    """
+    fixture_generator() creates all the fixtures for a league. It should only be 
+    called once per league. The fixtures will be generated randomly and will
+    have each user play the other memebers of the league once. Each match will also 
+    have a deadline that is relative to the league's deadline. Eventually, admin's
+    will also have control over the number of fixtures played per player.
+    """
+
+def fixture_generator(league_id, league_deadline)
+    # we need a more effective of finding all the users in the league. 
+    # as of right now we need to iterate through every user and the league_ids they pertain to
+
+    cursor = database.execute(
+        (
+            "SELECT user_id FROM league_responses WHERE league_id = %s"
+        ),
+        values=[league_id]
+    )
+    tempusers[]
+
+    # need a loop that'll generate fixtures. goes from 1 to len(users)
+    
+
+
+    for i in range(1,len(users)):
+        for user in users:
+            x = random.randint(1,len(users))
+
 
 def __get_join_league_info(league_id):
     """
