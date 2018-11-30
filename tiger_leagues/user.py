@@ -13,16 +13,27 @@ bp = Blueprint("user", __name__, url_prefix="/user")
 
 def get_user(net_id):
     """
+    @param `net_id` [str]: The Princeton Net ID of the user
     @returns `dict` representing a user in the database. 
-    
     @returns `None` If the user doesn't exist.
     """
-    return {
-        "user_id": 0, "name": "Chege Gitau", "net_id": net_id, 
-        "email": "dgitau@princeton.edu", "phone_num": "555-555-5555",
-        "room": "Henry Hall A34", 
-        "associated_leagues": __get_user_league_info_list(0)
-    }
+    cursor = database.execute((
+        "SELECT user_id, name, net_id, email, phone_num, room, league_ids "
+        "FROM users WHERE net_id = %s"
+    ), values=[net_id])
+    user_data = cursor.fetchone()
+    if user_data is None: return user_data
+
+    # Although psycopg2 allows us to change values already in the table, we 
+    # cannot add new fields that weren't columns, thus the need for a new dict
+    mutable_user_data = dict(**user_data)
+    if user_data["league_ids"] is None:
+        mutable_user_data["associated_leagues"] = []
+    else:
+        mutable_user_data["associated_leagues"] = __get_user_league_info_list(
+            [int(x) for x in user_data["league_ids"].split(", ")]
+        )
+    return mutable_user_data
 
 @bp.route("/profile", methods=["GET"])
 @decorators.login_required
@@ -71,13 +82,29 @@ def __create_user_profile(user_info):
         ]
     )
 
-def __get_user_league_info_list(user_id):
+def __get_user_league_info_list(league_ids):
     """
-    @return `List[dict]` containing all leagues that a user is associated with.
-    
+    @param List[int]: a list of all the league IDs that a user is associated with
+
+    @return `List[dict]` containing all leagues that a user is associated with. 
+    Expected keys: `league_name`, `league_id`, `status`.
     """
-    return [
-        {"league_name": "FIFA League", "league_id": 0, "status": "joined"},
-        {"league_name": "Table Tennis", "league_id": 1, "status": "pending"},
-        {"league_name": "Dragonball Z", "league_id": 2, "status": "pending"},
-    ]
+    league_info_list = []
+    for league_id in league_ids:
+        cursor = database.execute(
+            (
+                "SELECT league_name.league_id, league_name, status FROM league_info, {}"
+                "WHERE league_name.league_id = {}.league_id "
+                "AND league_name.league_id = %s"
+            ),
+            values=[league_id],
+            dynamic_table_or_column_names=[
+                "league_responses_{}".format(league_id),
+                "league_responses_{}".format(league_id)
+            ]
+        )
+        info = cursor.fetchone()
+        if info is not None:
+            league_info_list.append(info)
+        
+    return league_info_list
