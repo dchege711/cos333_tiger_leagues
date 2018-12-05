@@ -6,9 +6,10 @@ Exposes a blueprint that handles requests made to `` endpoint
 
 """
 
+from warnings import warn
 import requests as python_requests
 from flask import (
-    Blueprint, render_template, session, redirect, url_for, request
+    Blueprint, render_template, session, redirect, url_for, request, flash
 )
 from . import user, cas_client
 
@@ -47,8 +48,12 @@ def cas_login():
     Potentially useful files: ./user.py
 
     """
-    if request.method == "GET":
 
+    warn("Implement the actual CAS login. A whitelist is not good practice!")
+
+    if request.method == "GET":
+        """
+        Change this 
         if request.args.get("ticket"):
             print("Ticket:", request.url, "\n")
             cas_response = python_requests.get(
@@ -67,13 +72,19 @@ def cas_login():
                     url_for(".cas_login", _external=True)
                 )
             )
+        """
+        return render_template("/auth/cas_placeholder.html")
 
+    if request.method == "POST":
+        net_id = request.form["net_id"]
+        if net_id in {"dgitau", "ixue", "oumeh", "ruio", "castoria"}:
+            user_data = user.get_user(net_id)
+        else:
+            flash("Invalid login credentials", category="message")
+            return redirect(url_for("auth.index"))
 
-    # cas.authenticate(request, redirect, session)
-
-    # if session.get("username"):
-    #     session["user"] = user.get_user(session.get("username"))
-    
-    # if session.get("user") is not None: 
-    #     return redirect(url_for("league.index"))
-    # return redirect(url_for("user.display_user_profile"))
+        session["user"] = user_data
+        if user_data is not None:
+            return redirect(url_for("league.index"))
+        else:
+            return redirect(url_for("user.display_user_profile"))
