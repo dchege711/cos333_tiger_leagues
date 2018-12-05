@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <style>
+
+        /* https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Aligning_Items_in_a_Flex_Container */
+        div.box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+            
+        .box button {
+            min-width: 30%;
+            min-height: 20px;
+        }
+
+    </style>
+
+
+
+    <div class="box">
+
+        <form method="POST">
+            <label for="net_id">Enter your Princeton Net ID: </label>
+            <input type="text" name="net_id" required>
+
+            <br />
+            <br />
+
+            <div class="w3-center">
+                <button class="w3-btn w3-round w3-orange" type="submit">Login</button>
+            </div>
+            
+        </form>
+
+    </div>
+
+{% endblock %}
