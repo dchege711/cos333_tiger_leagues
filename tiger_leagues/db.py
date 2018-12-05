@@ -5,8 +5,7 @@ This file acts as the central access to the database.
 
 """
 
-# add a helper function that catchs database errors
-
+from warnings import warn
 import atexit
 from psycopg2 import connect, extras, sql
 from . import config
@@ -91,6 +90,10 @@ class Database:
 
         @yields a row fetched from the cursor.
         """
+        warn(
+            "Unlike sqlite, postgres provides an iterable cursor. No need to call me", 
+            DeprecationWarning
+        )
         row = cursor.fetchone()
         while row is not None:
             yield row
