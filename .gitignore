@@ -1,6 +1,7 @@
 # Custom rules
 coverage/
 .nyc_output/
+.vscode/
 
 
 # Byte-compiled / optimized / DLL files

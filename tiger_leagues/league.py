@@ -10,7 +10,7 @@ from datetime import date
 from collections import defaultdict
 
 from flask import (
-    Blueprint, render_template, request, url_for, jsonify, session, redirect
+    Blueprint, render_template, request, url_for, jsonify, session, redirect, flash
 )
 from . import db, decorators, user as user_client
 
@@ -55,7 +55,7 @@ def league_homepage(league_id):
     associated_leagues = session.get("user")["associated_leagues"]
     cursor = database.execute(
         (
-            "SELECT points_per_win, points_per_draw, points_per_loss "
+            "SELECT points_per_win, points_per_draw, points_per_loss, league_name "
             "FROM league_info WHERE league_id = %s"
         ),
         values=[league_id]
@@ -65,6 +65,7 @@ def league_homepage(league_id):
     points_per_win = row['points_per_win']
     points_per_draw = row['points_per_draw']
     points_per_loss = row['points_per_loss']
+    league_name = row['league_name']
 
     cursor = database.execute(
         (
@@ -118,7 +119,7 @@ def league_homepage(league_id):
 
     return render_template(
         "/league/league_homepage.html", 
-        standings=standings_info, associated_leagues=associated_leagues
+        standings=standings_info, associated_leagues=associated_leagues, league_name=league_name
     )
 
 
@@ -346,6 +347,5 @@ def join_league(league_id):
                 values=[", ".join(str(x) for x in user["league_ids"]), user["user_id"]]
             )
             session["user"] = user_client.get_user(user["net_id"])
-
-        return "Request Submitted!"
-    
+        flash("Request Submitted!")
+        return redirect(url_for("league.browse_leagues"))
