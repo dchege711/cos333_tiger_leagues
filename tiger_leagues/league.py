@@ -10,7 +10,7 @@ from datetime import date
 from collections import defaultdict
 
 from flask import (
-    Blueprint, render_template, request, url_for, jsonify, session
+    Blueprint, render_template, request, url_for, jsonify, session, redirect
 )
 from . import db, decorators, user as user_client
 
@@ -40,10 +40,9 @@ def index():
     user = session.get("user")
 
     if user["associated_leagues"]:
-        print(user)
         return league_homepage(user["associated_leagues"][0]["league_id"])
     
-    return "Display page for a user that's not in any league"
+    return redirect(url_for(".browse_leagues"))
 
 @bp.route("/<int:league_id>/", methods=["GET"])
 @decorators.login_required
@@ -262,7 +261,8 @@ def browse_leagues():
         key=lambda league_info: league_info["registration_deadline"]
     )
 
-    return "\n".join(str(x) for x in unjoined_leagues)
+    return render_template(
+        "/league/browse.html", leagues=unjoined_leagues)
 
 
 @bp.route("/<int:league_id>/join", methods=["GET", "POST"])

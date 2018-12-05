@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="w3-container large_portrait_margins w3-center">
+
+        <p class="w3-container">
+            <h4>Create a New League</h4>
+            <button class="w3-button w3-btn w3-green"
+            onclick="document.location = `{{ url_for('league.create_league', _external=True) }}`">
+            Create</button>
+            <hr>
+            <h4>Join an Existing League</h4>
+            <table class="w3-table-all">
+                <tr>
+                    <th>League Name</th>
+                    <th>Description</th>
+                    <th>Registration Deadline</th>
+                    <th></th>
+                </tr>
+                {% for league in leagues %}
+                    <tr>
+                        <td>{{ league["league_name"] }}</td>
+                        <td>{{ league["description"] }}</td>
+                        <td>{{ league["registration_deadline"] }}</td>
+                        <td><button class="w3-button w3-btn w3-green"
+                            onclick="document.location = `{{ url_for('league.join_league', league_id=league['league_id'], _external=True) }}`">
+                            Join</button></td>
+                            
+
+                    </tr>
+                {% endfor %}
+            </table>
+        </p>
+    </div>
+
+{% endblock %}

@@ -45,7 +45,7 @@ def cas_login():
     Potentially useful files: ./user.py
 
     """
-    net_id_from_cas = "dgitau"
+    net_id_from_cas = "ixue"
 
     session["user"] = user.get_user(net_id_from_cas)
     if session.get("user") is not None: 
