@@ -19,8 +19,10 @@ generic_500_msg = {
 }
 
 STATUS_REQUESTED = "requested"
-STATUS_APPROVED = "approved"
+STATUS_MEMBER = "member"
 STATUS_DENIED = "denied"
+STATUS_ADMIN = "admin"
+STATUS_INACTIVE = "inactive"
 
 database = db.Database()
 bp = Blueprint("league", __name__, url_prefix="/league")
@@ -349,3 +351,16 @@ def join_league(league_id):
             session["user"] = user_client.get_user(user["net_id"])
         flash("Request Submitted!")
         return redirect(url_for("league.browse_leagues"))
+
+    def leave_league(league_id):
+        assert isinstance(league_id, int) # Because of SQL injection...
+        user = session.get("user")
+
+        database.execute(
+            (
+                "UPDATE league_responses_{} "
+                "SET status = %s "
+                "WHERE user_id =  %s"
+            ),
+                values=["inactive", user["user_id"]], dynamic_table_or_column_names=league_id
+            )
