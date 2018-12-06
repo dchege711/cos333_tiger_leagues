@@ -1,0 +1,60 @@
+{% block content %}
+    <div class="w3-container">
+
+        <div class="w3-container w3-twothird">
+
+            <div class="w3-container">
+            </div>
+
+            <div class="w3-container">
+            </div>
+
+        </div>
+
+        <div class="w3-container w3-third">
+            
+            <!-- Display Pending Scores "not played, pending, approved"-->
+            <div class="w3-container">
+                <h4>Pending Scores</h4>
+                <hr>
+
+                <table class="w3-table-all">
+                    <tr>
+                        <th>Match ID</th>
+                        <th>Player 1</th>
+                        <th>P1 Score</th>
+                        <th>P2 Score</th>
+                        <th>Player 2</th>
+                        <th>Approve ?</th>
+                    </tr>
+
+                    {% for match in reported_matches %}
+                        <tr id="match_data"+{{match["match_id"]}}>
+                            <td>{{ match["match_id"] }}</td>
+                            <td>{{ match["player_one"] }}</td>
+                            <td>{{ match["p1_score"] }}</td>
+                            <td>{{ match["p2_score"] }}</td>
+                            <td>{{ match["player_two"] }}</td>
+                            <td>{{ onclick="updatePendingScores(match_id)" }}</td>
+                            
+                        </tr>
+                    {% endfor %}
+
+
+                </table>
+
+            </div>
+
+        </div>
+           
+    </div>
+    
+    <script type="text/javascript">
+        updatePendingScores(match_id)
+        {
+            database.execute(
+                "UPDATE match_info SET status = %s WHERE match_id = match_id", "approved")
+        }
+    </script>
+
+{% endblock %}
