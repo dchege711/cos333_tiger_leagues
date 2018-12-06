@@ -137,7 +137,6 @@ def create_league():
         return render_template("/league/create_league.html")
     elif request.method == "POST":
         create_league_info = request.json
-        create_league_info["UserId"] = 0
         results = __create_league(create_league_info)
         if results["success"]: return jsonify(results)
         return "500. Internal Server Error"
@@ -166,19 +165,25 @@ def __create_league(league_info):
                 "message": "Malformed input detected!"
             }
 
-    league_basics = (
-        league_info["league_name"], league_info["description"], 
-        league_info["points_per_win"], league_info["points_per_draw"], 
-        league_info["points_per_loss"], league_info["registration_deadline"],
-        json.dumps(sanitized_additional_questions)
-    )
+    league_basics = {
+        "creator_user_id": session.get("user")["user_id"],
+        "league_name": league_info["league_name"], 
+        "description": league_info["description"], 
+        "points_per_win": league_info["points_per_win"], 
+        "points_per_draw": league_info["points_per_draw"], 
+        "max_num_players": league_info["max_num_players"], 
+        "match_frequency_in_days": league_info["match_frequency_in_days"],
+        "points_per_loss": league_info["points_per_loss"], 
+        "registration_deadline": league_info["registration_deadline"],
+        "additional_questions": json.dumps(sanitized_additional_questions)
+    }
+    keys_in_order = list(league_basics.keys())
     cursor = database.execute(
-        (
-            "INSERT INTO league_info ("
-            "league_name, description, points_per_win, points_per_draw, "
-            "points_per_loss, registration_deadline, additional_questions) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s);"
-        ), 
+        "INSERT INTO league_info ({}) VALUES ({});".format(
+            ", ".join(["{}" for _ in keys_in_order]),
+            ", ".join(["%({})s".format(key) for key in keys_in_order])
+        ),
+        dynamic_table_or_column_names=keys_in_order,
         values=league_basics
     )
     if cursor is None: return {

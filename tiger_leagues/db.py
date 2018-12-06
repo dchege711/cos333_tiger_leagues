@@ -52,8 +52,8 @@ class Database:
             "CREATE TABLE IF NOT EXISTS league_info ("
             "league_id SERIAL PRIMARY KEY, league_name VARCHAR(255), "
             "description TEXT, points_per_win INT, points_per_draw INT, "
-            "points_per_loss INT, registration_deadline DATE, "
-            "additional_questions TEXT);"
+            "points_per_loss INT, registration_deadline DATE, max_num_players INT, "
+            "creator_user_id INT NOT NULL, match_frequency_in_days INT, additional_questions TEXT);"
         ))
 
     def execute(self, statement, values=None, dynamic_table_or_column_names=None, 
