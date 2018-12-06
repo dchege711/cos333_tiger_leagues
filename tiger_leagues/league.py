@@ -264,7 +264,7 @@ def join_league(league_id):
     will also have control over the number of fixtures played per player.
     """
 
-def fixture_generator(league_id, league_deadline)
+def fixture_generator(league_id, league_deadline):
     # we need a more effective of finding all the users in the league. 
     # as of right now we need to iterate through every user and the league_ids they pertain to
 
@@ -274,7 +274,47 @@ def fixture_generator(league_id, league_deadline)
         ),
         values=[league_id]
     )
-    tempusers[]
+    
+    users = []
+    row = cursor.fetchone()
+
+    for row in cursor:
+        users.append(row)
+        row = cursor.fetchone()
+
+    length = len(users)
+    odd = 0
+
+    if length % 2 is not 0:
+        length += 1
+        odd = 1
+
+    tempList1 = (length/2)
+    tempList2 = (length/2)
+
+    for i in range(0, length-1):
+        tempList1.insert(i, users[i])
+        if i is 0 and odd is 1:
+            tempList2.insert(i, None)
+        else:
+            tempList2.insert(i, users[length-1-i])
+
+    for i in range(0,length-1):
+        for i in range(0, length-1):
+            if tempList1[i] is not None and tempList2[i] is not None:
+                cursor = database.execute(
+                    (
+                        "INSERT match_info ("
+                        "user_id_1, user_id_2, league_id) "
+                        "VALUES (%s, %s, %s);"
+                    ),
+                    values=[tempList1[i], tempList2[i], league_id]
+                )
+        tempList1.insert(1, tempList2[0])
+        tempList2.insert(length, tempList1[length])
+        del tempList1[-1]
+        del tempList2[0]
+
 
     # need a loop that'll generate fixtures. goes from 1 to len(users)
     
