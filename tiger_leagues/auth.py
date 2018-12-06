@@ -23,6 +23,9 @@ def index():
     transfer them to the `league.index()` method.
 
     """
+    if session.get("user") is not None: 
+        return redirect(url_for("league.index"))
+
     return render_template("/auth/login.html")
 
 @bp.route("/cas", methods=["GET", "POST"])
@@ -89,3 +92,11 @@ def cas_login():
         else:
             session["user"] = {"net_id": net_id}
             return redirect(url_for("user.display_user_profile"))
+
+@bp.route("/logout", methods=["GET"])
+def cas_logout():
+    """
+    @GET Log out the currently logged in user. Redirect to the login page.
+    """
+    session["user"] = None
+    return redirect(url_for("auth.index"))

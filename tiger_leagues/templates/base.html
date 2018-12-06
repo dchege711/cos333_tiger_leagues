@@ -19,20 +19,27 @@
     <div class="navbar-header">
       <a class="navbar-brand" href="{{url_for('auth.index')}}">TigerLeagues</a>
     </div>
+    {% if session.get("user") %}
     <ul class="nav navbar-nav">
-      <!-- <li class="active"><a href="/leagues">Leagues</a></li> -->
       <li class="dropdown">
         <a class="dropdown-toggle" data-toggle="dropdown" href="#">Leagues <span class="caret"></span></a>
         <ul class="dropdown-menu">
-            {% block dropdown_league_list %}{% endblock %}
+            {% block dropdown_league_list %}
+            
+              {% for league_info in session.get("user")["associated_leagues"] %}
+                <li>
+                    <a href="{{url_for('league.league_homepage', league_id=league_info['league_id'])}}">{{league_info["league_name"]}} ({{league_info["status"]}})</a>
+                </li>  
+              {% endfor %}
+              <li><a href="{{url_for('league.browse_leagues')}}" class="w3-green">Join or Create League!</a></li>
+            {% endblock %}
+        
         </ul>
       </li>
+      <li class="w3-right"><a href="{{url_for('auth.cas_logout')}}"><span class="glyphicon glyphicon-log-out"></span>Logout</a></li>
       <!-- <button class="btn btn-danger navbar-btn">Button</button> -->
     </ul>
-    <!-- <ul class="nav navbar-nav navbar-right">
-      <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
-      <li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
-    </ul> -->
+    {% endif %}
   </div>
 </nav>
 
