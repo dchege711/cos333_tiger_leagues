@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <style>
+        button {
+            width: 75%;
+            margin: 3px;
+        }
+
+        button.inactive {
+            cursor: not-allowed;
+        }
+
+    </style>
+
+    <div class="w3-container">
+        <div class="w3-center large_portrait_margins">
+            <h4>{{league_info["league_name"]}} Admin Panel</h4>
+            <hr>
+            <button class="w3-button w3-large w3-round w3-green" onclick="document.location = ''">Change League Info</button>
+            <br />
+            <button class="w3-button w3-large w3-round w3-green" onclick="document.location = 'approve-members'">View & Approve Join Requests</button>
+            <br />
+            <button class="w3-button w3-large w3-round w3-gray inactive">Start League</button>
+            <br />
+            <button class="w3-button w3-large w3-round w3-gray inactive">Start Playoffs</button>
+            <br />
+            <button class="w3-button w3-large w3-round w3-gray inactive">View & Approve Scores</button>
+            <br />
+            <button class="w3-button w3-large w3-round w3-red inactive">Delete the League</button>
+            <br />
+        </div>
+    </div>
+
+{% endblock %}
