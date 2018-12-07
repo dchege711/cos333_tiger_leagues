@@ -371,15 +371,28 @@ def join_league(league_id):
         flash("Request Submitted!")
         return redirect(url_for("league.browse_leagues"))
 
+@bp.route("/<int:league_id>/leave-league", methods=["POST"])
+@decorators.login_required
 def leave_league(league_id):
-    assert isinstance(league_id, int) # Because of SQL injection...
     user = session.get("user")
-
-    database.execute(
-        (
-            "UPDATE league_responses_{} "
-            "SET status = %s "
-            "WHERE user_id =  %s"
-        ),
-            values=["inactive", user["user_id"]], dynamic_table_or_column_names=league_id
+    if request.method == "POST":
+        database.execute(
+            "UPDATE {} SET status = %s WHERE user_id =  %s",
+            values=[STATUS_INACTIVE, user["user_id"]], 
+            dynamic_table_or_column_names=["league_responses_{}".format(league_id)]
         )
+        associated_league_ids = set(user["league_ids"])
+        if league_id in associated_league_ids:
+            associated_league_ids.remove(league_id)
+        database.execute(
+            "UPDATE users SET league_ids=%s WHERE user_id=%s",
+            values=[
+                ", ".join([str(x) for x in associated_league_ids]),
+                user["user_id"]
+            ]
+        )
+        session["user"] = user_client.get_user(user["net_id"])
+
+        return jsonify({
+            "success": True, "message": "Successfully left the league"
+        })
