@@ -18,7 +18,7 @@ generic_500_msg = {
     "success": False, "status": 500, "message": "Internal Server Error"
 }
 
-STATUS_REQUESTED = "requested"
+STATUS_PENDING = "pending"
 STATUS_MEMBER = "member"
 STATUS_DENIED = "denied"
 STATUS_ADMIN = "admin"
@@ -42,7 +42,7 @@ def index():
     user = session.get("user")
 
     if user["associated_leagues"]:
-        return league_homepage(user["associated_leagues"][0]["league_id"])
+        return league_homepage(list(user["associated_leagues"].keys())[0])
     
     return redirect(url_for(".browse_leagues"))
 
@@ -153,6 +153,7 @@ def __create_league(league_info):
     `league_id`.
 
     """
+    creator_user_id = session.get("user")["user_id"]
     sanitized_additional_questions = {}
     for idx, question in enumerate(league_info["additional_questions"].values()):
         try:
@@ -166,7 +167,7 @@ def __create_league(league_info):
             }
 
     league_basics = {
-        "creator_user_id": session.get("user")["user_id"],
+        "creator_user_id": creator_user_id,
         "league_name": league_info["league_name"], 
         "description": league_info["description"], 
         "points_per_win": league_info["points_per_win"], 
@@ -179,7 +180,7 @@ def __create_league(league_info):
     }
     keys_in_order = list(league_basics.keys())
     cursor = database.execute(
-        "INSERT INTO league_info ({}) VALUES ({});".format(
+        "INSERT INTO league_info ({}) VALUES ({}) RETURNING league_id;".format(
             ", ".join(["{}" for _ in keys_in_order]),
             ", ".join(["%({})s".format(key) for key in keys_in_order])
         ),
@@ -190,9 +191,7 @@ def __create_league(league_info):
         "success": False, "status": 500, "message": "Internal Server Error"
     }
 
-    cursor = database.execute("SELECT MAX(league_id) from league_info;")
-    if cursor is None: return generic_500_msg
-    league_id = cursor.fetchone()[0]
+    league_id = cursor.fetchone()["league_id"]
 
     # questions provided by the creator of league, given as the keys in league_info
     if sanitized_additional_questions:
@@ -212,6 +211,24 @@ def __create_league(league_info):
             "user_id INT PRIMARY KEY UNIQUE, status VARCHAR(255));"
         ).format(league_id))
 
+    # Set a default row for the league creator as an admin
+    database.execute(
+        "INSERT INTO {} (user_id, status) VALUES (%s, %s);",
+        values=[creator_user_id, STATUS_ADMIN],
+        dynamic_table_or_column_names=[
+            "league_responses_{}".format(league_id)
+        ]
+    )
+
+    database.execute(
+        "UPDATE users SET league_ids = %s WHERE user_id = %s;",
+        values=[
+            ", ".join(str(x) for x in session.get("user")["league_ids"] + [league_id]),
+            creator_user_id
+        ]
+    )
+    session["user"] = user_client.get_user(session.get("user")["net_id"])
+
     return {
         "success": True, "status": 200, 
         "message": {
@@ -220,7 +237,7 @@ def __create_league(league_info):
         }
     }
 
-def __get_join_league_info(league_id):
+def get_join_league_info(league_id):
     """
     @returns `dict` Keys: `league_id`, `league_id`, `league_name`, `description`, 
     `points_per_win`, `points_per_draw`, `points_per_loss`, 
@@ -232,7 +249,7 @@ def __get_join_league_info(league_id):
         (
             "SELECT league_id, league_name, description, points_per_win, "
             "points_per_draw, points_per_loss, additional_questions, "
-            "registration_deadline, match_frequency_in_days "
+            "registration_deadline, match_frequency_in_days, max_num_players "
             "FROM league_info WHERE league_id = %s"
         ), 
         values=[league_id]
@@ -285,7 +302,7 @@ def join_league(league_id):
     the @GET request.
     """
 
-    league_info = __get_join_league_info(league_id)
+    league_info = get_join_league_info(league_id)
 
     # If the league doesn't exist, let the user know
     if league_info is None:
@@ -336,7 +353,7 @@ def join_league(league_id):
 
         # Record the response of the user
         expected_info["user_id"] = user["user_id"]
-        expected_info["status"] = STATUS_REQUESTED
+        expected_info["status"] = STATUS_PENDING
         database.execute(
             (
                 "INSERT INTO league_responses_{} ({}) VALUES ({}) ON CONFLICT (user_id) DO NOTHING;".format(
@@ -358,15 +375,15 @@ def join_league(league_id):
         flash("Request Submitted!")
         return redirect(url_for("league.browse_leagues"))
 
-    def leave_league(league_id):
-        assert isinstance(league_id, int) # Because of SQL injection...
-        user = session.get("user")
+def leave_league(league_id):
+    assert isinstance(league_id, int) # Because of SQL injection...
+    user = session.get("user")
 
-        database.execute(
-            (
-                "UPDATE league_responses_{} "
-                "SET status = %s "
-                "WHERE user_id =  %s"
-            ),
-                values=["inactive", user["user_id"]], dynamic_table_or_column_names=league_id
-            )
+    database.execute(
+        (
+            "UPDATE league_responses_{} "
+            "SET status = %s "
+            "WHERE user_id =  %s"
+        ),
+            values=["inactive", user["user_id"]], dynamic_table_or_column_names=league_id
+        )
