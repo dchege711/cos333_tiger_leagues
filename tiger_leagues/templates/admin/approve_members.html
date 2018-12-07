@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="w3-container large_portrait_margins w3-center">
+
+        <p class="w3-container">
+            <strong>Join Requests for {{league_info["league_name"]}}</strong>
+            <hr>
+        </p>
+
+        <div class="w3-container">
+
+            <table class="w3-table-all" id="table_join_requests">
+
+                {% set question_ids = league_info["additional_questions"].keys() %}
+                <thead>
+                    <tr>
+                        <th>Player Name</th>
+                        {% for question_id in question_ids %}
+                        <th>{{league_info["additional_questions"][question_id]["question"]}}</th>
+                        {% endfor %}
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                {% set ns = namespace(num_approved_players = 0) %}
+                <tbody>
+                    {% for join_request in join_requests %}
+                    <tr>
+                        <td>{{join_request["name"]}}</td>
+                        {% for question_id in question_ids %}
+                        <td>{{join_request[question_id]}}</td>
+                        {% endfor %}
+                        <td>
+                            <select name="{{join_request['user_id']}}" required>
+                                {% if join_request["status"] == "pending" %}
+                                    <option value="pending" selected>Pending</option>
+                                {% else %}
+                                    <option value="pending">Pending</option>
+                                {% endif %}
+                                {% if join_request["status"] == "member" %}
+                                    {% set ns.num_approved_players = ns.num_approved_players + 1 %}
+                                    <option value="member" selected>Member</option>
+                                {% else %}
+                                    <option value="member">Member</option>
+                                {% endif %}
+                                {% if join_request["status"] == "denied" %}
+                                    <option value="denied" selected>Denied</option>
+                                {% else %}
+                                    <option value="denied">Denied</option>
+                                {% endif %}
+                                {% if join_request["status"] == "admin" %}
+                                    {% set ns.num_approved_players = ns.num_approved_players + 1 %}
+                                    <option value="admin" selected>Admin</option>
+                                {% else %}
+                                    <option value="admin">Admin</option>
+                                {% endif %}
+                            </select>
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+                </tbody>
+                
+            </table>
+            <br />
+            <p>{{ns.num_approved_players}} active players / {{league_info["max_num_players"]}} possible players</p>
+            <br />
+            <button onclick="saveTableChanges();" class="w3-button w3-round w3-green">Save Changes</button>
+
+        </div>
+        
+    </div>
+
+    <script type="text/javascript">
+
+        function saveTableChanges() {
+            let tableElement = document.getElementById("table_join_requests");
+            let tableRows = tableElement.rows;
+            let cellIdx = tableRows[0].cells.length - 1;
+            let statusCounts = {pending: 0, admin: 0, denied: 0, member: 0};
+            let payload = {}, statusElement = null;
+            for (let rowIdx = 1; rowIdx < tableRows.length; rowIdx++) {
+                statusElement = tableRows[rowIdx].cells[cellIdx].children[0];
+                payload[statusElement.name] = statusElement.value;
+                statusCounts[statusElement.value] += 1;
+            }
+            
+            if (statusCounts.admin < 1) {
+                alert("The league must have at least 1 admin");
+                return;
+            } else {
+                sendHTTPRequest("POST", document.URL, payload)
+                    .then((response) => {
+                        response = JSON.parse(response);
+                        if (!response.success) {
+                            alert(response.message);
+                        } else {
+                            for (let rowIdx = 1; rowIdx < tableRows.length; rowIdx++) {
+                                statusElement = tableRows[rowIdx].cells[cellIdx].children[0];
+                                statusElement.value = response.message[statusElement.name];
+                            }
+                        }
+                    })
+                    .catch((err) => { alert(err.message); })
+            }
+        }
+    
+    </script>
+
+{% endblock %}
+

@@ -80,9 +80,12 @@ def league_requests(league_id):
             )
 
         join_requests = __fetch_league_requests()
+        user_id_to_status = {}
+        for join_request in join_requests:
+            user_id_to_status[join_request["user_id"]] = join_request["status"]
+
         return jsonify({
-            "success": True, "status": 200,
-            "message": [dict(**join_request) for join_request in join_requests]
+            "success": True, "status": 200, "message": user_id_to_status
         })
 
 @bp.route("/<int:league_id>/", methods=["GET"])
