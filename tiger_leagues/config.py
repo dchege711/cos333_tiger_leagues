@@ -23,6 +23,7 @@ if APP_ENV == "development":
         raise RuntimeError(results.stderr.decode("utf-8").strip())
 
     DATABASE_URL = results.stdout.decode("utf-8").strip()
+    
 elif APP_ENV == "production":
     # ... otherwise the app is running on Heroku and the URL is already set
     DATABASE_URL = environ["DATABASE_URL"]

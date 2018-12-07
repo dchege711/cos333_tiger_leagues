@@ -2,32 +2,13 @@
 
 {% block title %}League Standings{% endblock %}
 
-{% block dropdown_league_list %}
-    <li><a href="{{url_for('league.create_league')}}">Create New League!</a></li>
-    {% for league_info in league_info_list %}
-        <li>
-            {% if league_info["status"] == "joined" %}
-                <a href="{{url_for('league.league_homepage', league_id=associated_leagues['league_id'])}}">{{associated_leagues["league_name"]}} ({{associated_leagues["status"]}})</a>
-            {% endif %}
-            {% if league_info["status"] == "pending" %}
-                <a href="{{url_for('league.league_homepage', league_id=associated_leagues['league_id'])}}">{{associated_leagues["league_name"]}} ({{associated_leagues["status"]}})</a>
-            {% endif %}
-            {% if league_info["status"] == "rejected" %}
-                <a href="{{url_for('league.join_league', league_id=associated_leagues['league_id'])}}">{{associated_leagues["league_name"]}} ({{associated_leagues["status"]}})</a>
-            {% endif %}
-            {% if league_info["status"] == "" %}
-                <a href="{{url_for('league.join_league', league_id=associated_leagues['league_id'])}}">{{associated_leagues["league_name"]}} ({{associated_leagues["status"]}})</a>
-            {% endif %}
-        </li>
-    {% endfor %}
-{% endblock %}
-
 {% block content %}
     <div class="w3-container">
 
         <div class="w3-container w3-twothird">
 
             <div class="w3-container">
+                <h1>{{league_name}}</h1>
                 <h4>League Standings</h4>
                 <table class="w3-table-all">
                     <tr>

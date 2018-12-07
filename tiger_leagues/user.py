@@ -5,7 +5,7 @@ Exposes a blueprint that handles requests made to `/user/*` endpoint
 
 """
 
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, session, request, flash
 from . import db, decorators
 
 database = db.Database()
@@ -54,7 +54,7 @@ def display_user_profile():
     """
     return render_template("/user/user_profile.html", user=session.get("user"))
 
-@bp.route("/update", methods=["POST"])
+@bp.route("/profile", methods=["POST"])
 @decorators.login_required
 def update_user_profile():
     """
@@ -62,7 +62,40 @@ def update_user_profile():
     receive POST requests from the template rendered by user.displayUserProfile
 
     """
-    return NotImplementedError()
+    user_data = session.get("user")
+    submitted_data = request.form
+    changeable_cols = ["name", "email", "phone_num", "room"]
+    updated_col_names = []
+    updated_col_values = []
+    for column in changeable_cols:
+        if column in submitted_data:
+            updated_col_names.append(column)
+            updated_col_values.append(submitted_data[column])
+
+    if "user_id" not in user_data: 
+        # Then we have a new user...
+        updated_col_names += ["net_id"]
+        updated_col_values += [user_data["net_id"]]
+        database.execute(
+            "INSERT INTO users ({}) VALUES ({})".format(
+                ", ".join(["{}" for _ in updated_col_names ]),
+                ", ".join(["%s" for _ in updated_col_values ])
+            ),
+            values=updated_col_values,
+            dynamic_table_or_column_names=updated_col_names
+        )
+    else:
+        database.execute(
+            "UPDATE users SET {} WHERE user_id = %s".format(
+                ",".join(["{}=%s" for _ in updated_col_names])
+            ), 
+            values=updated_col_values + [user_data["user_id"]],
+            dynamic_table_or_column_names=updated_col_names
+        )
+
+    session["user"] = get_user(user_data["net_id"])
+    flash("User profile updated!")
+    return render_template("/user/user_profile.html", user=session.get("user"))
 
 def __create_user_profile(user_info):
     """

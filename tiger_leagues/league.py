@@ -10,7 +10,7 @@ from datetime import date
 from collections import defaultdict
 
 from flask import (
-    Blueprint, render_template, request, url_for, jsonify, session, redirect
+    Blueprint, render_template, request, url_for, jsonify, session, redirect, flash
 )
 from . import db, decorators, user as user_client
 
@@ -19,8 +19,10 @@ generic_500_msg = {
 }
 
 STATUS_REQUESTED = "requested"
-STATUS_APPROVED = "approved"
+STATUS_MEMBER = "member"
 STATUS_DENIED = "denied"
+STATUS_ADMIN = "admin"
+STATUS_INACTIVE = "inactive"
 
 database = db.Database()
 bp = Blueprint("league", __name__, url_prefix="/league")
@@ -55,7 +57,7 @@ def league_homepage(league_id):
     associated_leagues = session.get("user")["associated_leagues"]
     cursor = database.execute(
         (
-            "SELECT points_per_win, points_per_draw, points_per_loss "
+            "SELECT points_per_win, points_per_draw, points_per_loss, league_name "
             "FROM league_info WHERE league_id = %s"
         ),
         values=[league_id]
@@ -65,6 +67,7 @@ def league_homepage(league_id):
     points_per_win = row['points_per_win']
     points_per_draw = row['points_per_draw']
     points_per_loss = row['points_per_loss']
+    league_name = row['league_name']
 
     cursor = database.execute(
         (
@@ -118,7 +121,7 @@ def league_homepage(league_id):
 
     return render_template(
         "/league/league_homepage.html", 
-        standings=standings_info, associated_leagues=associated_leagues
+        standings=standings_info, associated_leagues=associated_leagues, league_name=league_name
     )
 
 
@@ -134,7 +137,6 @@ def create_league():
         return render_template("/league/create_league.html")
     elif request.method == "POST":
         create_league_info = request.json
-        create_league_info["UserId"] = 0
         results = __create_league(create_league_info)
         if results["success"]: return jsonify(results)
         return "500. Internal Server Error"
@@ -163,19 +165,25 @@ def __create_league(league_info):
                 "message": "Malformed input detected!"
             }
 
-    league_basics = (
-        league_info["league_name"], league_info["description"], 
-        league_info["points_per_win"], league_info["points_per_draw"], 
-        league_info["points_per_loss"], league_info["registration_deadline"],
-        json.dumps(sanitized_additional_questions)
-    )
+    league_basics = {
+        "creator_user_id": session.get("user")["user_id"],
+        "league_name": league_info["league_name"], 
+        "description": league_info["description"], 
+        "points_per_win": league_info["points_per_win"], 
+        "points_per_draw": league_info["points_per_draw"], 
+        "max_num_players": league_info["max_num_players"], 
+        "match_frequency_in_days": league_info["match_frequency_in_days"],
+        "points_per_loss": league_info["points_per_loss"], 
+        "registration_deadline": league_info["registration_deadline"],
+        "additional_questions": json.dumps(sanitized_additional_questions)
+    }
+    keys_in_order = list(league_basics.keys())
     cursor = database.execute(
-        (
-            "INSERT INTO league_info ("
-            "league_name, description, points_per_win, points_per_draw, "
-            "points_per_loss, registration_deadline, additional_questions) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s);"
-        ), 
+        "INSERT INTO league_info ({}) VALUES ({});".format(
+            ", ".join(["{}" for _ in keys_in_order]),
+            ", ".join(["%({})s".format(key) for key in keys_in_order])
+        ),
+        dynamic_table_or_column_names=keys_in_order,
         values=league_basics
     )
     if cursor is None: return {
@@ -224,7 +232,8 @@ def __get_join_league_info(league_id):
         (
             "SELECT league_id, league_name, description, points_per_win, "
             "points_per_draw, points_per_loss, additional_questions, "
-            "registration_deadline FROM league_info WHERE league_id = %s"
+            "registration_deadline, match_frequency_in_days "
+            "FROM league_info WHERE league_id = %s"
         ), 
         values=[league_id]
     )
@@ -346,6 +355,18 @@ def join_league(league_id):
                 values=[", ".join(str(x) for x in user["league_ids"]), user["user_id"]]
             )
             session["user"] = user_client.get_user(user["net_id"])
+        flash("Request Submitted!")
+        return redirect(url_for("league.browse_leagues"))
 
-        return "Request Submitted!"
-    
+    def leave_league(league_id):
+        assert isinstance(league_id, int) # Because of SQL injection...
+        user = session.get("user")
+
+        database.execute(
+            (
+                "UPDATE league_responses_{} "
+                "SET status = %s "
+                "WHERE user_id =  %s"
+            ),
+                values=["inactive", user["user_id"]], dynamic_table_or_column_names=league_id
+            )

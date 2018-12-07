@@ -11,7 +11,7 @@ import requests as python_requests
 from flask import (
     Blueprint, render_template, session, redirect, url_for, request, flash
 )
-from . import user, cas_client
+from . import user as user_client, cas_client
 
 cas = cas_client.CASClient()
 bp = Blueprint("auth", __name__, url_prefix="")
@@ -23,6 +23,9 @@ def index():
     transfer them to the `league.index()` method.
 
     """
+    if session.get("user") is not None: 
+        return redirect(url_for("league.index"))
+
     return render_template("/auth/login.html")
 
 @bp.route("/cas", methods=["GET", "POST"])
@@ -78,7 +81,7 @@ def cas_login():
     if request.method == "POST":
         net_id = request.form["net_id"]
         if net_id in {"dgitau", "ixue", "oumeh", "ruio", "castoria"}:
-            user_data = user.get_user(net_id)
+            user_data = user_client.get_user(net_id)
         else:
             flash("Invalid login credentials", category="message")
             return redirect(url_for("auth.index"))
@@ -87,4 +90,13 @@ def cas_login():
         if user_data is not None:
             return redirect(url_for("league.index"))
         else:
+            session["user"] = {"net_id": net_id}
             return redirect(url_for("user.display_user_profile"))
+
+@bp.route("/logout", methods=["GET"])
+def cas_logout():
+    """
+    @GET Log out the currently logged in user. Redirect to the login page.
+    """
+    session["user"] = None
+    return redirect(url_for("auth.index"))
