@@ -232,7 +232,8 @@ def __get_join_league_info(league_id):
         (
             "SELECT league_id, league_name, description, points_per_win, "
             "points_per_draw, points_per_loss, additional_questions, "
-            "registration_deadline FROM league_info WHERE league_id = %s"
+            "registration_deadline, match_frequency_in_days "
+            "FROM league_info WHERE league_id = %s"
         ), 
         values=[league_id]
     )
