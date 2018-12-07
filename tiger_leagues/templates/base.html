@@ -25,18 +25,30 @@
       <li class="dropdown">
         <a class="dropdown-toggle" data-toggle="dropdown" href="#">Leagues <span class="caret"></span></a>
         <ul class="dropdown-menu">
-            {% block dropdown_league_list %}
-            
-              {% for league_info in session.get("user")["associated_leagues"] %}
+              {% for league_info in session.get("user")["associated_leagues"].values() %}
                 <li>
-                    <a href="{{url_for('league.league_homepage', league_id=league_info['league_id'])}}">{{league_info["league_name"]}} ({{league_info["status"]}})</a>
+                    <a href="{{url_for('league.league_homepage', league_id=league_info['league_id'])}}">
+                      {{league_info["league_name"]}} ({{league_info["status"]}})
+                    </a>
                 </li>  
               {% endfor %}
               <li><a href="{{url_for('league.browse_leagues')}}" class="w3-green">Join or Create League!</a></li>
-            {% endblock %}
-        
         </ul>
       </li>
+      <li class="dropdown">
+          <a class="dropdown-toggle" data-toggle="dropdown" href="#">Admin <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+              {% for league_info in session.get("user")["associated_leagues"].values() %}
+                {% if league_info["status"] == "admin" %}
+                <li>
+                    <a href="{{url_for('admin.league_homepage', league_id=league_info['league_id'])}}">
+                      {{league_info["league_name"]}} ({{league_info["status"]}})
+                    </a>
+                </li>
+                {% endif %}  
+              {% endfor %}          
+          </ul>
+        </li>
     </ul>
     <ul class="nav navbar-nav w3-right">
       <li class="dropdown">
