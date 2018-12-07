@@ -100,9 +100,9 @@ def approve_scores(league_id):
     latest_date = date.today() + timedelta(days = 7)
     earliest_date = date.today() - timedelta(days = 7)
     reported_matches = database.execute(
-                "SELECT FROM match_info WHERE legaue_id= %s AND (deadline >= latest_date OR \
-                deadline =< latest_date) AND (status = %s OR status = %s);",
-                values=[league_id, league.STATUS_APPROVED, league.STATUS_PENDING]
+                "SELECT FROM match_info WHERE legaue_id= %s AND (deadline >= %s latest_date OR \
+                deadline =< %s) AND (status = %s OR status = %s);",
+                values=[league_id, latest_date, earliest_date, league.STATUS_APPROVED, league.STATUS_PENDING]
             )
-            
+
     return NotImplementedError()
