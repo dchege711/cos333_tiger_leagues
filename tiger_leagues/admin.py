@@ -10,6 +10,7 @@ from flask import (
 )
 
 from . import league, decorators, db
+from datetime import date, timedelta
 
 database = db.Database()
 bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -95,5 +96,13 @@ def league_homepage(league_id):
 
 @bp.route("/<int:league_id>/approve", methods=["POST"])
 @decorators.login_required
-def approve_scores(match_id):
+def approve_scores(league_id):
+    latest_date = date.today() + timedelta(days = 7)
+    earliest_date = date.today() - timedelta(days = 7)
+    reported_matches = database.execute(
+                "SELECT FROM match_info WHERE legaue_id= %s AND (deadline >= latest_date OR \
+                deadline =< latest_date) AND (status = %s OR status = %s);",
+                values=[league_id, league.STATUS_APPROVED, league.STATUS_PENDING]
+            )
+            
     return NotImplementedError()

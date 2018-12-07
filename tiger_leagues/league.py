@@ -23,6 +23,7 @@ STATUS_MEMBER = "member"
 STATUS_DENIED = "denied"
 STATUS_ADMIN = "admin"
 STATUS_INACTIVE = "inactive"
+STATUS_APPROVED = "approved"
 
 database = db.Database()
 bp = Blueprint("league", __name__, url_prefix="/league")
