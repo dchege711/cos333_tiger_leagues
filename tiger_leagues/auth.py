@@ -90,7 +90,7 @@ def cas_login():
         if user_data is not None:
             return redirect(url_for("league.index"))
         else:
-            session["user"] = {"net_id": net_id}
+            session["user"] = {"net_id": net_id, "associated_leagues": {}}
             return redirect(url_for("user.display_user_profile"))
 
 @bp.route("/logout", methods=["GET"])

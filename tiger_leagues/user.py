@@ -29,7 +29,7 @@ def get_user(net_id):
     mutable_user_data = dict(**user_data) # https://www.python.org/dev/peps/pep-0448/#abstract
     if user_data["league_ids"] is None:
         mutable_user_data["league_ids"] = []
-        mutable_user_data["associated_leagues"] = []
+        mutable_user_data["associated_leagues"] = {}
     else:
         mutable_user_data["league_ids"] = [int(x) for x in user_data["league_ids"].split(", ")]
         mutable_user_data["associated_leagues"] = __get_user_leagues_info(

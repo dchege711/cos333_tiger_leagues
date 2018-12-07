@@ -269,9 +269,7 @@ def browse_leagues():
     @GET: Display leagues that the user can join.
 
     """
-    ids_associated_leagues = {
-        x["league_id"] for x in session.get("user")["associated_leagues"]
-    }
+    ids_associated_leagues = set(session.get("user")["associated_leagues"].keys())
     cursor = database.execute((
         "SELECT league_id, league_name, registration_deadline, description"
         " FROM league_info;"
@@ -319,9 +317,7 @@ def join_league(league_id):
 
     if request.method == "GET":
         # If the user has submitted details before, re-populate them for editing
-        ids_associated_leagues = {
-            x["league_id"] for x in session.get("user")["associated_leagues"]
-        }
+        ids_associated_leagues = set(session.get("user")["associated_leagues"].keys())
         if league_id in ids_associated_leagues:
             previous_responses = database.iterator(
                 database.execute(

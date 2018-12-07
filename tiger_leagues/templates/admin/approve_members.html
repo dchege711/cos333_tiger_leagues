@@ -62,7 +62,7 @@
                 
             </table>
             <br />
-            <p>{{ns.num_approved_players}} active players / {{league_info["max_num_players"]}} possible players</p>
+            <p><span id="num_players">{{ns.num_approved_players}}</span> active players / {{league_info["max_num_players"]}} possible players</p>
             <br />
             <button onclick="saveTableChanges();" class="w3-button w3-round w3-green">Save Changes</button>
 
@@ -98,6 +98,7 @@
                                 statusElement = tableRows[rowIdx].cells[cellIdx].children[0];
                                 statusElement.value = response.message[statusElement.name];
                             }
+                            document.getElementById("num_players").innerText = statusCounts.admin + statusCounts.member;
                         }
                     })
                     .catch((err) => { alert(err.message); })
