@@ -32,7 +32,7 @@ def get_user(net_id):
         mutable_user_data["associated_leagues"] = []
     else:
         mutable_user_data["league_ids"] = [int(x) for x in user_data["league_ids"].split(", ")]
-        mutable_user_data["associated_leagues"] = __get_user_league_info_list(
+        mutable_user_data["associated_leagues"] = __get_user_leagues_info(
             user_data["user_id"], mutable_user_data["league_ids"]
         )
     return mutable_user_data
@@ -117,16 +117,16 @@ def __create_user_profile(user_info):
         ]
     )
 
-def __get_user_league_info_list(user_id, league_ids):
+def __get_user_leagues_info(user_id, league_ids):
     """
     @param int `user_id`: the ID of the associated user.
 
     @param List[int] `league_ids`: a list of all the league IDs that a user is associated with
 
-    @return `List[dict]` containing all leagues that a user is associated with. 
+    @return `Dict[dict]` containing all leagues that a user is associated with. 
     Expected keys: `league_name`, `league_id`, `status`.
     """
-    league_info_list = []
+    user_leagues_info = {}
     for league_id in league_ids:
         cursor = database.execute(
             (
@@ -141,6 +141,6 @@ def __get_user_league_info_list(user_id, league_ids):
         )
         info = cursor.fetchone()
         if info is not None:
-            league_info_list.append(dict(**info))
+            user_leagues_info[info["league_id"]] = dict(**info)
         
-    return league_info_list
+    return user_leagues_info
