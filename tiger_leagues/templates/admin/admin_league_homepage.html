@@ -37,7 +37,7 @@
                             <td contenteditable="true">{{ match["p2_score"] }}</td>
                             <td>{{ match["player_two"] }}</td>
                             <td>{{ match["status"] }}</td>
-                            <td>{{ onclick="updatePendingScores(match_id)" }}</td>
+                            <td><button class="w3-button w3-xlarge w3-circle w3-green" onclick="updatePendingScores({{match['match_id'])}}">&#10004</button></td>
                             
                         </tr>
                     {% endfor %}

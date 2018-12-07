@@ -94,15 +94,47 @@ def league_requests(league_id):
 def league_homepage(league_id):
     return "Display League Admin Panel"
 
-@bp.route("/<int:league_id>/approve", methods=["POST"])
+@bp.route("/<int:league_id>/approve", methods=["GET", "POST"])
 @decorators.login_required
 def approve_scores(league_id):
-    latest_date = date.today() + timedelta(days = 7)
-    earliest_date = date.today() - timedelta(days = 7)
-    reported_matches = database.execute(
-                "SELECT FROM match_info WHERE legaue_id= %s AND (deadline >= %s latest_date OR \
-                deadline =< %s) AND (status = %s OR status = %s);",
-                values=[league_id, latest_date, earliest_date, league.STATUS_APPROVED, league.STATUS_PENDING]
+    if request.method == "GET":
+
+        latest_date = date.today() + timedelta(days = 7)
+        earliest_date = date.today() - timedelta(days = 7)
+        reported_matches = database.execute(
+                    "SELECT FROM match_info WHERE legaue_id= %s AND (deadline >= %s latest_date OR \
+                    deadline =< %s) AND (status = %s OR status = %s);",
+                    values=[league_id, latest_date, earliest_date, league.STATUS_APPROVED,
+                    league.STATUS_PENDING]
+                )
+        
+
+        return render_template("/admin/admin_league_homepage.html", reported_matches=reported_matches)
+
+    if request.method == "POST":
+        score_info = request.json
+
+        try:
+
+            database.execute("UPDATE match_info SET status = %s, score_user_1 = %s \
+            , score_user_2 = %s WHERE match_id =%s:",
+            values=[league.STATUS_APPROVED, score_info["score_user_1"], score_info["score_user_2"],
+            score_info["match_id"]
+            ]
             )
 
-    return NotImplementedError()
+            return jsonify({
+                    "success": True, "status": 200,
+                    "message": league.STATUS_APPROVED
+                })
+
+        except:
+
+            return jsonify({
+                    "success": False, "status": 200,
+                    "message": "Failed to Update Scores"
+                })
+
+        
+
+    
