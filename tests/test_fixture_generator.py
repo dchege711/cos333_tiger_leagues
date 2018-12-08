@@ -6,9 +6,9 @@ Sanity tests the fixture generation algorithm.
 """
 
 import sys
-sys.path.insert(0, "..")
+sys.path.insert(0, "../dev_scripts")
 
-from tiger_leagues import league
+from dummy_fixtures import fixture_generator
 
 def test_fixture_generator():
     """
@@ -21,21 +21,28 @@ def test_fixture_generator():
     def check_fixtures(players):
         """
         @param List `players` a list of unique player IDs
-        @raises ValueError if the generated fixtures do not meet the criteria.
+        @raises AssertionError if the generated fixtures do not meet the criteria.
         """
         players_set = set(players)
-        assert len(players_set) == len(players)
+        N = len(players)
+        assert len(players_set) == N, "{} is not a list of unique items".format(str(players))
 
-        fixtures = league.get_fixtures(players)
+        fixtures = fixture_generator(players)
+        # for fixture in fixtures: print(fixture)
+        expected_games = N - 1 if N > 1 else N
+        assert len(fixtures) == expected_games, "Expected {} sets of games; received {}".format(expected_games, len(fixtures))
+
         for current_matches in fixtures:
-            not_yet_played = players_set
+            not_yet_played = players_set.copy()
 
-            def __check_player(player):
-                if player is None: return
-                try:
-                    not_yet_played.remove(player_a)
-                except KeyError:
-                    raise ValueError("Invalid pairing: {}".format(str(current_matches)))
+            def __check_player(player_id):
+                if player_id is None: return
+                if player_id in not_yet_played:
+                    not_yet_played.remove(player_id)
+                else:
+                    raise AssertionError(
+                        "Invalid pairing for {}: {}".format(player_id, str(current_matches))
+                    )
 
             for player_a, player_b in current_matches:
                 __check_player(player_a)
@@ -48,8 +55,25 @@ def test_fixture_generator():
                     )
                 )
 
-    print("Testing an even-length list...")
-    check_fixtures(list(range(10)))
-
-    print("Testing an odd-length list...")
+    print("Testing an odd-length list:", end=" ")
     check_fixtures(list(range(9)))
+    print("PASSED!")
+
+    print("Testing an even-length list:", end=" ")
+    check_fixtures(list(range(10)))
+    print("PASSED!")
+
+    print("Testing an empty list:", end=" ")
+    check_fixtures([])
+    print("PASSED")
+
+    print("Testing a 2-element list:", end=" ")
+    check_fixtures([0, 1])
+    print("PASSED")
+
+    print("Testing a 1-element list:", end=" ")
+    check_fixtures([0])
+    print("PASSED")
+
+if __name__ == "__main__":
+    test_fixture_generator()
