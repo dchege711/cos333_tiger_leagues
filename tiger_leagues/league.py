@@ -403,8 +403,8 @@ def fixture_generator(league_id, league_deadline):
         length += 1
         odd = 1
 
-    tempList1 = (length/2)
-    tempList2 = (length/2)
+    tempList1 = []
+    tempList2 = []
 
     for i in range(0, length-1):
         tempList1.insert(i, users[i])
