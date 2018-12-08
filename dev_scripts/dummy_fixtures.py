@@ -35,7 +35,7 @@ def fixture_generator(users):
     rounds_list = []
     pairs_list = []
 
-    for j in range(0,length):
+    for j in range(0,length-1):
         for i in range(0, half):
             pairs_list = [tempList1[i], tempList2[i]]
             rounds_list.append(pairs_list)
@@ -47,7 +47,7 @@ def fixture_generator(users):
         fixtures_list.append(rounds_list)
         rounds_list = []
 
-    print(fixtures_list)
+    return fixtures_list
        
 
 
