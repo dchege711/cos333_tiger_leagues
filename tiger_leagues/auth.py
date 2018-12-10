@@ -26,7 +26,7 @@ def index():
 
     return render_template("/auth/login.html")
 
-@bp.route("/cas", methods=["GET"])
+@bp.route("/login", methods=["GET"])
 def cas_login():
     """
     Log in users through CAS. At the end of the CAS-related stuff, the rest of 

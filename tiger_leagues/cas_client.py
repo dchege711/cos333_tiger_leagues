@@ -54,7 +54,6 @@ class CASClient:
         r = urllib.request.urlopen(val_url).readlines()   # returns 2 lines
         r = [byte_string.decode("utf-8") for byte_string in r]
         if len(r) == 2 and re.match("yes", r[0]) is not None:
-            print("Returning:", r[1].strip())
             return r[1].strip()
         return None
         
