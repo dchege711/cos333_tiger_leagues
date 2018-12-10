@@ -6,6 +6,7 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 """
 
 import json
+import random
 from datetime import date
 from collections import defaultdict
 
@@ -337,10 +338,9 @@ def join_league(league_id):
     if request.method == "POST":
         received_data = request.form
         user = session.get("user")
-
         expected_info = {}
         for key in league_info["additional_questions"]:
-            expected_info[key] = ""
+            expected_info[key] = ""   
 
         for key in expected_info:
             if key not in received_data: 
@@ -370,6 +370,73 @@ def join_league(league_id):
             session["user"] = user_client.get_user(user["net_id"])
         flash("Request Submitted!")
         return redirect(url_for("league.browse_leagues"))
+
+def fixture_generator(league_id, league_deadline):
+    """
+    fixture_generator() creates all the fixtures for a league. It should only be 
+    called once per league. The fixtures will be generated randomly and will
+    have each user play the other memebers of the league once. Each match will also 
+    have a deadline that is relative to the league's deadline. Eventually, admin's
+    will also have control over the number of fixtures played per player.
+    """
+    # we need a more effective of finding all the users in the league. 
+    # as of right now we need to iterate through every user and the league_ids they pertain to
+
+    cursor = database.execute(
+        (
+            "SELECT user_id FROM league_responses WHERE league_id = %s"
+        ),
+        values=[league_id]
+    )
+    
+    users = []
+    row = cursor.fetchone()
+
+    for row in cursor:
+        users.append(row)
+        row = cursor.fetchone()
+
+    length = len(users)
+    odd = 0
+
+    if length % 2 is not 0:
+        length += 1
+        odd = 1
+
+    tempList1 = []
+    tempList2 = []
+
+    for i in range(0, length-1):
+        tempList1.insert(i, users[i])
+        if i is 0 and odd is 1:
+            tempList2.insert(i, None)
+        else:
+            tempList2.insert(i, users[length-1-i])
+
+    for i in range(0,length-1):
+        for i in range(0, length-1):
+            if tempList1[i] is not None and tempList2[i] is not None:
+                cursor = database.execute(
+                    (
+                        "INSERT match_info ("
+                        "user_id_1, user_id_2, league_id) "
+                        "VALUES (%s, %s, %s);"
+                    ),
+                    values=[tempList1[i], tempList2[i], league_id]
+                )
+        tempList1.insert(1, tempList2[0])
+        tempList2.insert(length, tempList1[length])
+        del tempList1[-1]
+        del tempList2[0]
+
+
+    # need a loop that'll generate fixtures. goes from 1 to len(users)
+    
+
+
+    for i in range(1,len(users)):
+        for user in users:
+            x = random.randint(1,len(users))
 
 @bp.route("/<int:league_id>/leave-league", methods=["POST"])
 @decorators.login_required
