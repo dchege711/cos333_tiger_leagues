@@ -52,7 +52,9 @@ class CASClient:
             '?service=' + urllib.request.quote(self.strip_ticket(request)) + \
             '&ticket=' + urllib.request.quote(ticket)
         r = urllib.request.urlopen(val_url).readlines()   # returns 2 lines
+        r = [byte_string.decode("utf-8") for byte_string in r]
         if len(r) == 2 and re.match("yes", r[0]) is not None:
+            print("Returning:", r[1].strip())
             return r[1].strip()
         return None
         
@@ -85,6 +87,6 @@ class CASClient:
         login_url = self.cas_url + 'login' \
             + '?service=' + urllib.request.quote(self.strip_ticket(request))
             
-        redirect(login_url)
+        return redirect(login_url)
 
 #-----------------------------------------------------------------------
