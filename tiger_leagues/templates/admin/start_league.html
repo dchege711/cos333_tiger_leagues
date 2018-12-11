@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block content %}
+    <script>
+        // https://www.w3schools.com/Html/html5_draganddrop.asp
+        function allowDrop(ev) {
+          ev.preventDefault();
+        }
+        
+        function drag(ev) {
+          ev.dataTransfer.setData("text", ev.target.id);
+        }
+        
+        function drop(ev) {
+          ev.preventDefault();
+          var data = ev.dataTransfer.getData("text");
+          ev.target.appendChild(document.getElementById(data));
+        }
+    </script>
+
+    <div class="w3-container large_portrait_margins w3-center">
+
+        <div class="w3-container">
+            <h3>Start {{league_info["league_name"]}}</h3>
+            <br />
+            <p>
+                Confirm that the following values are correct. You cannot add 
+                more players once a league has already started.
+            </p>
+
+            <table class="w3-table-all">
+                <thead>
+                    <tr><th>Status</th><th>Number of Players</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Will join <em>{{league_info["league_name"]}}</em></td>
+                        <td>{{registration_stats["member"] + registration_stats["admin"]}}</td>
+                    </tr>
+                    <tr>
+                        <td>Waiting for admin approval</td>
+                        <td>{{registration_stats["pending"]}}</td>
+                    </tr>
+                    <tr>
+                        <td>Join request rejected by admin</td>
+                        <td>{{registration_stats["denied"]}}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <br />
+            <p>
+                If the above is inaccurate or not up to date, visit <a 
+                href="{{url_for('admin.league_requests', league_id=league_info['league_id'])}}">
+                {{url_for('admin.league_requests', league_id=league_info['league_id'], _external=True)}}</a> 
+                and make the desired changes.
+            </p>
+
+            <hr />
+
+            <h4>Form the Divisions</h4>
+
+            <p>
+                Provide values for at least one of these two options.
+            </p>
+
+            <div class="w3-card w3-padding-small">
+
+                <label>How many days do players have before a game is due?</label>
+                <input 
+                    value="{{league_info['match_frequency_in_days']}}" type="number"
+                    name="match_frequency_in_days" id="match_frequency_in_days" min="0">
+                <br />
+                <br />
+
+                <label>By what date should the league end?</label>
+                <input name="completion_deadline" id="completion_deadline" type="date">
+                <br />
+                <br />
+
+                <button class="w3-button w3-blue" onclick="generateDivisions();">
+                    <span class="glyphicon glyphicon-refresh"></span> Allocate Divisions
+                </button>
+
+                <br />
+                <div id="league_divisions" class="w3-container w3-margin-top"></div>
+
+                <div id="generate_fixtures_container" style="display:none">
+                    <p>
+                        If you're satisfied with the above allocation, click the button 
+                        below to generate the fixtures. Note that this step is irreversible.
+                    </p>
+    
+                    <button class="w3-button w3-green" onclick="generateFixtures();">
+                        Generate Fixtures
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+        
+    </div>
+
+    <script type="text/javascript">
+
+        let state = {
+            matchFrequencyInDaysElement: document.getElementById("match_frequency_in_days"),
+            competitionDeadlineElement: document.getElementById("completion_deadline"),
+            leagueDivisionsElement: document.getElementById("league_divisions"),
+            generateFixturesContainer: document.getElementById("generate_fixtures_container")
+        };
+
+        function generateDivisions() {
+            let numSelections = 0;
+            let payload = {};
+            if (state.matchFrequencyInDaysElement.value !== "") {
+                payload.match_frequency_in_days = state.matchFrequencyInDaysElement.value;
+            }
+            if (state.competitionDeadlineElement.value !== "") {
+                payload.completion_deadline = state.competitionDeadlineElement.value;
+            }
+
+            if (Object.keys(payload).length === 0) {
+                alert("Provide a value for at least one of the two options"); return;
+            }
+
+            sendHTTPRequest("POST", "allocate-divisions/", payload)
+                .then((response) => {
+                    let responseObject = JSON.parse(response);
+                    if (responseObject.success) {
+                        let divisionsHTML = `<table class='w3-table-all'><thead>
+                            <tr><td>Division</td><td>Players</td></tr></thead><tbody>`;
+                        let divisionIDs = Object.keys(responseObject.message.divisions);
+                        let playerObjects = null, playerNames = null;
+                        for (let i = 0; i < divisionIDs.length; i++) {
+                            playerObjects = responseObject.message.divisions[divisionIDs[i]];
+                            playerNames = [];
+                            for (let j = 0; j < playerObjects.length; j++) {
+                                playerNames.push(playerObjects[j].name);
+                            }
+                            divisionsHTML += `<tr>
+                                <td>${divisionIDs[i]}</td>
+                                <td>${playerNames.join(', ')}</td>
+                                </tr>`;
+                        }
+                        divisionsHTML += `</tbody></table><br /><p>League End Date: ${responseObject.message.end_date}</p>`;
+                        state.leagueDivisionsElement.innerHTML = divisionsHTML;
+                        state.leagueDivisions = responseObject.message;
+                        state.generateFixturesContainer.style.display = "block";
+                        
+                    } else {
+                        alert(`Error: ${responseObject.message}`);
+                    }
+                })
+                .catch((err) => { console.error(err); });
+
+        }
+        
+
+        function generateFixtures() {
+            if (!state.leagueDivisions) {
+                alert("Press the 'Allocate Divisions' button before generating the fixtures");
+                return;
+            }
+
+            sendHTTPRequest("POST", document.URL, state.leagueDivisions.divisions)
+                .then((response) => {
+                    let responseObject = JSON.parse(response);
+                    if (responseObject.success) {
+                        alert(responseObject.message);
+                    } else {
+                        alert(`Error: ${responseObject.message}`);
+                    }
+                })
+                .catch((err) => { console.error(err); });
+        }
+
+    </script>
+
+{% endblock %}
