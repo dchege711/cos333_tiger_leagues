@@ -9,9 +9,6 @@ sys.path.insert(0, "..")
 def fixture_generator(users):
     # we need a more effective of finding all the users in the league. 
     # as of right now we need to iterate through every user and the league_ids they pertain to
-
-    
-
     length = len(users)
     odd = 0
 
