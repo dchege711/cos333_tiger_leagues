@@ -38,6 +38,7 @@ def admin_status_required():
     if league_id not in associated_leagues or associated_leagues[league_id]["status"] != "admin":
         return redirect(url_for("league.index"))
     # If nothing has been returned, the request will be passed to its handler
+    return None
 
 @bp.route("/<int:league_id>/approve-members/", methods=["GET", "POST"])
 def league_requests(league_id):
@@ -142,6 +143,11 @@ def start_league(league_id):
         if active_player_ids: return jsonify({
             "success": False, "message": "Invalid data detected!"
         })
+
+        # Delete any existing fixtures
+        database.execute(
+            "DELETE FROM match_info WHERE league_id = %s", values=[league_id]
+        )
         
         # Generate the fixtures for each division
         timeslot_length = timedelta(days=league_info["match_frequency_in_days"])
@@ -165,8 +171,6 @@ def start_league(league_id):
         return jsonify({
             "success": True, "message": "Fixtures successfully created!"
         })
-
-
 
 def __fetch_active_league_players(league_id):
     """
