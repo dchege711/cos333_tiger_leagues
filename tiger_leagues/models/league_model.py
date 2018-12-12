@@ -166,7 +166,7 @@ def create_league(league_info, creator_user_profile):
         db.execute(
             (
                 "CREATE TABLE league_responses_{} ("
-                "user_id INT PRIMARY KEY UNIQUE, status VARCHAR(255), {});"
+                "user_id INT PRIMARY KEY UNIQUE, status VARCHAR(255), division_id INT, {});"
             ).format(
                 league_id, ", ".join([
                     "{} VARCHAR(255)".format(x) for x in sanitized_additional_questions
@@ -329,14 +329,21 @@ def process_join_league_request(league_id, user_profile, submitted_data):
 
     expected_info["user_id"] = user_profile["user_id"]
     expected_info["status"] = STATUS_PENDING
+    table_name = "league_responses_{}".format(league_id)
+    db.execute(
+        "DELETE FROM {} WHERE user_id = %s", values=[user_profile["user_id"]], 
+        dynamic_table_or_column_names=[table_name]
+
+    )
     db.execute(
         (
-            "INSERT INTO league_responses_{} ({}) VALUES ({}) ON CONFLICT (user_id) DO NOTHING;".format(
-                league_id, ", ".join(key for key in expected_info), 
+            "INSERT INTO {} ({}) VALUES ({});".format(
+                "{}", ", ".join(key for key in expected_info), 
                 ", ".join("%({})s".format(key) for key in expected_info)
             )
         ),
-        values=expected_info
+        values=expected_info,
+        dynamic_table_or_column_names=[table_name]
     )
 
     # Indicate on the user object that they're involved in this league
