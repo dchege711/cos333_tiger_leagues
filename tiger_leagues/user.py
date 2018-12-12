@@ -63,6 +63,7 @@ def update_user_profile():
 
     """
     user_data = session.get("user")
+    net_id = session.get("net_id")
     submitted_data = request.form
     changeable_cols = ["name", "email", "phone_num", "room"]
     updated_col_names = []
@@ -72,14 +73,14 @@ def update_user_profile():
             updated_col_names.append(column)
             updated_col_values.append(submitted_data[column])
 
-    if "user_id" not in user_data: 
+    if user_data is None: 
         # Then we have a new user...
         updated_col_names += ["net_id"]
-        updated_col_values += [user_data["net_id"]]
+        updated_col_values += [net_id]
         database.execute(
             "INSERT INTO users ({}) VALUES ({})".format(
-                ", ".join(["{}" for _ in updated_col_names ]),
-                ", ".join(["%s" for _ in updated_col_values ])
+                ", ".join(["{}" for _ in updated_col_names]),
+                ", ".join(["%s" for _ in updated_col_values])
             ),
             values=updated_col_values,
             dynamic_table_or_column_names=updated_col_names
@@ -93,7 +94,7 @@ def update_user_profile():
             dynamic_table_or_column_names=updated_col_names
         )
 
-    session["user"] = get_user(user_data["net_id"])
+    session["user"] = get_user(net_id)
     flash("User profile updated!")
     return render_template("/user/user_profile.html", user=session.get("user"))
 
