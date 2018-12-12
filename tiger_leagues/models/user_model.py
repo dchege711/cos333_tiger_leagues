@@ -91,19 +91,22 @@ def __get_user_leagues_info(user_id, league_ids):
     """
     user_leagues_info = {}
     for league_id in league_ids:
+        league_responses_tablename = "league_responses_{}".format(league_id)
         cursor = db.execute(
             (
-                "SELECT league_info.league_id, league_name, status FROM league_info, {} "
+                "SELECT league_info.league_id, league_name, status, {}.division_id "
+                "FROM league_info, {} "
                 "WHERE {}.user_id = %s AND league_info.league_id = %s"
             ),
             values=[user_id, league_id],
             dynamic_table_or_column_names=[
-                "league_responses_{}".format(league_id),
-                "league_responses_{}".format(league_id)
+                league_responses_tablename,
+                league_responses_tablename,
+                league_responses_tablename
             ]
         )
         info = cursor.fetchone()
         if info is not None:
-            user_leagues_info[info["league_id"]] = dict(**info)
+            user_leagues_info[int(league_id)] = dict(**info)
         
     return user_leagues_info
