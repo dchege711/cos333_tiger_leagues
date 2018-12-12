@@ -45,7 +45,7 @@ def league_requests(league_id):
     join the league.
 
     """
-    league_info = league_model.get_join_league_info(league_id)
+    league_info = league_model.get_league_info(league_id)
 
     if request.method == "GET":
         join_requests = admin_model.get_join_league_requests(league_id)
@@ -68,7 +68,7 @@ def start_league(league_id):
     """
     @GET: Render a template for setting the league configurations.
     """
-    league_info = league_model.get_join_league_info(league_id)
+    league_info = league_model.get_league_info(league_id)["message"]
 
     if request.method == "GET":
         registration_stats = admin_model.get_registration_stats(league_id)
@@ -103,7 +103,7 @@ def league_homepage(league_id):
     """
     @GET: Return the league admin panel
     """
-    league_info = league_model.get_join_league_info(league_id)
+    league_info = league_model.get_league_info(league_id)
     return render_template(
         "/admin/admin_league_panel.html", league_info=league_info
     )

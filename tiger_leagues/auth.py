@@ -9,7 +9,8 @@ Exposes a blueprint that handles requests made to `` endpoint
 from flask import (
     Blueprint, render_template, session, redirect, url_for, request
 )
-from . import user as user_client, cas_client
+from . import cas_client
+from .models import user_model
 
 cas = cas_client.CASClient()
 bp = Blueprint("auth", __name__, url_prefix="")
@@ -46,7 +47,7 @@ def cas_login():
         return r
 
     net_id = r
-    user_data = user_client.get_user(net_id)
+    user_data = user_model.get_user(net_id)
     session["user"] = user_data
     session["net_id"] = net_id
     if user_data is not None:

@@ -10,9 +10,9 @@ from random import shuffle
 from math import ceil
 from datetime import date, timedelta
 
-from . import league_model as league, db_model as database
+from . import league_model, db_model
 
-db = database.Database()
+db = db_model.Database()
 
 def get_join_league_requests(league_id):
     """
@@ -44,10 +44,10 @@ def update_join_league_requests(league_id, league_statuses):
     matching. Otherwise, `message` will contain an error description.
 
     """
-    league_info = league.get_join_league_info(league_id)
+    league_info = league_model.get_league_info(league_id)
     available_statuses = {
-        league.STATUS_ADMIN, league.STATUS_DENIED, league.STATUS_MEMBER, 
-        league.STATUS_PENDING
+        league_model.STATUS_ADMIN, league_model.STATUS_DENIED, league_model.STATUS_MEMBER, 
+        league_model.STATUS_PENDING
     }
     for value in league_statuses.values():
         if value not in available_statuses:
@@ -139,7 +139,7 @@ def generate_league_fixtures(league_id, div_allocations):
     )
     
     # Generate the fixtures for each division
-    league_info = league.get_join_league_info(league_id)
+    league_info = league_model.get_league_info(league_id)
     timeslot_length = timedelta(days=league_info["match_frequency_in_days"])
     match_deadline = date.today() + timedelta(days=1) + timeslot_length
 
@@ -173,7 +173,7 @@ def __fetch_active_league_players(league_id):
     cursor = db.execute(
         "SELECT users.user_id, users.name FROM {}, users WHERE (status = %s "
         "OR status = %s) AND users.user_id = {}.user_id;",
-        values=[league.STATUS_ADMIN, league.STATUS_MEMBER],
+        values=[league_model.STATUS_ADMIN, league_model.STATUS_MEMBER],
         dynamic_table_or_column_names=[table_name, table_name]
     )
     return cursor.fetchall()
