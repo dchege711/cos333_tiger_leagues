@@ -92,7 +92,10 @@ def league_requests(league_id):
 @bp.route("/<int:league_id>/", methods=["GET"])
 @decorators.login_required
 def league_homepage(league_id):
-    return "Display League Admin Panel"
+    league_info = league.get_join_league_info(league_id)
+    return render_template(
+        "/admin/admin_league_panel.html", league_info=league_info
+    )
 
 @bp.route("/<int:league_id>/approve", methods=["GET", "POST"])
 @decorators.login_required
