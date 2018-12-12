@@ -14,7 +14,7 @@ from . import league_model as league, db_model as database
 
 db = database.Database()
 
-def get_league_requests(league_id):
+def get_join_league_requests(league_id):
     """
     @param int `league_id`: The ID of the league
 
@@ -33,7 +33,7 @@ def get_league_requests(league_id):
     )
     return join_requests
 
-def update_league_requests(league_id, league_statuses):
+def update_join_league_requests(league_id, league_statuses):
     """
     @param int `league_id`: The ID of the league
 
@@ -62,7 +62,7 @@ def update_league_requests(league_id, league_statuses):
             values=[user_status, user_id]
         )
 
-    join_requests = get_league_requests(league_id)
+    join_requests = get_join_league_requests(league_id)
     user_id_to_status = {}
     for join_request in join_requests:
         user_id_to_status[join_request["user_id"]] = join_request["status"]
@@ -301,4 +301,3 @@ def __fixture_generator(users):
         rounds_list = []
 
     return fixtures_list
-    
