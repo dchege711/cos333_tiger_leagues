@@ -140,7 +140,7 @@ def generate_league_fixtures(league_id, div_allocations):
     
     # Generate the fixtures for each division
     league_info = league_model.get_league_info(league_id)
-    timeslot_length = timedelta(days=league_info["match_frequency_in_days"])
+    timeslot_length = timedelta(days=ceil(league_info["match_frequency_in_days"]))
     match_deadline = date.today() + timedelta(days=1) + timeslot_length
 
     for division_id, division_players in div_allocations.items():
@@ -184,6 +184,11 @@ def allocate_league_divisions(league_id, desired_allocation_config):
 
     @param dict `desired_allocation_config`: Options to use when allocating the 
     divisions. Keys may include `match_frequency_in_days`, `completion_deadline`
+
+    @returns dict: if `success` is `False`, `message` contains a string 
+    describing what went wrong. Otherwise, `message` is a dict keyed by `divisions` 
+    and `end_date`
+
     """
     allocation_config = {}
     allowed_params = {
@@ -221,13 +226,19 @@ def allocate_league_divisions(league_id, desired_allocation_config):
         ).fetchone()["match_frequency_in_days"]
 
     start_date = allocation_config.get(
-        "start_date", d=date.today() + timedelta(days=1)
+        "start_date", date.today() + timedelta(days=1)
     )
 
     if "completion_deadline" in allocation_config:
         max_num_games_per_timeslot = ceil(num_players / 2.0)
         num_total_games = int(num_players * (num_players - 1) / 2.0)
-        num_available_timeslots = max(1, (allocation_config["completion_deadline"] - start_date) / timedelta(days=allocation_config["match_frequency_in_days"]))
+        num_available_timeslots = max(
+            1, 
+            (
+                (allocation_config["completion_deadline"] - start_date) / 
+                timedelta(days=ceil(max(1, allocation_config["match_frequency_in_days"])))
+            )
+        )
         num_games_per_timeslot = num_total_games / num_available_timeslots
         num_divisions = max(1, num_games_per_timeslot / max_num_games_per_timeslot)
     else:
@@ -246,7 +257,7 @@ def allocate_league_divisions(league_id, desired_allocation_config):
         division_allocations[division_id] = current_division
 
     league_end_date = start_date + timedelta(
-        days=(num_players_per_div - 1) * allocation_config["match_frequency_in_days"]
+        days=ceil((num_players_per_div - 1) * allocation_config["match_frequency_in_days"])
     )
     return {
         "success": True, "message": {
