@@ -13,9 +13,9 @@ from tiger_leagues import db as database
 
 def clean_database():
     """
-    Delete all the tables in the database.
+    Delete all the tables in the database and reinitialize them.
 
-    @returns `bool`: `True` if the deletion was successful.
+    @returns `bool`: `True` if the operation was successful.
     """
     db = database.Database()
     cursor = db.execute((
@@ -29,6 +29,8 @@ def clean_database():
         "DROP TABLE {}".format(", ".join(["{}" for _ in table_names])),
         dynamic_table_or_column_names=table_names
     )
+
+    db.launch()
 
     return True
 
