@@ -64,6 +64,7 @@ def create_leagues(admin_user_profile, num_leagues=4):
     league_info_list = []
     for league_info in __generate_league_info():
         results = league_model.create_league(league_info, admin_user_profile)
+        admin_user_profile = user_model.get_user(admin_user_profile["net_id"])
         league_info["league_id"] = results["message"]
         league_info_list.append(league_info)
 
@@ -119,8 +120,6 @@ def generate_matches(league_info_list):
             print(allocation_config)
             raise RuntimeError(results["message"])
 
-        print(results["message"])
-
 if __name__ == "__main__":
     try:
         net_id = sys.argv[1]
@@ -132,7 +131,7 @@ if __name__ == "__main__":
     try:
         admin_user_profile = user_model.update_user_profile(
             None, net_id, {
-                "name": "User #{}".format(net_id), "net_id": net_id, 
+                "name": net_id, "net_id": net_id, 
                 "email": "{}@princeton.edu".format(net_id),
                 "phone_num": "555-555-5555", "room": "Blair A57"  
             }
