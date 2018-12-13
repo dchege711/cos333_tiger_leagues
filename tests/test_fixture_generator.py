@@ -6,9 +6,9 @@ Sanity tests the fixture generation algorithm.
 """
 
 import sys
-sys.path.insert(0, "../dev_scripts")
+sys.path.insert(0, "..")
 
-from dummy_fixtures import fixture_generator
+from tiger_leagues.models import admin_model
 
 def test_fixture_generator():
     """
@@ -27,26 +27,27 @@ def test_fixture_generator():
         N = len(players)
         assert len(players_set) == N, "{} is not a list of unique items".format(str(players))
 
-        fixtures = fixture_generator(players)
+        fixtures = admin_model.fixture_generator(players)
         # for fixture in fixtures: print(fixture)
         expected_games = N - 1 if N > 1 else N
         assert len(fixtures) == expected_games, "Expected {} sets of games; received {}".format(expected_games, len(fixtures))
 
+        not_yet_played = set()
         for current_matches in fixtures:
             not_yet_played = players_set.copy()
 
-            def __check_player(player_id):
+            def __check_player(player_id, matches):
                 if player_id is None: return
                 if player_id in not_yet_played:
                     not_yet_played.remove(player_id)
                 else:
                     raise AssertionError(
-                        "Invalid pairing for {}: {}".format(player_id, str(current_matches))
+                        "Invalid pairing for {}: {}".format(player_id, str(matches))
                     )
 
             for player_a, player_b in current_matches:
-                __check_player(player_a)
-                __check_player(player_b)
+                __check_player(player_a, current_matches)
+                __check_player(player_b, current_matches)
                 
             if not_yet_played:
                 raise ValueError(
@@ -69,6 +70,10 @@ def test_fixture_generator():
 
     print("Testing a 2-element list:", end=" ")
     check_fixtures([0, 1])
+    print("PASSED")
+
+    print("Testing a 3-element list:", end=" ")
+    check_fixtures([0, 1, 2])
     print("PASSED")
 
     print("Testing a 1-element list:", end=" ")

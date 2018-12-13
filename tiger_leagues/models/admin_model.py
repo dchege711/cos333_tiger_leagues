@@ -144,7 +144,7 @@ def generate_league_fixtures(league_id, div_allocations):
     match_deadline = date.today() + timedelta(days=1) + timeslot_length
 
     for division_id, division_players in div_allocations.items():
-        fixtures = __fixture_generator([x["user_id"] for x in division_players])
+        fixtures = fixture_generator([x["user_id"] for x in division_players])
         deadline = match_deadline
         for current_matches in fixtures:
             for matchup in current_matches:
@@ -255,7 +255,7 @@ def allocate_league_divisions(league_id, desired_allocation_config):
         }
     }
 
-def __fixture_generator(users):
+def fixture_generator(users):
     """
     @return `List[List[List]]` the innermost list is has 2 elements (the IDs of 
     the players involved in a game). The middle list has a collection of all the 
