@@ -45,7 +45,7 @@ class Database:
         self.execute((
             "CREATE TABLE IF NOT EXISTS match_info ("
             "match_id SERIAL PRIMARY KEY, user_id_1 INT, user_id_2 INT, league_id INT, "
-            "score_user_1 INT, score_user_2 INT, deadline DATE, status VARCHAR(70));"
+            "division_id INT, score_user_1 INT, score_user_2 INT, deadline DATE, status VARCHAR(70));"
         ))
 
         self.execute((
@@ -53,7 +53,8 @@ class Database:
             "league_id SERIAL PRIMARY KEY, league_name VARCHAR(255), "
             "description TEXT, points_per_win INT, points_per_draw INT, "
             "points_per_loss INT, registration_deadline DATE, max_num_players INT, "
-            "creator_user_id INT NOT NULL, match_frequency_in_days INT, additional_questions TEXT);"
+            "creator_user_id INT NOT NULL, match_frequency_in_days NUMERIC DEFAULT 7.0, "
+            "additional_questions TEXT);"
         ))
 
     def execute(self, statement, values=None, dynamic_table_or_column_names=None, 
