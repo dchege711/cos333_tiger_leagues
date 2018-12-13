@@ -240,21 +240,28 @@ def allocate_league_divisions(league_id, desired_allocation_config):
             )
         )
         num_games_per_timeslot = num_total_games / num_available_timeslots
-        num_divisions = max(1, num_games_per_timeslot / max_num_games_per_timeslot)
+        num_divisions = max(1, int(num_games_per_timeslot / max_num_games_per_timeslot))
     else:
         num_divisions = 1
 
     shuffle(active_league_players)
-    num_players_per_div = ceil(num_players * 1.0 / num_divisions)
+    num_players_per_div = int(num_players * 1.0 / num_divisions)
     division_allocations = {}
     i = 0
     for division_id in range(1, ceil(num_divisions) + 1):
         current_division = []
-        num_players_in_current_div = min(num_players - i, num_players_per_div)
-        for _2 in range(num_players_in_current_div):
+        for _2 in range(num_players_per_div):
             current_division.append(dict(**active_league_players[i]))
             i += 1
         division_allocations[division_id] = current_division
+
+    # Allocate the remainders...
+    j, div_ids = 0, list(division_allocations.keys())
+    len_div_ids = len(div_ids)
+    while i < len(active_league_players):
+        division_allocations[div_ids[j % len_div_ids]].append(dict(**active_league_players[i]))
+        i += 1
+        j += 1
 
     league_end_date = start_date + timedelta(
         days=ceil((num_players_per_div - 1) * allocation_config["match_frequency_in_days"])
