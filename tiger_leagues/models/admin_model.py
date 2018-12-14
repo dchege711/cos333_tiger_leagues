@@ -324,3 +324,59 @@ def fixture_generator(users):
         rounds_list = []
 
     return fixtures_list
+
+def get_current_matches(league_id):
+    """
+    @returns List[DictRow]: A list of all matches in the current time block. Keys 
+    include `match_id`, `league_id`, `user_id_1`, `user_id_2`, `division_id`, 
+    `score_user_1`, `score_user_2`, `status`, `user_1_name`, `user_2_name`
+    """
+    league_info = league_model.get_league_info(league_id)
+    time_window_days = ceil(league_info["match_frequency_in_days"])
+    latest_date = date.today() + timedelta(days=time_window_days)
+    earliest_date = date.today() - timedelta(days=time_window_days)
+    reported_matches = db.execute(
+        "SELECT FROM match_info WHERE league_id = %s AND (deadline >= %s earliest_date AND \
+        deadline =< %s);",
+        values=[league_id, earliest_date, latest_date]
+    )
+    current_matches = []
+    mapping = {"user_id_1": "user_1_name", "user_id_2": "user_2_name"}
+    for match in reported_matches:
+        match_dict = dict(**match)
+        for key, val in mapping.items():
+            match_dict[val] = db.execute(
+                "SELECT name FROM users WHERE user_id = %s",
+                values=[match[key]]
+            )
+        current_matches.append(match_dict)
+
+    return current_matches
+
+def approve_match(score_info):
+    """
+    @param dict `score_info`: Expected keys: `score_user_1`, `score_user_2`, 
+    `match_id`
+
+    @return `dict`: Keys: `success`, `message
+    """
+    try:
+        db.execute(
+            "UPDATE match_info SET status = %s, score_user_1 = %s \
+            , score_user_2 = %s WHERE match_id = %s;",
+            values=[
+                league_model.MATCH_STATUS_APPROVED, 
+                score_info["score_user_1"], 
+                score_info["score_user_2"],
+                score_info["match_id"]
+            ]
+        )
+
+        return {
+            "success": True, "message": league_model.MATCH_STATUS_APPROVED
+        }
+
+    except:
+        return {
+            "success": False, "message": "Failed to Update Scores"
+        }
