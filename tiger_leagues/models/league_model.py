@@ -22,6 +22,12 @@ STATUS_DENIED = "denied"
 STATUS_ADMIN = "admin"
 STATUS_INACTIVE = "inactive"
 
+LEAGUE_STAGE_ACCEPTING_USERS = "accepting_users"
+LEAGUE_STAGE_DEADLINE_PASSED_NOT_YET_STARTED = "awaiting_admin_greenlight"
+LEAGUE_STAGE_IN_PROGRESS = "league_in_progress"
+LEAGUE_STAGE_COMPLETED = "league_matches_completed"
+LEAGUE_STAGE_IN_PLAYOFFS = "in_playoffs"
+
 db = db_model.Database()
 
 def get_league_standings(league_id, division_id):
@@ -140,6 +146,7 @@ def create_league(league_info, creator_user_profile):
 
     league_basics = {
         "creator_user_id": creator_user_id,
+        "league_status": LEAGUE_STAGE_ACCEPTING_USERS,
         "league_name": league_info["league_name"], 
         "description": league_info["description"], 
         "points_per_win": league_info["points_per_win"], 
@@ -201,15 +208,16 @@ def create_league(league_info, creator_user_profile):
 def get_league_info(league_id):
     """
     @returns `dict` Keys: `league_id`, `league_id`, `league_name`, `description`, 
-    `points_per_win`, `points_per_draw`, `points_per_loss`, 
-    `additional_questions`, `registration_deadline`
+    `points_per_win`, `points_per_draw`, `points_per_loss`, `league_status`, 
+    `additional_questions`, `registration_deadline`, `match_frequency_in_days`, 
+    `max_num_players`
 
     @returns `None` if the league_id is not found
     """
     cursor = db.execute(
         (
             "SELECT league_id, league_name, description, points_per_win, "
-            "points_per_draw, points_per_loss, additional_questions, "
+            "points_per_draw, points_per_loss, additional_questions, league_status, "
             "registration_deadline, match_frequency_in_days, max_num_players "
             "FROM league_info WHERE league_id = %s"
         ), 

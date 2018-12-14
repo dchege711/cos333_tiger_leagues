@@ -158,6 +158,11 @@ def generate_league_fixtures(league_id, div_allocations):
                     ]
                 )
             deadline += timeslot_length
+
+    db.execute(
+        "UPDATE league_info SET league_status = %s WHERE league_id = %s",
+        values=[league_model.LEAGUE_STAGE_IN_PROGRESS, league_id]
+    )
     
     return {
         "success": True, "message": "Fixtures successfully created!"
