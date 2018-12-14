@@ -26,7 +26,7 @@ def register_fake_users(num_users=40):
         """
         for i in range(n):
             yield {
-                "name": "User #{}".format(i), "email": "{}@not.princeton.edu".format(i),
+                "name": "u{}".format(i), "email": "{}@not.princeton.edu".format(i),
                 "phone_num": "555-555-5555", "room": "Blair A{}".format(i), 
                 "net_id": "user{}".format(i)
             }
@@ -127,6 +127,11 @@ if __name__ == "__main__":
         raise RuntimeError("Please provide a Princeton Net ID as a command line arg")
 
     clean_database()
+
+    try:
+        num_leagues = int(sys.argv[2])
+    except IndexError:
+        num_leagues = 5
     
     try:
         admin_user_profile = user_model.update_user_profile(
@@ -138,9 +143,10 @@ if __name__ == "__main__":
         )
 
         fake_users = register_fake_users()
-        league_info_list = create_leagues(admin_user_profile)
+        league_info_list = create_leagues(admin_user_profile, num_leagues=num_leagues)
+
         fake_users = populate_leagues(league_info_list, fake_users)
-        generate_matches(league_info_list)
+        generate_matches(league_info_list[:num_leagues // 2])
     except:
         clean_database()
         raise
