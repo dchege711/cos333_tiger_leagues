@@ -59,6 +59,6 @@ def cas_logout():
     """
     @GET Log out the currently logged in user. Redirect to the login page.
     """
-    session["user"] = None
+    session.clear()
     return redirect(url_for("auth.index"))
     
