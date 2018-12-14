@@ -336,19 +336,19 @@ def get_current_matches(league_id):
     latest_date = date.today() + timedelta(days=time_window_days)
     earliest_date = date.today() - timedelta(days=time_window_days)
     reported_matches = db.execute(
-        "SELECT FROM match_info WHERE league_id = %s AND (deadline >= %s AND \
-        deadline <= %s);",
-        values=[league_id, earliest_date, latest_date]
+        "SELECT * FROM match_info WHERE league_id = %s;",
+        values=[league_id]
     )
     current_matches = []
     mapping = {"user_id_1": "user_1_name", "user_id_2": "user_2_name"}
     for match in reported_matches:
         match_dict = dict(**match)
         for key, val in mapping.items():
-            match_dict[val] = db.execute(
-                "SELECT name FROM users WHERE user_id = %s",
-                values=[match[key]]
-            )
+            if match[key] is not None:
+                match_dict[val] = db.execute(
+                    "SELECT name FROM users WHERE user_id = %s",
+                    values=[match[key]]
+                ).fetchone()["name"]
         current_matches.append(match_dict)
 
     return current_matches
@@ -358,7 +358,7 @@ def approve_match(score_info):
     @param dict `score_info`: Expected keys: `score_user_1`, `score_user_2`, 
     `match_id`
 
-    @return `dict`: Keys: `success`, `message
+    @return `dict`: Keys: `success`, `message`
     """
     try:
         db.execute(
