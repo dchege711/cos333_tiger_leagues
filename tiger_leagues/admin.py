@@ -68,7 +68,7 @@ def start_league(league_id):
     """
     @GET: Render a template for setting the league configurations.
     """
-    league_info = league_model.get_league_info(league_id)["message"]
+    league_info = league_model.get_league_info(league_id)
 
     if request.method == "GET":
         registration_stats = admin_model.get_registration_stats(league_id)
@@ -79,7 +79,7 @@ def start_league(league_id):
 
     if request.method == "POST":
         return jsonify(
-            admin_model.allocate_league_divisions(
+            admin_model.generate_league_fixtures(
                 league_id, request.json
             )
         )

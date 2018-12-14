@@ -102,6 +102,10 @@
 
             </div>
 
+            <div class="w3-container w3-margin-top">
+                <button onclick="document.location = './../'" class="w3-button w3-round w3-orange w3-left">Back to Admin Page</button>
+            </div>
+
         </div>
 
         
@@ -175,6 +179,7 @@
                     let responseObject = JSON.parse(response);
                     if (responseObject.success) {
                         alert(responseObject.message);
+                        document.location = `./../`;
                     } else {
                         alert(`Error: ${responseObject.message}`);
                     }
