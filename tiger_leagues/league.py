@@ -5,28 +5,12 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 
 """
 
-import json
-import random
-from datetime import date
-from collections import defaultdict
-
 from flask import (
     Blueprint, render_template, request, url_for, jsonify, session, redirect, flash
 )
-from . import db, decorators, user as user_client
+from . import decorators
+from .models import league_model, user_model
 
-generic_500_msg = {
-    "success": False, "status": 500, "message": "Internal Server Error"
-}
-
-STATUS_PENDING = "pending"
-STATUS_MEMBER = "member"
-STATUS_DENIED = "denied"
-STATUS_ADMIN = "admin"
-STATUS_INACTIVE = "inactive"
-STATUS_APPROVED = "approved"
-
-database = db.Database()
 bp = Blueprint("league", __name__, url_prefix="/league")
 
 @bp.route("/", methods=["GET"])
@@ -57,77 +41,17 @@ def league_homepage(league_id):
     score_reports, upcoming_games`, etc.
     """
     associated_leagues = session.get("user")["associated_leagues"]
-    cursor = database.execute(
-        (
-            "SELECT points_per_win, points_per_draw, points_per_loss, league_name "
-            "FROM league_info WHERE league_id = %s"
-        ),
-        values=[league_id]
+    standings = league_model.get_league_standings(
+        league_id, associated_leagues[str(league_id)]["division_id"]
     )
-    row = cursor.fetchone()
-
-    points_per_win = row['points_per_win']
-    points_per_draw = row['points_per_draw']
-    points_per_loss = row['points_per_loss']
-    league_name = row['league_name']
-
-    cursor = database.execute(
-        (
-            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2 "
-            "FROM match_info WHERE league_id = %s"
-        ),
-        values=[league_id]
-    )
-
-    standings_info = {}
-    row = cursor.fetchone()
-    while row is not None:
-        key1 = row['user_id_1']
-        key2 = row['user_id_2']
-
-        if key1 not in standings_info:
-            standings_info[key1] = defaultdict(lambda: 0)
-        if key2 not in standings_info:
-            standings_info[key2] = defaultdict(lambda: 0)
-
-        standings_info[key1]['goals_formed'] += row['score_user_1']
-        standings_info[key2]['goals_formed'] += row['score_user_2']
-        standings_info[key1]['goals_allowed'] += row['score_user_2']
-        standings_info[key2]['goals_allowed'] += row['score_user_1']
-        if (row['score_user_1'] > row['score_user_2']):
-            standings_info[key1]['wins'] += 1
-            standings_info[key1]['points'] += points_per_win
-            standings_info[key2]['losses'] += 1
-            standings_info[key2]['points'] += points_per_loss
-        elif (row['score_user_1'] < row['score_user_2']):
-            standings_info[key2]['wins'] += 1
-            standings_info[key2]['points'] += points_per_win
-            standings_info[key1]['losses'] += 1
-            standings_info[key1]['points'] += points_per_loss
-        else:
-            standings_info[key1]['draws'] += 1
-            standings_info[key1]['points'] += points_per_draw
-            standings_info[key2]['draws'] += 1
-            standings_info[key2]['points'] += points_per_draw
-        row = cursor.fetchone()
-
-    for key in standings_info:
-        cursor = database.execute(
-            (
-                "SELECT name FROM users WHERE user_id = %s"
-            ),
-            values=key
-        )
-        standings_info[key]['name'] = cursor.fetchone()['name']
-        standings_info[key]['goal_diff'] = standings_info[key]['goals_formed'] - standings_info[key]['goals_allowed']
-
     return render_template(
         "/league/league_homepage.html", 
-        standings=standings_info, associated_leagues=associated_leagues, league_name=league_name
+        standings=standings, 
+        associated_leagues=associated_leagues, 
+        league_name=associated_leagues[str(league_id)]["league_name"]
     )
 
-
-@bp.route("/create", methods=["GET", "POST"])
+@bp.route("/create/", methods=["GET", "POST"])
 @decorators.login_required
 def create_league():
     """
@@ -139,159 +63,31 @@ def create_league():
         return render_template("/league/create_league.html")
     elif request.method == "POST":
         create_league_info = request.json
-        results = __create_league(create_league_info)
-        if results["success"]: return jsonify(results)
-        return "500. Internal Server Error"
-
-def __create_league(league_info):
-    """
-    Create a league from the submitted data. Expected keys: `league_name`, 
-    `description`, `points_per_win`, `points_per_draw`, `points_per_loss`, 
-    `registration_deadline` and `additional_questions`.
-
-    @returns `dict`: `success` is set to `True` only if the league was created. 
-    If `success` is `False`, the `message` field will contain a decriptive error.
-    Otherwise, the `message` field will be a `dict` keyed by `invite_url` and 
-    `league_id`.
-
-    """
-    creator_user_id = session.get("user")["user_id"]
-    sanitized_additional_questions = {}
-    for idx, question in enumerate(league_info["additional_questions"].values()):
-        try:
-            sanitized_additional_questions["question{}".format(idx)] = {
-                "question": question["question"], "options": question["options"]
+        user_profile = session.get("user")
+        results = league_model.create_league(create_league_info, user_profile)
+        if results["success"]:
+            league_id = results["message"]
+            results["message"] = {
+                "league_id": league_id,
+                "invite_url": url_for("league.join_league", league_id=league_id, _external=True)
             }
-        except KeyError:
-            return {
-                "success": False, "status": 200, 
-                "message": "Malformed input detected!"
-            }
+        
+        session["user"] = user_model.get_user(user_profile["net_id"])
+        return jsonify(results)
 
-    league_basics = {
-        "creator_user_id": creator_user_id,
-        "league_name": league_info["league_name"], 
-        "description": league_info["description"], 
-        "points_per_win": league_info["points_per_win"], 
-        "points_per_draw": league_info["points_per_draw"], 
-        "max_num_players": league_info["max_num_players"], 
-        "match_frequency_in_days": league_info["match_frequency_in_days"],
-        "points_per_loss": league_info["points_per_loss"], 
-        "registration_deadline": league_info["registration_deadline"],
-        "additional_questions": json.dumps(sanitized_additional_questions)
-    }
-    keys_in_order = list(league_basics.keys())
-    cursor = database.execute(
-        "INSERT INTO league_info ({}) VALUES ({}) RETURNING league_id;".format(
-            ", ".join(["{}" for _ in keys_in_order]),
-            ", ".join(["%({})s".format(key) for key in keys_in_order])
-        ),
-        dynamic_table_or_column_names=keys_in_order,
-        values=league_basics
-    )
-    if cursor is None: return {
-        "success": False, "status": 500, "message": "Internal Server Error"
-    }
-
-    league_id = cursor.fetchone()["league_id"]
-
-    # questions provided by the creator of league, given as the keys in league_info
-    if sanitized_additional_questions:
-        database.execute(
-            (
-                "CREATE TABLE league_responses_{} ("
-                "user_id INT PRIMARY KEY UNIQUE, status VARCHAR(255), {});"
-            ).format(
-                league_id, ", ".join([
-                    "{} VARCHAR(255)".format(x) for x in sanitized_additional_questions
-                ])
-            )
-        )
-    else:
-        database.execute((
-            "CREATE TABLE league_responses_{} ("
-            "user_id INT PRIMARY KEY UNIQUE, status VARCHAR(255));"
-        ).format(league_id))
-
-    # Set a default row for the league creator as an admin
-    database.execute(
-        "INSERT INTO {} (user_id, status) VALUES (%s, %s);",
-        values=[creator_user_id, STATUS_ADMIN],
-        dynamic_table_or_column_names=[
-            "league_responses_{}".format(league_id)
-        ]
-    )
-
-    database.execute(
-        "UPDATE users SET league_ids = %s WHERE user_id = %s;",
-        values=[
-            ", ".join(str(x) for x in session.get("user")["league_ids"] + [league_id]),
-            creator_user_id
-        ]
-    )
-    session["user"] = user_client.get_user(session.get("user")["net_id"])
-
-    return {
-        "success": True, "status": 200, 
-        "message": {
-            "invite_url": url_for("league.join_league", league_id=league_id, _external=True),
-            "league_id": league_id
-        }
-    }
-
-def get_join_league_info(league_id):
-    """
-    @returns `dict` Keys: `league_id`, `league_id`, `league_name`, `description`, 
-    `points_per_win`, `points_per_draw`, `points_per_loss`, 
-    `additional_questions`, `registration_deadline`
-
-    @returns `None` if the league_id is not found
-    """
-    cursor = database.execute(
-        (
-            "SELECT league_id, league_name, description, points_per_win, "
-            "points_per_draw, points_per_loss, additional_questions, "
-            "registration_deadline, match_frequency_in_days, max_num_players "
-            "FROM league_info WHERE league_id = %s"
-        ), 
-        values=[league_id]
-    )
-    league_info = cursor.fetchone()
-    
-    if league_info is not None:
-        if league_info["additional_questions"]:
-            league_info["additional_questions"] = json.loads(league_info["additional_questions"])
-
-    return league_info
-
-@bp.route("/browse", methods=["GET"])
+@bp.route("/browse/", methods=["GET"])
 @decorators.login_required
 def browse_leagues():
     """
     @GET: Display leagues that the user can join.
 
     """
-    ids_associated_leagues = set(session.get("user")["associated_leagues"].keys())
-    cursor = database.execute((
-        "SELECT league_id, league_name, registration_deadline, description"
-        " FROM league_info;"
-    ))
-
-    unjoined_leagues, today = [], date.today()
-    for row in database.iterator(cursor):
-        if row["league_id"] not in ids_associated_leagues:
-            if today <= row["registration_deadline"]:
-                unjoined_leagues.append(row)
-
-    unjoined_leagues.sort(
-        key=lambda league_info: league_info["registration_deadline"]
+    return render_template(
+        "/league/browse.html", 
+        leagues=league_model.get_leagues_not_yet_joined(session.get("user"))
     )
 
-    return render_template(
-        "/league/browse.html", leagues=unjoined_leagues)
-
-
-@bp.route("/<int:league_id>/join", methods=["GET", "POST"])
+@bp.route("/<int:league_id>/join/", methods=["GET", "POST"])
 @decorators.login_required
 def join_league(league_id):
     """
@@ -302,165 +98,44 @@ def join_league(league_id):
     the @GET request.
     """
 
-    league_info = get_join_league_info(league_id)
-
-    # If the league doesn't exist, let the user know
-    if league_info is None:
-        return "League not found"
-
-    # If the league's deadline is already passed, communicate that to the user
-    today = date.today()
-    if today > league_info["registration_deadline"]:
-        return "The League's registration deadline ({}) has passed".format(
-            league_info["registration_deadline"].strftime("%A, %B %d, %Y")
+    results = league_model.get_league_info_if_joinable(league_id)
+    if not results["success"]: 
+        return render_template(
+            "/league/join_league.html", error=results["message"]
         )
 
-    assert isinstance(league_id, int) # Because of SQL injection...
+    league_info = results["message"]
+    user_profile = session.get("user")
 
     if request.method == "GET":
-        # If the user has submitted details before, re-populate them for editing
-        ids_associated_leagues = set(session.get("user")["associated_leagues"].keys())
-        if league_id in ids_associated_leagues:
-            previous_responses = database.iterator(
-                database.execute(
-                    "SELECT * from {} WHERE user_id = %s", 
-                    dynamic_table_or_column_names=["league_responses_{}".format(league_id)],
-                    values=[session.get("user")["user_id"]]
-                )
-            )
-        else:
-            previous_responses = None
-
+        previous_responses = league_model.get_previous_responses(
+            league_id, user_profile
+        )
         return render_template(
             "/league/join_league.html", 
             league_info=league_info, previous_responses=previous_responses
         )
 
     if request.method == "POST":
-        received_data = request.form
-        user = session.get("user")
-        expected_info = {}
-        for key in league_info["additional_questions"]:
-            expected_info[key] = ""   
-
-        for key in expected_info:
-            if key not in received_data: 
-                return "Missing {} in the submitted form".format(key)
-            expected_info[key] = received_data[key]
-
-        # Record the response of the user
-        expected_info["user_id"] = user["user_id"]
-        expected_info["status"] = STATUS_PENDING
-        database.execute(
-            (
-                "INSERT INTO league_responses_{} ({}) VALUES ({}) ON CONFLICT (user_id) DO NOTHING;".format(
-                    league_id, ", ".join(key for key in expected_info), 
-                    ", ".join("%({})s".format(key) for key in expected_info)
-                )
-            ),
-            values=expected_info
+        results = league_model.process_join_league_request(
+            league_id, user_profile, request.form
         )
-
-        # Indicate on the user object that they're involved in this league
-        if league_id not in user["league_ids"]:
-            user["league_ids"].append(league_id)
-            database.execute(
-                "UPDATE users SET league_ids = %s WHERE user_id = %s",
-                values=[", ".join(str(x) for x in user["league_ids"]), user["user_id"]]
-            )
-            session["user"] = user_client.get_user(user["net_id"])
-        flash("Request Submitted!")
+        if results["success"]: 
+            session["user"] = results["message"]
+            flash("Request Submitted!")
+        else:
+            flash(results["message"])
         return redirect(url_for("league.browse_leagues"))
 
-def fixture_generator(league_id, league_deadline):
-    """
-    fixture_generator() creates all the fixtures for a league. It should only be 
-    called once per league. The fixtures will be generated randomly and will
-    have each user play the other memebers of the league once. Each match will also 
-    have a deadline that is relative to the league's deadline. Eventually, admin's
-    will also have control over the number of fixtures played per player.
-    """
-    # we need a more effective of finding all the users in the league. 
-    # as of right now we need to iterate through every user and the league_ids they pertain to
+    return NotImplementedError()
 
-    cursor = database.execute(
-        (
-            "SELECT user_id FROM league_responses WHERE league_id = %s"
-        ),
-        values=[league_id]
-    )
-    
-    users = []
-    row = cursor.fetchone()
-
-    for row in cursor:
-        users.append(row)
-        row = cursor.fetchone()
-
-    length = len(users)
-    odd = 0
-
-    if length % 2 is not 0:
-        length += 1
-        odd = 1
-
-    tempList1 = []
-    tempList2 = []
-
-    for i in range(0, length-1):
-        tempList1.insert(i, users[i])
-        if i is 0 and odd is 1:
-            tempList2.insert(i, None)
-        else:
-            tempList2.insert(i, users[length-1-i])
-
-    for i in range(0,length-1):
-        for i in range(0, length-1):
-            if tempList1[i] is not None and tempList2[i] is not None:
-                cursor = database.execute(
-                    (
-                        "INSERT match_info ("
-                        "user_id_1, user_id_2, league_id) "
-                        "VALUES (%s, %s, %s);"
-                    ),
-                    values=[tempList1[i], tempList2[i], league_id]
-                )
-        tempList1.insert(1, tempList2[0])
-        tempList2.insert(length, tempList1[length])
-        del tempList1[-1]
-        del tempList2[0]
-
-
-    # need a loop that'll generate fixtures. goes from 1 to len(users)
-    
-
-
-    for i in range(1,len(users)):
-        for user in users:
-            x = random.randint(1,len(users))
-
-@bp.route("/<int:league_id>/leave-league", methods=["POST"])
+@bp.route("/<int:league_id>/leave-league/", methods=["POST"])
 @decorators.login_required
 def leave_league(league_id):
-    user = session.get("user")
-    if request.method == "POST":
-        database.execute(
-            "UPDATE {} SET status = %s WHERE user_id =  %s",
-            values=[STATUS_INACTIVE, user["user_id"]], 
-            dynamic_table_or_column_names=["league_responses_{}".format(league_id)]
-        )
-        associated_league_ids = set(user["league_ids"])
-        if league_id in associated_league_ids:
-            associated_league_ids.remove(league_id)
-        database.execute(
-            "UPDATE users SET league_ids=%s WHERE user_id=%s",
-            values=[
-                ", ".join([str(x) for x in associated_league_ids]),
-                user["user_id"]
-            ]
-        )
-        session["user"] = user_client.get_user(user["net_id"])
-
-        return jsonify({
-            "success": True, "message": "Successfully left the league"
-        })
+    """
+    @POST process requests to leave a given league
+    """
+    user_profile = session.get("user")
+    success = league_model.process_leave_league_request(league_id, user_profile)
+    session["user"] = user_model.get_user(user_profile["net_id"])
+    return jsonify({"success": success})
