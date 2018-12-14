@@ -49,7 +49,7 @@ def index():
 
 @bp.route("/<int:league_id>/", methods=["GET"])
 @decorators.login_required
-def league_homepage(league_id):
+def league_homepage(league_id, user_id):
     """
     Render a template for the provided league and the associated user. The 
     template should include information such as `standings, media_feed, 
@@ -72,7 +72,7 @@ def league_homepage(league_id):
 
     cursor = database.execute(
         (
-            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2 "
+            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2, deadline, status "
             "FROM match_info WHERE league_id = %s"
         ),
         values=[league_id]
@@ -81,6 +81,7 @@ def league_homepage(league_id):
     standings_info = {}
     row = cursor.fetchone()
     while row is not None:
+        if row['status'] = 'Accepted'
         key1 = row['user_id_1']
         key2 = row['user_id_2']
 
@@ -119,6 +120,15 @@ def league_homepage(league_id):
         )
         standings_info[key]['name'] = cursor.fetchone()['name']
         standings_info[key]['goal_diff'] = standings_info[key]['goals_formed'] - standings_info[key]['goals_allowed']
+
+    # homepage must also contain upcoming matches
+
+    cursor = database.execute(
+        (
+            "SELECT "
+        ),
+
+    )
 
     return render_template(
         "/league/league_homepage.html", 
@@ -390,7 +400,6 @@ def fixture_generator(league_id, league_deadline):
     )
     
     users = []
-    row = cursor.fetchone()
 
     for row in cursor:
         users.append(row)
@@ -400,34 +409,55 @@ def fixture_generator(league_id, league_deadline):
     odd = 0
 
     if length % 2 is not 0:
-        length += 1
         odd = 1
 
-    tempList1 = []
-    tempList2 = []
+    half = ceil(length/2)
 
-    for i in range(0, length-1):
-        tempList1.insert(i, users[i])
-        if i is 0 and odd is 1:
-            tempList2.insert(i, None)
-        else:
-            tempList2.insert(i, users[length-1-i])
+    tempList1 = [None] * half
+    tempList2 = [None] * half
 
-    for i in range(0,length-1):
-        for i in range(0, length-1):
-            if tempList1[i] is not None and tempList2[i] is not None:
-                cursor = database.execute(
-                    (
-                        "INSERT match_info ("
-                        "user_id_1, user_id_2, league_id) "
-                        "VALUES (%s, %s, %s);"
-                    ),
-                    values=[tempList1[i], tempList2[i], league_id]
-                )
+    for i in range(0, half):
+        tempList1[i] = users[i]
+
+    j = 0
+    for i in range(length-1, half-1, -1):
+        tempList2[j] = users[i]
+        j += 1
+
+    fixtures_list = []
+    rounds_list = []
+    pairs_list = []
+
+    for j in range(0,length-1):
+        for i in range(0, half):
+            pairs_list = [tempList1[i], tempList2[i]]
+            rounds_list.append(pairs_list)
+            pairs_list = []
         tempList1.insert(1, tempList2[0])
-        tempList2.insert(length, tempList1[length])
-        del tempList1[-1]
         del tempList2[0]
+        tempList2.append(tempList1[half])
+        del tempList1[-1]
+        fixtures_list.append(rounds_list)
+        rounds_list = []
+
+    return fixtures_list
+
+
+    # for i in range(0,length-1):
+    #     for i in range(0, length-1):
+    #         if tempList1[i] is not None and tempList2[i] is not None:
+    #             cursor = database.execute(
+    #                 (
+    #                     "INSERT match_info ("
+    #                     "user_id_1, user_id_2, league_id) "
+    #                     "VALUES (%s, %s, %s);"
+    #                 ),
+    #                 values=[tempList1[i], tempList2[i], league_id]
+    #             )
+    #     tempList1.insert(1, tempList2[0])
+    #     tempList2.insert(length, tempList1[length])
+    #     del tempList1[-1]
+    #     del tempList2[0]
 
 
     # need a loop that'll generate fixtures. goes from 1 to len(users)
