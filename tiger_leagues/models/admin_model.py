@@ -336,8 +336,8 @@ def get_current_matches(league_id):
     latest_date = date.today() + timedelta(days=time_window_days)
     earliest_date = date.today() - timedelta(days=time_window_days)
     reported_matches = db.execute(
-        "SELECT FROM match_info WHERE league_id = %s AND (deadline >= %s earliest_date AND \
-        deadline =< %s);",
+        "SELECT FROM match_info WHERE league_id = %s AND (deadline >= %s AND \
+        deadline <= %s);",
         values=[league_id, earliest_date, latest_date]
     )
     current_matches = []

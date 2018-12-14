@@ -35,6 +35,17 @@ def admin_status_required():
     # If nothing has been returned, the request will be passed to its handler
     return None
 
+
+@bp.route("/<int:league_id>/", methods=["GET"])
+def league_homepage(league_id):
+    """
+    @GET: Return the league admin panel
+    """
+    league_info = league_model.get_league_info(league_id)
+    return render_template(
+        "/admin/admin_league_panel.html", league_info=league_info
+    )
+
 @bp.route("/<int:league_id>/approve-members/", methods=["GET", "POST"])
 def league_requests(league_id):
     """
@@ -98,12 +109,11 @@ def allocate_league_divisions(league_id):
         )
     )
 
-@bp.route("/<int:league_id>/", methods=["GET"])
-def league_homepage(league_id):
-    """
-    @GET: Return the league admin panel
-    """
-    league_info = league_model.get_league_info(league_id)
-    return render_template(
-        "/admin/admin_league_panel.html", league_info=league_info
-    )
+
+@bp.route("/<int:league_id>/match-reports/", methods=["GET", "POST"])
+def approve_scores(league_id):
+    if request.method == "GET":
+        return render_template(
+            "/admin/admin_league_homepage.html",
+            reported_matches=admin_model.get_current_matches(league_id)
+        )
