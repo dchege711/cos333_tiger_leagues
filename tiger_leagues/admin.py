@@ -104,9 +104,7 @@ def allocate_league_divisions(league_id):
     divisions
     """
     return jsonify(
-        admin_model.allocate_league_divisions(
-            league_id, request.json
-        )
+        admin_model.allocate_league_divisions(league_id, request.json)
     )
 
 
@@ -117,3 +115,6 @@ def approve_scores(league_id):
             "/admin/admin_league_homepage.html",
             reported_matches=admin_model.get_current_matches(league_id)
         )
+
+    if request.method == "POST":
+        return jsonify(admin_model.approve_match(request.json))
