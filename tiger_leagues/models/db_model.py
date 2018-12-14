@@ -8,7 +8,7 @@ This file acts as the central access to the database.
 from warnings import warn
 import atexit
 from psycopg2 import connect, extras, sql
-from . import config
+from .. import config
 
 class Database:
     """
@@ -54,7 +54,7 @@ class Database:
             "description TEXT, points_per_win INT, points_per_draw INT, "
             "points_per_loss INT, registration_deadline DATE, max_num_players INT, "
             "creator_user_id INT NOT NULL, match_frequency_in_days NUMERIC DEFAULT 7.0, "
-            "additional_questions TEXT, league_status VARCHAR(255));"
+            "additional_questions TEXT);"
         ))
 
     def execute(self, statement, values=None, dynamic_table_or_column_names=None, 
