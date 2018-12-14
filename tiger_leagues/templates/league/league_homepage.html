@@ -83,14 +83,16 @@
                     </tr>
 
                     {% for match in report_scores %}
-                        <tr id="match_data" + {{ match[3] }} >
+                        <tr id="match_data_{{match[3]}}">
                             <td>{{ match[0] }}</td>
                             <td>{{ match[1] }}</td>
                             <td contenteditable="true"></td>
                             <td contenteditable="true"></td>
                             <td>{{ match[2] }}</td> 
                             <td>
-                                <button class="w3-button w3-circle w3-blue" onclick="updateReportedScores(match[3])"      
+                                <button class="w3-button w3-circle w3-blue" onclick="updateReportedScores({{match[3]}})">
+                                    
+                                </button>     
                         </tr>
                     {% endfor %}
 
@@ -104,12 +106,27 @@
     </div>
 
     <script type="text/javascript">
-        updateReportedScores(match_id)
+        function updateReportedScores(match_id)
         {
-            var contenteditable = document.querySelector('[contenteditable]'),score_user_1 = contenteditable.textContent;
-            var contenteditable = document.querySelector('[contenteditable]'),score_user_2 = contenteditable.textContent;
-            database.execute(
-                "UPDATE match_info SET status = %s score_user_1 = %s score_user2 = %s WHERE match_id = match_id")
+            let matchData = document.getElementById(`match_data_${match_id}`);
+
+            let payload = {
+                "score_user_1": matchData.cells[2].innerText,
+                "score_user_2": matchData.cells[3].innerText,
+                "match_id": match_id
+            }
+            sendHTTPRequest("POST", document.URL, payload)
+                    .then((response) => {
+                        response = JSON.parse(response);
+                        if (!response.success) 
+                        {
+                            alert(response.message);
+                        } else 
+                        {
+                            matchData.cells[5].innerHTML = `<button class="w3-button w3-circle w3-green" onclick="updatePendingScores(${match_id})">&#10004</button>`;
+                        }
+                    })
+                    .catch((err) => { alert(err.message); })
         }
     </script>
 
