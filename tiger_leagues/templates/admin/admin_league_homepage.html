@@ -25,17 +25,19 @@
                         <th>P1 Score</th>
                         <th>P2 Score</th>
                         <th>Player 2</th>
-                        <th>Approve ?</th>
+                        <th>Status</th>
+                        <th>Update</th>
                     </tr>
 
                     {% for match in reported_matches %}
                         <tr id="match_data"+{{match["match_id"]}}>
                             <td>{{ match["match_id"] }}</td>
                             <td>{{ match["player_one"] }}</td>
-                            <td>{{ match["p1_score"] }}</td>
-                            <td>{{ match["p2_score"] }}</td>
+                            <td contenteditable="true">{{ match["p1_score"] }}</td>
+                            <td contenteditable="true">{{ match["p2_score"] }}</td>
                             <td>{{ match["player_two"] }}</td>
-                            <td>{{ onclick="updatePendingScores(match_id)" }}</td>
+                            <td>{{ match["status"] }}</td>
+                            <td><button class="w3-button w3-xlarge w3-circle w3-green" onclick="updatePendingScores({{match['match_id'])}}">&#10004</button></td>
                             
                         </tr>
                     {% endfor %}
@@ -50,10 +52,26 @@
     </div>
     
     <script type="text/javascript">
-        updatePendingScores(match_id)
+        function updatePendingScores(match_id)
         {
-            database.execute(
-                "UPDATE match_info SET status = %s WHERE match_id = match_id", "approved")
+            match_data = document.getElementById("match_data"+match_id);
+            let payload = {
+                "score_user_1": match_data.cells[2].innerText,
+                "score_user_2": match_data.cells[3].innerText,
+                "match_id": match_id
+            }
+            sendHTTPRequest("POST", document.URL, payload)
+                    .then((response) => {
+                        response = JSON.parse(response);
+                        if (!response.success) 
+                        {
+                            alert(response.message);
+                        } else 
+                        {
+                            match_data.cells[5] = response.message;
+                        }
+                    })
+                    .catch((err) => { alert(err.message); })
         }
     </script>
 
