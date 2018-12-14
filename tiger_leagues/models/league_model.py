@@ -6,7 +6,8 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 """
 
 import json
-from datetime import date
+from datetime import date, timedelta
+from math import ceil
 from collections import defaultdict
 from functools import cmp_to_key
 
@@ -58,6 +59,7 @@ def get_league_standings(league_id, division_id):
         ),
         values=[league_id, division_id]
     )
+
 
     standings_info = {}
     for row in cursor:
@@ -116,6 +118,70 @@ def get_league_standings(league_id, division_id):
 
     return standings
 
+def get_upcoming_matches(user_id, league_id, division_id):
+    cursor = db.execute(
+        (
+            "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s"
+        ),
+        values=[league_id]
+    )
+
+    match_frequency_in_days = cursor.fetchone()["match_frequency_in_days"]
+    timeslot_length = timedelta(days=ceil(match_frequency_in_days))
+    date_range_1 = date.today() - (5 * timeslot_length)
+    date_range_2 = date.today() + (5 * timeslot_length)
+
+    report_scores = []
+    upcoming_matches = []
+
+    print(user_id)
+    cursor = db.execute(
+        (
+            # "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2, deadline "
+            # "FROM match_info WHERE (user_id_1 = %s OR user_id_2 = %s) AND league_id = %s "
+            # "AND division_id = %s"
+            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2, deadline, status "
+            "FROM match_info WHERE league_id = %s"
+        ),
+        values=[league_id]
+    )
+
+    for row in cursor:
+        # print(row)
+        user_id_1 = row['user_id_1']
+        user_id_2 = row['user_id_2']
+        if row['score_user_1'] is not None:
+            continue
+        if row['score_user_2'] is not None:
+            continue
+        if row['deadline'] > date_range_1:
+            if user_id_1 is user_id:
+                if user_id_2 is not None:
+                    report_scores.append([user_id_2, row['deadline'], row['status'], row['match_id']])
+            if user_id_2 is user_id:
+                if user_id_1 is not None:
+                    report_scores.append([user_id_1, row['deadline'], row['status'], row['match_id']])
+        if row['deadline'] < date_range_2:
+            if user_id_1 is user_id:
+                if user_id_2 is not None:
+                    report_scores.append([user_id_2,row['deadline'], row['status'], row['match_id']])
+            if user_id_2 is user_id:
+                if user_id_1 is not None:
+                    report_scores.append([user_id_1, row['deadline'], row['status'], row['match_id']])
+
+    print(report_scores, upcoming_matches)
+
+    for match in report_scores:
+        cursor = db.execute(
+        (
+            "SELECT name FROM users WHERE user_id = %s"
+        ),
+        values=[match[0]]
+    )
+        match[0] = cursor.fetchone()["name"]
+
+
+    return report_scores, upcoming_matches
 def create_league(league_info, creator_user_profile):
     """
     Create a league from the submitted data. 

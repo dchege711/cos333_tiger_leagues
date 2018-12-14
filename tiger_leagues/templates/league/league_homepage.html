@@ -69,23 +69,28 @@
 
             <!-- Display reported scores-->
             <div class="w3-container">
-                <h4>Reported Scores</h4>
+                <h4>Report Scores</h4>
                 <hr>
 
                 <table class="w3-table-all">
                     <tr>
-                        <th>Versus</th>
-                        <th>You</th>
-                        <th>Them</th>
-                        <th>Approved?</th>
+                        <th>Opponent</th>
+                        <th>Deadline</th>
+                        <th>Your Score</th>
+                        <th>Opponent Score</th>
+                        <th>Status</th>
+                        <th></th>
                     </tr>
 
-                    {% for match in past_matches %}
-                        <tr>
-                            <td>{{ match["opponent"] }}</td>
-                            <td>{{ match["my_score"] }}</td>
-                            <td>{{ match["opponent_score"] }}</td>
-                            <td>{{ match["score_approved"] }}</td>
+                    {% for match in report_scores %}
+                        <tr id="match_data" + {{ match[3] }} >
+                            <td>{{ match[0] }}</td>
+                            <td>{{ match[1] }}</td>
+                            <td contenteditable="true"></td>
+                            <td contenteditable="true"></td>
+                            <td>{{ match[2] }}</td> 
+                            <td>
+                                <button class="w3-button w3-circle w3-blue" onclick="updateReportedScores(match[3])"      
                         </tr>
                     {% endfor %}
 
@@ -97,5 +102,15 @@
         </div>
            
     </div>
+
+    <script type="text/javascript">
+        updateReportedScores(match_id)
+        {
+            var contenteditable = document.querySelector('[contenteditable]'),score_user_1 = contenteditable.textContent;
+            var contenteditable = document.querySelector('[contenteditable]'),score_user_2 = contenteditable.textContent;
+            database.execute(
+                "UPDATE match_info SET status = %s score_user_1 = %s score_user2 = %s WHERE match_id = match_id")
+        }
+    </script>
 
 {% endblock %}

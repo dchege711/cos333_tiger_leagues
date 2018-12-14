@@ -44,9 +44,14 @@ def league_homepage(league_id):
     standings = league_model.get_league_standings(
         league_id, associated_leagues[str(league_id)]["division_id"]
     )
+    user_id = session.get("user")["user_id"]
+    report_scores, upcoming_matches = league_model.get_upcoming_matches(
+        user_id, league_id, associated_leagues[str(league_id)]["division_id"]
+    )
     return render_template(
         "/league/league_homepage.html", 
-        standings=standings, 
+        standings=standings,
+        report_scores=report_scores, 
         associated_leagues=associated_leagues, 
         league_name=associated_leagues[str(league_id)]["league_name"]
     )
