@@ -13,7 +13,7 @@ from flask import (
     Blueprint, render_template, session, request, url_for, redirect, jsonify
 )
 
-from . import league, db
+from . import league, db, decorators
 
 database = db.Database()
 bp = Blueprint("admin", __name__, url_prefix="/admin")
