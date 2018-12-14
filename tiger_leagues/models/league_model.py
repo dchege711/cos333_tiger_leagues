@@ -54,11 +54,11 @@ def get_league_standings(league_id, division_id):
     cursor = db.execute(
         (
             "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2 "
-            "FROM match_info WHERE league_id = %s AND division_id = %s"
+            "FROM match_info WHERE league_id = %s"
         ),
-        values=[league_id, division_id]
+        values=[league_id]
     )
-
+    #            "AND status = %s"
     standings_info = {}
     for row in cursor:
         user_id_1 = row['user_id_1']
@@ -90,16 +90,17 @@ def get_league_standings(league_id, division_id):
             standings_info[user_id_2]['points'] += points_per_draw
 
     for user_id in standings_info:
-        cursor = db.execute(
-            (
-                "SELECT name FROM users WHERE user_id = %s"
-            ),
-            values=[user_id]
-        )
-        standings_info[user_id]['name'] = cursor.fetchone()['name']
-        standings_info[user_id]['user_id'] = user_id
-        standings_info[user_id]['goal_diff'] = standings_info[user_id]['goals_for'] - standings_info[user_id]['goals_allowed']
-
+        if user_id is not None:
+            cursor = db.execute(
+                (
+                    "SELECT name FROM users WHERE user_id = %s"
+                ),
+                values=[user_id]
+            )
+            standings_info[user_id]['name'] = cursor.fetchone()['name']
+            standings_info[user_id]['user_id'] = user_id
+            standings_info[user_id]['goal_diff'] = standings_info[user_id]['goals_for'] - standings_info[user_id]['goals_allowed']
+        
     def standings_cmp(a, b):
         """
         A comparator function for sorting the standings
@@ -112,8 +113,8 @@ def get_league_standings(league_id, division_id):
             return a["losses"] + a["draws"] + a["wins"] - b["losses"] - b["draws"] - b["wins"]
 
     standings = [x for x in standings_info.values()]
-    standings.sort(key=cmp_to_key(standings_cmp))
-
+    standings.sort(key=cmp_to_key(standings_cmp), reverse=True)
+    print(standings)
     return standings
 
 def create_league(league_info, creator_user_profile):
