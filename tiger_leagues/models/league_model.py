@@ -28,6 +28,8 @@ LEAGUE_STAGE_IN_PROGRESS = "league_in_progress"
 LEAGUE_STAGE_COMPLETED = "league_matches_completed"
 LEAGUE_STAGE_IN_PLAYOFFS = "in_playoffs"
 
+MATCH_STATUS_APPROVED = "approved"
+
 db = db_model.Database()
 
 def get_league_standings(league_id, division_id):
