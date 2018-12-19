@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}League Member Profile{% endblock %}
+
+{% block content %}
+    <div class="w3-container">
+
+        <div class="w3-container w3-twothird">
+
+            <div class="w3-container">
+                <h1>{{league_name}}: {{user['name']}}</h1>
+                <h4>Player Summary</h4>
+                <table class="w3-table-all">
+                    <tr>
+                        <th>W</th>
+                        <th>L</th>
+                        <th>D</th>
+                        <th>GF</th>
+                        <th>GA</th>
+                        <th>GD</th>
+                        <th>PTS</th>
+                    </tr>
+                    <tr>
+                        <td>{{ standings["wins"] }}</td>
+                        <td>{{ standings["losses"] }}</td>
+                        <td>{{ standings["draws"] }}</td>
+                        <td>{{ standings["goals_formed"] }}</td>
+                        <td>{{ standings["goals_allowed"] }}</td>
+                        <td>{{ standings["goal_diff"] }}</td>
+                        <td>{{ standings["points"] }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="w3-container">
+            </div>
+
+        </div>           
+    </div>
+
+{% endblock %}

@@ -34,7 +34,7 @@
             <br />
 
             {% if league_info["league_status"] == "league_in_progress" %}
-            <button class="w3-button w3-large w3-round w3-green">View & Approve Scores</button>
+            <button class="w3-button w3-large w3-round w3-green" onclick="document.location = 'match-reports/'">View & Approve Scores</button>
             {% else %}
             <button class="w3-button w3-large w3-round w3-gray inactive">View & Approve Scores</button>
             {% endif %}
