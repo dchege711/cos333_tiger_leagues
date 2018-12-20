@@ -58,8 +58,9 @@ def get_league_standings(league_id):
 
     cursor = db.execute(
         (
-            "SELECT match_id, division_id, user_id_1, user_id_2, score_user_1, score_user_2 "
-            "FROM match_info WHERE league_id = %s AND score_user_1 IS NOT NULL ORDER BY division_id;"
+            "SELECT match_id, division_id, user_id_1, user_id_2, score_user_1, "
+            "score_user_2 FROM match_info WHERE league_id = %s "
+            "AND score_user_1 IS NOT NULL ORDER BY division_id;"
         ),
         values=[league_id]
     )
@@ -127,6 +128,26 @@ def get_league_standings(league_id):
         standings = [x for x in all_standings[division_id].values()]
         standings.sort(key=cmp_to_key(standings_cmp), reverse=True)
         all_standings[division_id] = standings
+
+    # If games have been scheduled but no one has played, pad with zeros...
+    if not all_standings:
+        table_name = "league_responses_{}".format(league_id)
+        cursor = db.execute(
+            (
+                "SELECT users.user_id, users.name, division_id FROM {}, users "
+                "WHERE users.user_id = {}.user_id AND division_id IS NOT NULL;"
+            ),
+            dynamic_table_or_column_names=[table_name, table_name]
+        )
+
+        for row in cursor:
+            all_standings[row["division_id"]][row["user_id"]] = {
+                "name": row["name"], "wins": 0, "losses": 0, "draws": 0, 
+                "goals_for": 0, "goals_allowed": 0, "goal_diff": 0, "points": 0
+            }
+
+        for division_id in all_standings:
+            all_standings[division_id] = [x for x in all_standings[division_id].values()]
 
     return all_standings
 
@@ -231,6 +252,7 @@ def process_player_score_report(user_id, score_details):
         mapping["opponent_score"] = "score_user_1"
         mapping["score_user_1"] = "opponent_score"
     
+    print(dict(**previous_match_details))
     if previous_match_details["recent_updater_id"] != user_id and \
         previous_match_details[mapping["my_score"]] == score_details["my_score"] and \
         previous_match_details[mapping["opponent_score"]] == score_details["opponent_score"]:
