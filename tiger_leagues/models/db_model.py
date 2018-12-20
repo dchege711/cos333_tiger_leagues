@@ -46,7 +46,7 @@ class Database:
             "CREATE TABLE IF NOT EXISTS match_info ("
             "match_id SERIAL PRIMARY KEY, user_id_1 INT, user_id_2 INT, league_id INT, "
             "division_id INT, score_user_1 INT, score_user_2 INT, "
-            "status VARCHAR(255), deadline DATE, status VARCHAR(70));"
+            "status VARCHAR(255), deadline DATE);"
         ))
 
         self.execute((

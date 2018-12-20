@@ -45,13 +45,13 @@ def league_homepage(league_id):
         league_id, associated_leagues[str(league_id)]["division_id"]
     )
     user_id = session.get("user")["user_id"]
-    report_scores, _ = league_model.get_upcoming_matches(
-        user_id, league_id, associated_leagues[str(league_id)]["division_id"]
+    current_matches = league_model.get_players_current_matches(
+        user_id, league_id
     )
     return render_template(
         "/league/league_homepage.html", 
         standings=standings,
-        report_scores=report_scores, 
+        current_matches=current_matches, 
         associated_leagues=associated_leagues, 
         league_name=associated_leagues[str(league_id)]["league_name"]
     )
