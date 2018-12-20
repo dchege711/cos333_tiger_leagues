@@ -143,9 +143,11 @@ def generate_league_fixtures(league_id, div_allocations):
     timeslot_length = timedelta(days=ceil(league_info["match_frequency_in_days"]))
     match_deadline = date.today() + timedelta(days=1) + timeslot_length
 
+    player_ids_to_div_ids = {}
     for division_id, division_players in div_allocations.items():
         fixtures = fixture_generator([x["user_id"] for x in division_players])
         deadline = match_deadline
+        note_division_ids = True
         for current_matches in fixtures:
             for matchup in current_matches:
                 db.execute(
@@ -157,7 +159,26 @@ def generate_league_fixtures(league_id, div_allocations):
                         matchup[0], matchup[1], league_id, division_id, deadline
                     ]
                 )
+                if note_division_ids:
+                    for player_id in (matchup[0], matchup[1]):
+                        if player_id not in player_ids_to_div_ids:
+                            player_ids_to_div_ids[player_id] = division_id
+
+            note_division_ids = False
             deadline += timeslot_length
+
+    responses_table_name = "league_responses_{}".format(league_id)
+    player_ids_to_div_ids = [
+        (user_id, div_id) for user_id, div_id in player_ids_to_div_ids.items()
+    ]
+    db.execute_many(
+        (
+            "UPDATE {} SET division_id = data.division_id FROM (VALUES %s) "
+            "AS data (user_id, division_id) WHERE {}.user_id = data.user_id;"
+        ),
+        player_ids_to_div_ids, 
+        dynamic_table_or_column_names=[responses_table_name, responses_table_name]
+    )
 
     db.execute(
         "UPDATE league_info SET league_status = %s WHERE league_id = %s",
