@@ -30,6 +30,7 @@ LEAGUE_STAGE_COMPLETED = "league_matches_completed"
 LEAGUE_STAGE_IN_PLAYOFFS = "in_playoffs"
 
 MATCH_STATUS_APPROVED = "approved"
+MATCH_STATUS_PENDING_APPROVAL = "pending_approval"
 
 db = db_model.Database()
 
@@ -192,7 +193,54 @@ def get_players_current_matches(user_id, league_id):
         match["opponent_name"] = cursor.fetchone()["name"]
 
     return current_matches
+
+def process_player_score_report(user_id, score_details):
+    """
+    @param int `user_id`: The ID of the user submitting the score report
+
+    @param dict `score_details`: Expected keys: `my_score`, `opponent_score`, 
+    `match_id`.
+
+    @returns dict: Expected keys: `success`, `message`
+
+    """
+    previous_match_details = db.execute(
+        "SELECT * FROM match_info WHERE match_id = %s", 
+        values=[score_details["match_id"]]
+    ).fetchone()
+    mapping = {}
+    if previous_match_details["user_id_1"] == user_id:
+        mapping["my_score"] = "score_user_1"
+        mapping["score_user_1"] = "my_score"
+        mapping["opponent_score"] = "score_user_2"
+        mapping["score_user_2"] = "opponent_score"
+    else:
+        mapping["my_score"] = "score_user_2"
+        mapping["score_user_2"] = "my_score"
+        mapping["opponent_score"] = "score_user_1"
+        mapping["score_user_1"] = "opponent_score"
     
+    if previous_match_details["recent_updater_id"] != user_id and \
+        previous_match_details[mapping["my_score"]] == score_details["my_score"] and \
+        previous_match_details[mapping["opponent_score"]] == score_details["opponent_score"]:
+        match_status = MATCH_STATUS_APPROVED
+    else:
+        match_status = MATCH_STATUS_PENDING_APPROVAL
+
+    db.execute(
+        (
+            "UPDATE match_info "
+            "SET score_user_1 = %s, score_user_2 = %s, status = %s, recent_updater_id = %s "
+            "WHERE match_id = %s"
+        ),
+        values=[
+            score_details[mapping["score_user_1"]], score_details[mapping["score_user_2"]],
+            match_status, user_id, score_details["match_id"]
+        ]
+    )
+
+    return {"success": True, "message": {"match_status": match_status}}
+
 def create_league(league_info, creator_user_profile):
     """
     Create a league from the submitted data. 
