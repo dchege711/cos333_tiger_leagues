@@ -96,19 +96,19 @@
             let matchData = document.getElementById(`match_data_${match_id}`);
 
             let payload = {
-                "score_user_1": parseInt(matchData.cells[2].innerText),
-                "score_user_2": parseInt(matchData.cells[3].innerText),
-                "match_id": match_id
+                my_score: parseInt(matchData.cells[2].innerText),
+                opponent_score: parseInt(matchData.cells[3].innerText),
+                match_id: match_id
             }
-            sendHTTPRequest("POST", document.URL, payload)
+            sendHTTPRequest("POST", "submit-score/", payload)
                     .then((response) => {
                         response = JSON.parse(response);
-                        if (!response.success) 
-                        {
+                        if (!response.success) {
                             alert(response.message);
-                        } else 
-                        {
-                            matchData.cells[5].innerHTML = `<button class="w3-button w3-circle w3-green" onclick="updatePendingScores(${match_id})">&#10004</button>`;
+                        } else {
+                            if (response.message.match_status == "approved") {
+                                matchData.cells[4].innerHTML = `<span style="color: green">&#10004</span>`;
+                            }
                         }
                     })
                     .catch((err) => { alert(err.message); })
