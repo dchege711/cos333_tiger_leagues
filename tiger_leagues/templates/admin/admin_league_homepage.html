@@ -78,7 +78,7 @@
 
             let payload = {
                 "score_user_1": parseInt(matchData.cells[2].innerText),
-                "score_user_2": parseInt(matchData.cells[3].innerText),
+                "score_user_2": parseInt(matchData.cells[4].innerText),
                 "match_id": match_id
             }
             sendHTTPRequest("POST", document.URL, payload)
@@ -89,7 +89,7 @@
                             alert(response.message);
                         } else 
                         {
-                            matchData.cells[5].innerHTML = `<button class="w3-button w3-circle w3-green" onclick="updatePendingScores(${match_id})">&#10004</button>`;
+                            matchData.cells[6].innerHTML = `<button class="w3-button w3-circle w3-green" onclick="updatePendingScores(${match_id})">&#10004</button>`;
                         }
                     })
                     .catch((err) => { alert(err.message); })
