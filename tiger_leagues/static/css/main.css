@@ -16,6 +16,12 @@ input[type="email"] {
     width: 100%;
 }
 
+[contenteditable="true"] {
+    margin: 2%;
+    background-color: white;
+    border: thin solid black;
+}
+
 .flash {
     margin: auto;
     background-color: lightblue;
