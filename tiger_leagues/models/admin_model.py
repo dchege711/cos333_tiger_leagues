@@ -5,7 +5,7 @@ Exposes functions that are used by the controller for the `/admin/*` endpoint
 
 """
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from random import shuffle
 from math import ceil
 from datetime import date, timedelta
@@ -169,7 +169,7 @@ def generate_league_fixtures(league_id, div_allocations):
 
     responses_table_name = "league_responses_{}".format(league_id)
     player_ids_to_div_ids = [
-        (user_id, div_id) for user_id, div_id in player_ids_to_div_ids.items()
+        (user_id, int(div_id)) for user_id, div_id in player_ids_to_div_ids.items()
     ]
     db.execute_many(
         (
@@ -354,13 +354,13 @@ def get_current_matches(league_id):
     """
     league_info = league_model.get_league_info(league_id)
     time_window_days = ceil(league_info["match_frequency_in_days"])
-    latest_date = date.today() + timedelta(days=time_window_days)
+    latest_date = date.today() + timedelta(days=time_window_days * 2)
     earliest_date = date.today() - timedelta(days=time_window_days)
     reported_matches = db.execute(
-        "SELECT * FROM match_info WHERE league_id = %s;",
-        values=[league_id]
+        "SELECT * FROM match_info WHERE league_id = %s AND deadline >= %s AND deadline <= %s ORDER BY deadline;",
+        values=[league_id, earliest_date, latest_date]
     )
-    current_matches = []
+    current_matches = defaultdict(list)
     mapping = {"user_id_1": "user_1_name", "user_id_2": "user_2_name"}
     for match in reported_matches:
         match_dict = dict(**match)
@@ -370,7 +370,9 @@ def get_current_matches(league_id):
                     "SELECT name FROM users WHERE user_id = %s",
                     values=[match[key]]
                 ).fetchone()["name"]
-        current_matches.append(match_dict)
+        current_matches[match_dict["division_id"]].append(match_dict)
+    
+    current_matches = OrderedDict(sorted(current_matches.items(), key=lambda t: t[0]))
 
     return current_matches
 
