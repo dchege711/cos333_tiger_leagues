@@ -42,11 +42,11 @@ def cas_login():
 
     """
 
-    # r = cas.authenticate(request, redirect, session)
-    # while not isinstance(r, str):
-    #     return r
+    r = cas.authenticate(request, redirect, session)
+    while not isinstance(r, str):
+        return r
 
-    net_id = "ruio"
+    net_id = r
     user_data = user_model.get_user(net_id)
     session["user"] = user_data
     session["net_id"] = net_id

@@ -133,10 +133,10 @@ def play_matches():
             db.execute(
                     "UPDATE match_info SET score_user_1 = %s, score_user_2 = %s, "
                     "status = %s WHERE match_id =  %s",
-                    values=[randint(0,10), randint(0, 10), 'approved', row[0]]
+                    values=[randint(0, 10), randint(0, 10), 'approved', row[0]]
                 )
             row = cursor.fetchone()
-        print("Matches successfully 'played'!")
+        print("Matches successfully played!")
     except: 
         raise RuntimeError("Something went wrong")
     

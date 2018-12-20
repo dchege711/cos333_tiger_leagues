@@ -57,9 +57,9 @@ def get_league_standings(league_id, division_id):
     cursor = db.execute(
         (
             "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2 "
-            "FROM match_info WHERE league_id = %s"
+            "FROM match_info WHERE league_id = %s AND division_id = %s"
         ),
-        values=[league_id]
+        values=[league_id, division_id]
     )
     standings_info = {}
     for row in cursor:
@@ -116,7 +116,6 @@ def get_league_standings(league_id, division_id):
 
     standings = [x for x in standings_info.values()]
     standings.sort(key=cmp_to_key(standings_cmp), reverse=True)
-    print(standings)
     return standings
 
 def get_upcoming_matches(user_id, league_id, division_id):
@@ -135,7 +134,6 @@ def get_upcoming_matches(user_id, league_id, division_id):
     report_scores = []
     upcoming_matches = []
 
-    print(user_id)
     cursor = db.execute(
         (
             # "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2, deadline "
@@ -165,22 +163,19 @@ def get_upcoming_matches(user_id, league_id, division_id):
         if row['deadline'] < date_range_2:
             if user_id_1 is user_id:
                 if user_id_2 is not None:
-                    report_scores.append([user_id_2,row['deadline'], row['status'], row['match_id']])
+                    report_scores.append([user_id_2, row['deadline'], row['status'], row['match_id']])
             if user_id_2 is user_id:
                 if user_id_1 is not None:
                     report_scores.append([user_id_1, row['deadline'], row['status'], row['match_id']])
 
-    print(report_scores, upcoming_matches)
-
     for match in report_scores:
         cursor = db.execute(
-        (
-            "SELECT name FROM users WHERE user_id = %s"
-        ),
-        values=[match[0]]
-    )
+            (
+                "SELECT name FROM users WHERE user_id = %s"
+            ),
+            values=[match[0]]
+        )
         match[0] = cursor.fetchone()["name"]
-
 
     return report_scores, upcoming_matches
     
