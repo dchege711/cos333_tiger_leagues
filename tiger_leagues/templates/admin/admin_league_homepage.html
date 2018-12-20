@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-    <div class="w3-container w3-center">
+    <div class="w3-container">
             
             <!-- Display Pending Scores "not played, pending, approved"-->
             <div class="w3-container w3-half w3-center">
@@ -28,7 +28,7 @@
 
                             <table class="w3-table-all">
                                 <tr>
-                                    <th>Deadline</th><th>Player 1</th><th>P1 Score</th>
+                                    <th>Deadline</th><th>Player 1</th><th>P1 Score</th><th></th>
                                     <th>P2 Score</th><th>Player 2</th><th>Update</th>
                                 </tr>
             
@@ -38,20 +38,22 @@
                                         <td>{{ match["user_1_name"] }}</td>
                                         {% if match["status"] != None %}
                                             <td contenteditable="true">{{ match["score_user_1"] }}</td>
+                                            <td><strong> - </strong></td>
                                             <td contenteditable="true">{{ match["score_user_2"] }}</td>
                                         {% else %}
                                             <td contenteditable="true"></td>
+                                            <td><strong> - </strong></td>
                                             <td contenteditable="true"></td>
                                         {% endif %}
                                         <td>{{ match["user_2_name"] }}</td>
                                         <td>
-                                            {% if match["status"] != None %}
+                                            {% if match["status"] == "approved" %}
                                                 <button class="w3-button w3-circle w3-green" onclick="updatePendingScores({{match['match_id']}})">
                                                     &#10004
                                                 </button>
                                             {% else %}
                                                 <button class="w3-button w3-circle w3-gray" onclick="updatePendingScores({{match['match_id']}})">
-                                                </button>
+                                                Approve</button>
                                             {% endif %}
                                         </td>
                                         
@@ -75,8 +77,8 @@
             let matchData = document.getElementById(`match_data_${match_id}`);
 
             let payload = {
-                "score_user_1": matchData.cells[2].innerText,
-                "score_user_2": matchData.cells[3].innerText,
+                "score_user_1": parseInt(matchData.cells[2].innerText),
+                "score_user_2": parseInt(matchData.cells[3].innerText),
                 "match_id": match_id
             }
             sendHTTPRequest("POST", document.URL, payload)
