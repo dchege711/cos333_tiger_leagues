@@ -36,7 +36,7 @@ def index():
 @decorators.login_required
 def league_homepage(league_id):
     """
-    Render a template for the provided league and the associated user. The 
+    @GET: Render a template for the provided league and the associated user. The 
     template should include information such as `standings, media_feed, 
     score_reports, upcoming_matches`, etc.
     """
@@ -54,6 +54,17 @@ def league_homepage(league_id):
         current_matches=current_matches, 
         associated_leagues=associated_leagues, 
         league_name=associated_leagues[str(league_id)]["league_name"]
+    )
+
+@bp.route("/<int:league_id>/submit-score/", methods=["POST"])
+@decorators.login_required
+def process_score_submit(league_id):
+    """
+    @POST: Respond to a score submit by a user in a non-admin capacity
+    """
+    user_id = session.get("user")["user_id"]
+    return jsonify(
+        league_model.process_player_score_report(user_id, request.json)
     )
 
 @bp.route("/<int:league_id>/user/<string:net_id>", methods=["GET"])
