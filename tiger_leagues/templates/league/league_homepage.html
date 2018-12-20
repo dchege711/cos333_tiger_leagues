@@ -43,33 +43,10 @@
         </div>
 
         <div class="w3-container w3-third">
-            
-            <!-- Display the coming fixtures -->
-            <div class="w3-container">
-                <h4>Your Upcoming Matches</h4>
-                <hr>
-
-                <table class="w3-table-all">
-                    <tr>
-                        <th>Versus</th>
-                        <th>Deadline</th>
-                        <th>Venue</th>
-                        <th>League</th>
-                    </tr>
-                    {% for match in upcoming_matches %}
-                        <tr>
-                            <td>{{ match["opponent"] }}</td>
-                            <td>{{ match["deadline"] }}</td>
-                            <td>{{ match["venue"] }}</td>
-                            <td>{{ match["league_name"] }}</td>
-                        </tr>
-                    {% endfor %}
-                </table>
-            </div>
 
             <!-- Display reported scores-->
             <div class="w3-container">
-                <h4>Report Scores</h4>
+                <h4>Your Matches</h4>
                 <hr>
 
                 <table class="w3-table-all">
@@ -77,22 +54,30 @@
                         <th>Opponent</th>
                         <th>Deadline</th>
                         <th>Your Score</th>
-                        <th>Opponent Score</th>
-                        <th>Status</th>
-                        <th></th>
+                        <th>Their Score</th>
+                        <th>Approved?</th>
                     </tr>
 
-                    {% for match in report_scores %}
-                        <tr id="match_data_{{match[3]}}">
-                            <td>{{ match[0] }}</td>
-                            <td>{{ match[1] }}</td>
-                            <td contenteditable="true"></td>
-                            <td contenteditable="true"></td>
-                            <td>{{ match[2] }}</td> 
-                            <td>
-                                <button class="w3-button w3-circle w3-blue" onclick="updateReportedScores({{match[3]}})">
-                                    
-                                </button>     
+                    {% for match in current_matches %}
+                        <tr id="match_data_{{match['match_id']}}">
+                            <td>{{ match["opponent_name"] }}</td>
+                            <td>{{ match["deadline"].strftime("%a, %b %d") }}</td>
+                            {% if match["status"] == "approved" %}
+                                <td>{{match['your_score']}}</td>
+                                <td>{{match['opponent_score']}}</td>
+                            {% else %}
+                                <td contenteditable="true" value="{{match['your_score']}}"></td>
+                                <td contenteditable="true" value="{{match['opponent_score']}}"></td>
+                            {% endif %} 
+                            <td class="w3-center">
+                                {% if match["status"] == "approved" %}
+                                    <span style="color: green">&#10004</span>
+                                {% else %}
+                                    <button class="w3-button w3-blue" onclick="updateReportedScores({{match['match_id']}})">
+                                        Submit
+                                    </button>
+                                {% endif %}
+                            </td>     
                         </tr>
                     {% endfor %}
                         
@@ -111,8 +96,8 @@
             let matchData = document.getElementById(`match_data_${match_id}`);
 
             let payload = {
-                "score_user_1": matchData.cells[2].innerText,
-                "score_user_2": matchData.cells[3].innerText,
+                "score_user_1": parseInt(matchData.cells[2].innerText),
+                "score_user_2": parseInt(matchData.cells[3].innerText),
                 "match_id": match_id
             }
             sendHTTPRequest("POST", document.URL, payload)
