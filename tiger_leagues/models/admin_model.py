@@ -352,17 +352,12 @@ def get_current_matches(league_id):
     include `match_id`, `league_id`, `user_id_1`, `user_id_2`, `division_id`, 
     `score_user_1`, `score_user_2`, `status`, `user_1_name`, `user_2_name`
     """
-    league_info = league_model.get_league_info(league_id)
-    time_window_days = ceil(league_info["match_frequency_in_days"])
-    latest_date = date.today() + timedelta(days=time_window_days * 2)
-    earliest_date = date.today() - timedelta(days=time_window_days)
-    reported_matches = db.execute(
-        "SELECT * FROM match_info WHERE league_id = %s AND deadline >= %s AND deadline <= %s ORDER BY deadline;",
-        values=[league_id, earliest_date, latest_date]
+    relevant_matches = league_model.get_matches_in_current_window(
+        league_id, num_periods_before=1, num_periods_after=2
     )
     current_matches = defaultdict(list)
     mapping = {"user_id_1": "user_1_name", "user_id_2": "user_2_name"}
-    for match in reported_matches:
+    for match in relevant_matches:
         match_dict = dict(**match)
         for key, val in mapping.items():
             if match[key] is not None:

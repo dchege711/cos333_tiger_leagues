@@ -118,66 +118,80 @@ def get_league_standings(league_id, division_id):
     standings.sort(key=cmp_to_key(standings_cmp), reverse=True)
     return standings
 
-def get_upcoming_matches(user_id, league_id, division_id):
+def get_matches_in_current_window(league_id, num_periods_before=1, 
+                                  num_periods_after=2, user_id=None):
+    """
+    @param int `league_id`: The ID of the league.
+
+    @kwargs int `num_periods_before`, `num_periods_after`: Each league has a defined 
+    period between game deadlines. This method fetches matches that have deadlines 
+    in the range `[today - period * num_periods_before, today + period * num_periods_after]`
+
+    @kwargs int `user_id`: If set, filter matches that are associated with this user ID
+
+    @return List[DictRow]: A list of all the matches within the current time 
+    window. These are the matches that are about to be played or have been played. 
+    Keys include: `match_id` `user_id_1`, `user_id_2`, `league_id`, `division_id`, 
+    `score_user_1`, `score_user_2`, `status`, `deadline`
+    """
     cursor = db.execute(
-        (
-            "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s"
-        ),
+        "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s", 
         values=[league_id]
     )
+    time_window_days = ceil(cursor.fetchone()["match_frequency_in_days"])
 
-    match_frequency_in_days = cursor.fetchone()["match_frequency_in_days"]
-    timeslot_length = timedelta(days=ceil(match_frequency_in_days))
-    date_range_1 = date.today() - (5 * timeslot_length)
-    date_range_2 = date.today() + (5 * timeslot_length)
+    latest_date = date.today() + timedelta(days=time_window_days * num_periods_after)
+    earliest_date = date.today() - timedelta(days=time_window_days * num_periods_before)
 
-    report_scores = []
-    upcoming_matches = []
-
-    cursor = db.execute(
-        (
-            # "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2, deadline "
-            # "FROM match_info WHERE (user_id_1 = %s OR user_id_2 = %s) AND league_id = %s "
-            # "AND division_id = %s"
-            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2, deadline, status "
-            "FROM match_info WHERE league_id = %s"
-        ),
-        values=[league_id]
-    )
-
-    for row in cursor:
-        # print(row)
-        user_id_1 = row['user_id_1']
-        user_id_2 = row['user_id_2']
-        if row['score_user_1'] is not None:
-            continue
-        if row['score_user_2'] is not None:
-            continue
-        if row['deadline'] > date_range_1:
-            if user_id_1 is user_id:
-                if user_id_2 is not None:
-                    report_scores.append([user_id_2, row['deadline'], row['status'], row['match_id']])
-            if user_id_2 is user_id:
-                if user_id_1 is not None:
-                    report_scores.append([user_id_1, row['deadline'], row['status'], row['match_id']])
-        if row['deadline'] < date_range_2:
-            if user_id_1 is user_id:
-                if user_id_2 is not None:
-                    report_scores.append([user_id_2, row['deadline'], row['status'], row['match_id']])
-            if user_id_2 is user_id:
-                if user_id_1 is not None:
-                    report_scores.append([user_id_1, row['deadline'], row['status'], row['match_id']])
-
-    for match in report_scores:
-        cursor = db.execute(
+    if user_id is not None:
+        return db.execute(
             (
-                "SELECT name FROM users WHERE user_id = %s"
+                "SELECT * FROM match_info WHERE league_id = %s "
+                "AND (user_id_1 = %s OR user_id_2 = %s) "
+                "AND (user_id_1 IS NOT NULL AND user_id_2 IS NOT NULL) "
+                "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
             ),
-            values=[match[0]]
+            values=[league_id, user_id, user_id, earliest_date, latest_date]
         )
-        match[0] = cursor.fetchone()["name"]
+        
+    return db.execute(
+        (
+            "SELECT * FROM match_info WHERE league_id = %s "
+            "AND (user_id_1 IS NOT NULL AND user_id_2 IS NOT NULL) "
+            "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
+        ),
+        values=[league_id, earliest_date, latest_date]
+    )
 
-    return report_scores, upcoming_matches
+def get_players_current_matches(user_id, league_id):
+    """
+    @returns List[dict]: the player's current matches ordered by the deadline.
+    """
+
+    relevant_matches = get_matches_in_current_window(league_id, user_id=user_id)
+    current_matches = []
+
+    for match in relevant_matches:
+        mutable_match = dict(**match)
+        if match["user_id_1"] != user_id: 
+            mutable_match["opponent_id"] = match["user_id_1"]
+            mutable_match["opponent_score"] = match['score_user_1']
+            mutable_match["your_score"] = match['score_user_2']
+        else: 
+            mutable_match["opponent_id"] = match["user_id_2"]
+            mutable_match["opponent_score"] = match['score_user_2']
+            mutable_match["your_score"] = match['score_user_1']
+
+        current_matches.append(mutable_match)
+
+    for match in current_matches:
+        cursor = db.execute(
+            "SELECT name FROM users WHERE user_id = %s",
+            values=[match["opponent_id"]]
+        )
+        match["opponent_name"] = cursor.fetchone()["name"]
+
+    return current_matches
     
 def create_league(league_info, creator_user_profile):
     """
