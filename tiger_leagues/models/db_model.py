@@ -20,7 +20,7 @@ class Database:
         Initialize the database instance.
 
         """
-        self._connection = connect(config.DATABASE_URL)
+        self.__connection = connect(config.DATABASE_URL)
         self.launch()
         atexit.register(self.disconnect)
 
@@ -29,7 +29,7 @@ class Database:
         Close the connection to the database. Should be called before exiting 
         the script.
         """
-        self._connection.close()
+        self.__connection.close()
     
     def launch(self):
         """
@@ -59,7 +59,7 @@ class Database:
         ))
 
     def execute(self, statement, values=None, dynamic_table_or_column_names=None, 
-        cursor_factory=extras.DictCursor):
+                cursor_factory=extras.DictCursor):
         """
         @returns `Cursor` after executing the SQL statement in `statement` with 
         placeholders substituted by the `values` tuple. 
@@ -67,7 +67,7 @@ class Database:
         @returns `None` if the SQL transaction fails. The error is reported to 
         stderr and the transaction is rolled back.
         """
-        cursor = self._connection.cursor(cursor_factory=cursor_factory)
+        cursor = self.__connection.cursor(cursor_factory=cursor_factory)
         try:
             if dynamic_table_or_column_names:
                 cursor.execute(
@@ -78,11 +78,37 @@ class Database:
                 )
             else: 
                 cursor.execute(statement, values)
-            self._connection.commit()
+            self.__connection.commit()
             return cursor
         except:
             print("\nLast Query:", cursor.query, "\n")
-            self._connection.rollback()
+            self.__connection.rollback()
+            raise
+
+    def execute_many(self, sql_query, values, dynamic_table_or_column_names=None, 
+                     cursor_factory=extras.DictCursor):
+        """
+        Execute many related SQL queries, e.g. update several rows of a table.
+
+        @param str `sql_query`: the query to execute. It must contain a single 
+        `%s` placeholder
+
+        @param List[List] `values`: Each item should be a value that can be 
+        substituted when composing a SQL query
+
+        """
+        if dynamic_table_or_column_names is not None:
+            sql_query = sql.SQL(sql_query).format(*[
+                sql.Identifier(s) for s in dynamic_table_or_column_names
+            ])
+        cursor = self.__connection.cursor(cursor_factory=cursor_factory)
+        try:
+            extras.execute_values(cursor, sql_query, values)
+            self.__connection.commit()
+            return cursor
+        except:
+            print("\nLast Query:", cursor.query, "\n")
+            self.__connection.rollback()
             raise
             
     def iterator(self, cursor):
