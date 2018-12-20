@@ -41,16 +41,16 @@ def league_homepage(league_id):
     score_reports, upcoming_matches`, etc.
     """
     associated_leagues = session.get("user")["associated_leagues"]
-    standings = league_model.get_league_standings(
-        league_id, associated_leagues[str(league_id)]["division_id"]
-    )
+    standings = league_model.get_league_standings(league_id)
     user_id = session.get("user")["user_id"]
     current_matches = league_model.get_players_current_matches(
         user_id, league_id
     )
+
     return render_template(
         "/league/league_homepage.html", 
         standings=standings,
+        user_division_id=associated_leagues[str(league_id)]["division_id"],
         current_matches=current_matches, 
         associated_leagues=associated_leagues, 
         league_name=associated_leagues[str(league_id)]["league_name"]
@@ -79,8 +79,7 @@ def league_member(league_id, net_id):
     @param int `league_id`: a list of all the league IDs that a user is associated with
     """
     associated_leagues = session.get("user")["associated_leagues"]
-    standings = league_model.get_league_standings(
-        league_id, associated_leagues[str(league_id)]["division_id"])
+    standings = league_model.get_league_standings(league_id)
 
     return render_template(
         "/league/league_member.html", 

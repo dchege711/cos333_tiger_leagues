@@ -5,36 +5,58 @@
 {% block content %}
     <div class="w3-container">
 
-        <div class="w3-container w3-twothird">
+        <div class="w3-container w3-half">
 
             <div class="w3-container">
-                <h1>{{league_name}}</h1>
-                <h4>League Standings</h4>
-                <table class="w3-table-all">
-                    <tr>
-                        <th>Player Name</th>
-                        <th>W</th>
-                        <th>L</th>
-                        <th>D</th>
-                        <th>GF</th>
-                        <th>GA</th>
-                        <th>GD</th>
-                        <th>PTS</th>
-                    </tr>
-                    {% for standing in standings %}
-                        <tr>
-                            <td>{{ standing["name"] }}</td>
-                            <td>{{ standing["wins"] }}</td>
-                            <td>{{ standing["losses"] }}</td>
-                            <td>{{ standing["draws"] }}</td>
-                            <td>{{ standing["goals_formed"] }}</td>
-                            <td>{{ standing["goals_allowed"] }}</td>
-                            <td>{{ standing["goal_diff"] }}</td>
-                            <td>{{ standing["points"] }}</td>
-                        </tr>
+                <h4>{{league_name}} Standings</h4>
+
+                <ul class="nav nav-tabs">
+                    {% for division_id in standings %}
+                        {% if division_id == user_division_id %}
+                            <li class="active"><a data-toggle="tab" href="#division{{division_id}}">Division {{division_id}}</a></li>
+                        {% else %}
+                            <li><a data-toggle="tab" href="#division{{division_id}}">Division {{division_id}}</a></li>
+                        {% endif %}
                     {% endfor %}
-                </table>
-                <br>
+                </ul>
+
+                <div class="tab-content">
+
+                    {% for division_id in standings %}
+                        {% if division_id == user_division_id %}
+                            <div id="division{{division_id}}" class="tab-pane fade in active">
+                        {% else %}
+                            <div id="division{{division_id}}" class="tab-pane fade">
+                        {% endif %}
+
+                        <table class="w3-table-all">
+                            <tr>
+                                <th>Player Name</th>
+                                <th>W</th><th>L</th><th>D</th>
+                                <th>GF</th><th>GA</th><th>GD</th>
+                                <th>PTS</th>
+                            </tr>
+        
+                            {% for standing in standings[division_id] %}
+                                <tr>
+                                    <td>{{ standing["name"] }}</td>
+                                    <td>{{ standing["wins"] }}</td>
+                                    <td>{{ standing["losses"] }}</td>
+                                    <td>{{ standing["draws"] }}</td>
+                                    <td>{{ standing["goals_formed"] }}</td>
+                                    <td>{{ standing["goals_allowed"] }}</td>
+                                    <td>{{ standing["goal_diff"] }}</td>
+                                    <td>{{ standing["points"] }}</td>
+                                </tr>
+                            {% endfor %}
+        
+                        </table>
+
+                        </div>
+                                
+                    {% endfor %}
+
+                </div>
             </div>
 
             <div class="w3-container">
@@ -42,7 +64,7 @@
 
         </div>
 
-        <div class="w3-container w3-third">
+        <div class="w3-container w3-half">
 
             <!-- Display reported scores-->
             <div class="w3-container">
