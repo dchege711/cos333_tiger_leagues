@@ -252,7 +252,6 @@ def process_player_score_report(user_id, score_details):
         mapping["opponent_score"] = "score_user_1"
         mapping["score_user_1"] = "opponent_score"
     
-    print(dict(**previous_match_details))
     if previous_match_details["recent_updater_id"] != user_id and \
         previous_match_details[mapping["my_score"]] == score_details["my_score"] and \
         previous_match_details[mapping["opponent_score"]] == score_details["opponent_score"]:
