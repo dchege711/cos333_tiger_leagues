@@ -55,7 +55,7 @@ class Database:
             "description TEXT, points_per_win INT, points_per_draw INT, "
             "points_per_loss INT, registration_deadline DATE, max_num_players INT, "
             "creator_user_id INT NOT NULL, match_frequency_in_days NUMERIC DEFAULT 7.0, "
-            "additional_questions TEXT);"
+            "additional_questions TEXT, league_status VARCHAR(255));"
         ))
 
     def execute(self, statement, values=None, dynamic_table_or_column_names=None, 
