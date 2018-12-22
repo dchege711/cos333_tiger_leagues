@@ -9,7 +9,7 @@ changes.
 import sys
 sys.path.insert(0, "..")
 
-from tiger_leagues import db as database
+from tiger_leagues.models import db_model as database
 
 def clean_database():
     """
@@ -26,7 +26,7 @@ def clean_database():
     table_names = [row["tablename"] for row in cursor]
 
     cursor = db.execute(
-        "DROP TABLE {}".format(", ".join(["{}" for _ in table_names])),
+        "DROP TABLE {};".format(", ".join(["{}" for _ in table_names])),
         dynamic_table_or_column_names=table_names
     )
 

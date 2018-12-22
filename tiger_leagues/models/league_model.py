@@ -6,8 +6,9 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 """
 
 import json
-from datetime import date
-from collections import defaultdict
+from datetime import date, timedelta
+from math import ceil
+from collections import defaultdict, OrderedDict
 from functools import cmp_to_key
 
 from . import db_model
@@ -28,9 +29,12 @@ LEAGUE_STAGE_IN_PROGRESS = "league_in_progress"
 LEAGUE_STAGE_COMPLETED = "league_matches_completed"
 LEAGUE_STAGE_IN_PLAYOFFS = "in_playoffs"
 
+MATCH_STATUS_APPROVED = "approved"
+MATCH_STATUS_PENDING_APPROVAL = "pending_approval"
+
 db = db_model.Database()
 
-def get_league_standings(league_id, division_id):
+def get_league_standings(league_id):
     """
     @param int `league_id`: The ID of the league
 
@@ -38,6 +42,7 @@ def get_league_standings(league_id, division_id):
 
     @returns List[dict]: The sorted league standings
     """
+
     cursor = db.execute(
         (
             "SELECT points_per_win, points_per_draw, points_per_loss "
@@ -53,53 +58,61 @@ def get_league_standings(league_id, division_id):
 
     cursor = db.execute(
         (
-            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2 "
-            "FROM match_info WHERE league_id = %s AND division_id = %s"
+            "SELECT match_id, division_id, user_id_1, user_id_2, score_user_1, "
+            "score_user_2 FROM match_info WHERE league_id = %s "
+            "AND score_user_1 IS NOT NULL ORDER BY division_id;"
         ),
-        values=[league_id, division_id]
+        values=[league_id]
     )
 
-    standings_info = {}
+    all_standings = defaultdict(dict)
+
     for row in cursor:
+
+        div_standings_info = all_standings[row["division_id"]]
+
         user_id_1 = row['user_id_1']
         user_id_2 = row['user_id_2']
 
-        if user_id_1 not in standings_info:
-            standings_info[user_id_1] = defaultdict(lambda: 0)
-        if user_id_2 not in standings_info:
-            standings_info[user_id_2] = defaultdict(lambda: 0)
+        if user_id_1 not in div_standings_info:
+            div_standings_info[user_id_1] = defaultdict(lambda: 0)
+        if user_id_2 not in div_standings_info:
+            div_standings_info[user_id_2] = defaultdict(lambda: 0)
 
-        standings_info[user_id_1]['goals_for'] += row['score_user_1']
-        standings_info[user_id_2]['goals_for'] += row['score_user_2']
-        standings_info[user_id_1]['goals_allowed'] += row['score_user_2']
-        standings_info[user_id_2]['goals_allowed'] += row['score_user_1']
+        div_standings_info[user_id_1]['goals_for'] += row['score_user_1']
+        div_standings_info[user_id_2]['goals_for'] += row['score_user_2']
+        div_standings_info[user_id_1]['goals_allowed'] += row['score_user_2']
+        div_standings_info[user_id_2]['goals_allowed'] += row['score_user_1']
         if (row['score_user_1'] > row['score_user_2']):
-            standings_info[user_id_1]['wins'] += 1
-            standings_info[user_id_1]['points'] += points_per_win
-            standings_info[user_id_2]['losses'] += 1
-            standings_info[user_id_2]['points'] += points_per_loss
+            div_standings_info[user_id_1]['wins'] += 1
+            div_standings_info[user_id_1]['points'] += points_per_win
+            div_standings_info[user_id_2]['losses'] += 1
+            div_standings_info[user_id_2]['points'] += points_per_loss
         elif (row['score_user_1'] < row['score_user_2']):
-            standings_info[user_id_2]['wins'] += 1
-            standings_info[user_id_2]['points'] += points_per_win
-            standings_info[user_id_1]['losses'] += 1
-            standings_info[user_id_1]['points'] += points_per_loss
+            div_standings_info[user_id_2]['wins'] += 1
+            div_standings_info[user_id_2]['points'] += points_per_win
+            div_standings_info[user_id_1]['losses'] += 1
+            div_standings_info[user_id_1]['points'] += points_per_loss
         else:
-            standings_info[user_id_1]['draws'] += 1
-            standings_info[user_id_1]['points'] += points_per_draw
-            standings_info[user_id_2]['draws'] += 1
-            standings_info[user_id_2]['points'] += points_per_draw
+            div_standings_info[user_id_1]['draws'] += 1
+            div_standings_info[user_id_1]['points'] += points_per_draw
+            div_standings_info[user_id_2]['draws'] += 1
+            div_standings_info[user_id_2]['points'] += points_per_draw
 
-    for user_id in standings_info:
-        cursor = db.execute(
-            (
-                "SELECT name FROM users WHERE user_id = %s"
-            ),
-            values=[user_id]
-        )
-        standings_info[user_id]['name'] = cursor.fetchone()['name']
-        standings_info[user_id]['user_id'] = user_id
-        standings_info[user_id]['goal_diff'] = standings_info[user_id]['goals_for'] - standings_info[user_id]['goals_allowed']
-
+    for division_id in all_standings:
+        div_standings_info = all_standings[division_id]
+        for user_id in div_standings_info:
+            if user_id is not None:
+                cursor = db.execute(
+                    (
+                        "SELECT name FROM users WHERE user_id = %s"
+                    ),
+                    values=[user_id]
+                )
+                div_standings_info[user_id]['name'] = cursor.fetchone()['name']
+                div_standings_info[user_id]['user_id'] = user_id
+                div_standings_info[user_id]['goal_diff'] = div_standings_info[user_id]['goals_for'] - div_standings_info[user_id]['goals_allowed']
+        
     def standings_cmp(a, b):
         """
         A comparator function for sorting the standings
@@ -111,10 +124,154 @@ def get_league_standings(league_id, division_id):
             if a["goal_diff"] < b["goal_diff"]: return -1
             return a["losses"] + a["draws"] + a["wins"] - b["losses"] - b["draws"] - b["wins"]
 
-    standings = [x for x in standings_info.values()]
-    standings.sort(key=cmp_to_key(standings_cmp))
+    for division_id in all_standings:
+        standings = [x for x in all_standings[division_id].values()]
+        standings.sort(key=cmp_to_key(standings_cmp), reverse=True)
+        all_standings[division_id] = standings
 
-    return standings
+    # If games have been scheduled but no one has played, pad with zeros...
+    if not all_standings:
+        table_name = "league_responses_{}".format(league_id)
+        cursor = db.execute(
+            (
+                "SELECT users.user_id, users.name, division_id FROM {}, users "
+                "WHERE users.user_id = {}.user_id AND division_id IS NOT NULL;"
+            ),
+            dynamic_table_or_column_names=[table_name, table_name]
+        )
+
+        for row in cursor:
+            all_standings[row["division_id"]][row["user_id"]] = {
+                "name": row["name"], "wins": 0, "losses": 0, "draws": 0, 
+                "goals_for": 0, "goals_allowed": 0, "goal_diff": 0, "points": 0
+            }
+
+        for division_id in all_standings:
+            all_standings[division_id] = [x for x in all_standings[division_id].values()]
+
+    return all_standings
+
+def get_matches_in_current_window(league_id, num_periods_before=1, 
+                                  num_periods_after=2, user_id=None):
+    """
+    @param int `league_id`: The ID of the league.
+
+    @kwargs int `num_periods_before`, `num_periods_after`: Each league has a defined 
+    period between game deadlines. This method fetches matches that have deadlines 
+    in the range `[today - period * num_periods_before, today + period * num_periods_after]`
+
+    @kwargs int `user_id`: If set, filter matches that are associated with this user ID
+
+    @return List[DictRow]: A list of all the matches within the current time 
+    window. These are the matches that are about to be played or have been played. 
+    Keys include: `match_id` `user_id_1`, `user_id_2`, `league_id`, `division_id`, 
+    `score_user_1`, `score_user_2`, `status`, `deadline`
+    """
+    cursor = db.execute(
+        "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s", 
+        values=[league_id]
+    )
+    time_window_days = ceil(cursor.fetchone()["match_frequency_in_days"])
+
+    latest_date = date.today() + timedelta(days=time_window_days * num_periods_after)
+    earliest_date = date.today() - timedelta(days=time_window_days * num_periods_before)
+
+    if user_id is not None:
+        return db.execute(
+            (
+                "SELECT * FROM match_info WHERE league_id = %s "
+                "AND (user_id_1 = %s OR user_id_2 = %s) "
+                "AND (user_id_1 IS NOT NULL AND user_id_2 IS NOT NULL) "
+                "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
+            ),
+            values=[league_id, user_id, user_id, earliest_date, latest_date]
+        )
+        
+    return db.execute(
+        (
+            "SELECT * FROM match_info WHERE league_id = %s "
+            "AND (user_id_1 IS NOT NULL AND user_id_2 IS NOT NULL) "
+            "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
+        ),
+        values=[league_id, earliest_date, latest_date]
+    )
+
+def get_players_current_matches(user_id, league_id):
+    """
+    @returns List[dict]: the player's current matches ordered by the deadline.
+    """
+
+    relevant_matches = get_matches_in_current_window(league_id, user_id=user_id)
+    current_matches = []
+
+    for match in relevant_matches:
+        mutable_match = dict(**match)
+        if match["user_id_1"] != user_id: 
+            mutable_match["opponent_id"] = match["user_id_1"]
+            mutable_match["opponent_score"] = match['score_user_1']
+            mutable_match["your_score"] = match['score_user_2']
+        else: 
+            mutable_match["opponent_id"] = match["user_id_2"]
+            mutable_match["opponent_score"] = match['score_user_2']
+            mutable_match["your_score"] = match['score_user_1']
+
+        current_matches.append(mutable_match)
+
+    for match in current_matches:
+        cursor = db.execute(
+            "SELECT name FROM users WHERE user_id = %s",
+            values=[match["opponent_id"]]
+        )
+        match["opponent_name"] = cursor.fetchone()["name"]
+
+    return current_matches
+
+def process_player_score_report(user_id, score_details):
+    """
+    @param int `user_id`: The ID of the user submitting the score report
+
+    @param dict `score_details`: Expected keys: `my_score`, `opponent_score`, 
+    `match_id`.
+
+    @returns dict: Expected keys: `success`, `message`
+
+    """
+    previous_match_details = db.execute(
+        "SELECT * FROM match_info WHERE match_id = %s", 
+        values=[score_details["match_id"]]
+    ).fetchone()
+    mapping = {}
+    if previous_match_details["user_id_1"] == user_id:
+        mapping["my_score"] = "score_user_1"
+        mapping["score_user_1"] = "my_score"
+        mapping["opponent_score"] = "score_user_2"
+        mapping["score_user_2"] = "opponent_score"
+    else:
+        mapping["my_score"] = "score_user_2"
+        mapping["score_user_2"] = "my_score"
+        mapping["opponent_score"] = "score_user_1"
+        mapping["score_user_1"] = "opponent_score"
+    
+    if previous_match_details["recent_updater_id"] != user_id and \
+        previous_match_details[mapping["my_score"]] == score_details["my_score"] and \
+        previous_match_details[mapping["opponent_score"]] == score_details["opponent_score"]:
+        match_status = MATCH_STATUS_APPROVED
+    else:
+        match_status = MATCH_STATUS_PENDING_APPROVAL
+
+    db.execute(
+        (
+            "UPDATE match_info "
+            "SET score_user_1 = %s, score_user_2 = %s, status = %s, recent_updater_id = %s "
+            "WHERE match_id = %s"
+        ),
+        values=[
+            score_details[mapping["score_user_1"]], score_details[mapping["score_user_2"]],
+            match_status, user_id, score_details["match_id"]
+        ]
+    )
+
+    return {"success": True, "message": {"match_status": match_status}}
 
 def create_league(league_info, creator_user_profile):
     """

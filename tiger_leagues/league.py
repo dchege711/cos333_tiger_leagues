@@ -36,22 +36,58 @@ def index():
 @decorators.login_required
 def league_homepage(league_id):
     """
-    Render a template for the provided league and the associated user. The 
+    @GET: Render a template for the provided league and the associated user. The 
     template should include information such as `standings, media_feed, 
-    score_reports, upcoming_games`, etc.
+    score_reports, upcoming_matches`, etc.
     """
     associated_leagues = session.get("user")["associated_leagues"]
-    standings = league_model.get_league_standings(
-        league_id, associated_leagues[str(league_id)]["division_id"]
+    standings = league_model.get_league_standings(league_id)
+    user_id = session.get("user")["user_id"]
+    current_matches = league_model.get_players_current_matches(
+        user_id, league_id
     )
+
     return render_template(
         "/league/league_homepage.html", 
-        standings=standings, 
+        standings=standings,
+        user_division_id=associated_leagues[str(league_id)]["division_id"],
+        current_matches=current_matches, 
         associated_leagues=associated_leagues, 
         league_name=associated_leagues[str(league_id)]["league_name"]
     )
 
-@bp.route("/create/", methods=["GET", "POST"])
+@bp.route("/<int:league_id>/submit-score/", methods=["POST"])
+@decorators.login_required
+def process_score_submit(league_id):
+    """
+    @POST: Respond to a score submit by a user in a non-admin capacity
+    """
+    user_id = session.get("user")["user_id"]
+    return jsonify(
+        league_model.process_player_score_report(user_id, request.json)
+    )
+
+@bp.route("/<int:league_id>/user/<string:net_id>", methods=["GET"])
+@decorators.login_required
+def league_member(league_id, net_id):
+    """
+    Render a template for the provided league and league member. The 
+    template should include information such as ``, etc.
+
+    @param int `user_id`: the ID of the associated user.
+
+    @param int `league_id`: a list of all the league IDs that a user is associated with
+    """
+    associated_leagues = session.get("user")["associated_leagues"]
+    standings = league_model.get_league_standings(league_id)
+
+    return render_template(
+        "/league/league_member.html", 
+        user=session.get("user"), standings=standings, 
+        league_name=associated_leagues[str(league_id)]["league_name"]
+    )
+
+@bp.route("/create", methods=["GET", "POST"])
 @decorators.login_required
 def create_league():
     """

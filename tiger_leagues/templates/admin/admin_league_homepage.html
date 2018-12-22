@@ -1,51 +1,71 @@
+{% extends "base.html" %}
 {% block content %}
     <div class="w3-container">
-
-        <div class="w3-container w3-twothird">
-
-            <div class="w3-container">
-            </div>
-
-            <div class="w3-container">
-            </div>
-
-        </div>
-
-        <div class="w3-container w3-third">
             
             <!-- Display Pending Scores "not played, pending, approved"-->
             <div class="w3-container">
                 <h4>Pending Scores</h4>
                 <hr>
 
-                <table class="w3-table-all">
-                    <tr>
-                        <th>Match ID</th>
-                        <th>Player 1</th>
-                        <th>P1 Score</th>
-                        <th>P2 Score</th>
-                        <th>Player 2</th>
-                        <th>Status</th>
-                        <th>Update</th>
-                    </tr>
-
-                    {% for match in reported_matches %}
-                        <tr id="match_data"+{{match["match_id"]}}>
-                            <td>{{ match["match_id"] }}</td>
-                            <td>{{ match["player_one"] }}</td>
-                            <td contenteditable="true">{{ match["p1_score"] }}</td>
-                            <td contenteditable="true">{{ match["p2_score"] }}</td>
-                            <td>{{ match["player_two"] }}</td>
-                            <td>{{ match["status"] }}</td>
-                            <td><button class="w3-button w3-xlarge w3-circle w3-green" onclick="updatePendingScores({{match['match_id'])}}">&#10004</button></td>
-                            
-                        </tr>
+                <ul class="nav nav-tabs">
+                    {% for division_id in reported_matches %}
+                        {% if division_id == 1 %}
+                            <li class="active"><a data-toggle="tab" href="#division{{division_id}}">Division {{division_id}}</a></li>
+                        {% else %}
+                            <li><a data-toggle="tab" href="#division{{division_id}}">Division {{division_id}}</a></li>
+                        {% endif %}
                     {% endfor %}
+                </ul>
 
+                <div class="tab-content">
 
-                </table>
+                    {% for division_id in reported_matches %}
+                        {% if division_id == 1 %}
+                            <div id="division{{division_id}}" class="tab-pane fade in active">
+                        {% else %}
+                            <div id="division{{division_id}}" class="tab-pane fade">
+                        {% endif %}
 
-            </div>
+                            <table class="w3-table-all">
+                                <tr>
+                                    <th>Deadline</th><th>Player 1</th><th>P1 Score</th><th></th>
+                                    <th>P2 Score</th><th>Player 2</th><th>Update</th>
+                                </tr>
+            
+                                {% for match in reported_matches[division_id] %}
+                                    <tr id="match_data_{{match['match_id']}}">
+                                        <td>{{ match["deadline"].strftime("%a, %b %d") }}</td>
+                                        <td>{{ match["user_1_name"] }}</td>
+                                        {% if match["status"] != None %}
+                                            <td contenteditable="true">{{ match["score_user_1"] }}</td>
+                                            <td><strong> - </strong></td>
+                                            <td contenteditable="true">{{ match["score_user_2"] }}</td>
+                                        {% else %}
+                                            <td contenteditable="true"></td>
+                                            <td><strong> - </strong></td>
+                                            <td contenteditable="true"></td>
+                                        {% endif %}
+                                        <td>{{ match["user_2_name"] }}</td>
+                                        <td>
+                                            {% if match["status"] == "approved" %}
+                                                <button class="w3-button w3-circle w3-green" onclick="updatePendingScores({{match['match_id']}})">
+                                                    &#10004
+                                                </button>
+                                            {% else %}
+                                                <button class="w3-button w3-circle w3-gray" onclick="updatePendingScores({{match['match_id']}})">
+                                                Approve</button>
+                                            {% endif %}
+                                        </td>
+                                        
+                                    </tr>
+                                {% endfor %}
+            
+                            </table>
+
+                            </div>
+                                
+                    {% endfor %}
+                </div>
 
         </div>
            
@@ -54,10 +74,11 @@
     <script type="text/javascript">
         function updatePendingScores(match_id)
         {
-            match_data = document.getElementById("match_data"+match_id);
+            let matchData = document.getElementById(`match_data_${match_id}`);
+
             let payload = {
-                "score_user_1": match_data.cells[2].innerText,
-                "score_user_2": match_data.cells[3].innerText,
+                "score_user_1": parseInt(matchData.cells[2].innerText),
+                "score_user_2": parseInt(matchData.cells[4].innerText),
                 "match_id": match_id
             }
             sendHTTPRequest("POST", document.URL, payload)
@@ -68,7 +89,7 @@
                             alert(response.message);
                         } else 
                         {
-                            match_data.cells[5] = response.message;
+                            matchData.cells[6].innerHTML = `<button class="w3-button w3-circle w3-green" onclick="updatePendingScores(${match_id})">&#10004</button>`;
                         }
                     })
                     .catch((err) => { alert(err.message); })

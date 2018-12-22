@@ -10,9 +10,12 @@ sys.path.insert(0, "..")
 
 from random import randint, sample
 from datetime import date, timedelta
+from math import ceil
 
 from clean_database import clean_database
-from tiger_leagues.models import user_model, league_model, admin_model
+from tiger_leagues.models import user_model, league_model, admin_model, db_model
+
+db = db_model.Database()
 
 def register_fake_users(num_users=40):
     """
@@ -120,6 +123,24 @@ def generate_matches(league_info_list):
             print(allocation_config)
             raise RuntimeError(results["message"])
 
+def play_matches():
+    """
+    Generate scores and approve the matches for the provided league.
+    """
+    try:
+        cursor = db.execute("SELECT match_id FROM match_info")
+        row = cursor.fetchone()
+        while (row is not None):
+            db.execute(
+                    "UPDATE match_info SET score_user_1 = %s, score_user_2 = %s, "
+                    "status = %s WHERE match_id =  %s",
+                    values=[randint(0, 10), randint(0, 10), 'approved', row[0]]
+                )
+            row = cursor.fetchone()
+        print("Matches successfully played!")
+    except: 
+        raise RuntimeError("Something went wrong")
+    
 if __name__ == "__main__":
     try:
         net_id = sys.argv[1]
@@ -146,7 +167,9 @@ if __name__ == "__main__":
         league_info_list = create_leagues(admin_user_profile, num_leagues=num_leagues)
 
         fake_users = populate_leagues(league_info_list, fake_users)
-        generate_matches(league_info_list[:num_leagues // 2])
+        generate_matches(league_info_list[:ceil(num_leagues / 2.0)])
+        play_matches()
+        generate_matches([league_info_list[ceil(num_leagues / 2.0)]])
     except:
         clean_database()
         raise

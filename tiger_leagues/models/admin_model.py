@@ -5,7 +5,7 @@ Exposes functions that are used by the controller for the `/admin/*` endpoint
 
 """
 
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from random import shuffle
 from math import ceil
 from datetime import date, timedelta
@@ -143,9 +143,11 @@ def generate_league_fixtures(league_id, div_allocations):
     timeslot_length = timedelta(days=ceil(league_info["match_frequency_in_days"]))
     match_deadline = date.today() + timedelta(days=1) + timeslot_length
 
+    player_ids_to_div_ids = {}
     for division_id, division_players in div_allocations.items():
         fixtures = fixture_generator([x["user_id"] for x in division_players])
         deadline = match_deadline
+        note_division_ids = True
         for current_matches in fixtures:
             for matchup in current_matches:
                 db.execute(
@@ -157,7 +159,26 @@ def generate_league_fixtures(league_id, div_allocations):
                         matchup[0], matchup[1], league_id, division_id, deadline
                     ]
                 )
+                if note_division_ids:
+                    for player_id in (matchup[0], matchup[1]):
+                        if player_id not in player_ids_to_div_ids:
+                            player_ids_to_div_ids[player_id] = division_id
+
+            note_division_ids = False
             deadline += timeslot_length
+
+    responses_table_name = "league_responses_{}".format(league_id)
+    player_ids_to_div_ids = [
+        (user_id, int(div_id)) for user_id, div_id in player_ids_to_div_ids.items()
+    ]
+    db.execute_many(
+        (
+            "UPDATE {} SET division_id = data.division_id FROM (VALUES %s) "
+            "AS data (user_id, division_id) WHERE {}.user_id = data.user_id;"
+        ),
+        player_ids_to_div_ids, 
+        dynamic_table_or_column_names=[responses_table_name, responses_table_name]
+    )
 
     db.execute(
         "UPDATE league_info SET league_status = %s WHERE league_id = %s",
@@ -314,7 +335,8 @@ def fixture_generator(users):
     for j in range(0,length-1):
         for i in range(0, half):
             pairs_list = [tempList1[i], tempList2[i]]
-            rounds_list.append(pairs_list)
+            if (pairs_list[0] is not None and pairs_list[1] is not None):
+                rounds_list.append(pairs_list)
             pairs_list = []
         tempList1.insert(1, tempList2[0])
         del tempList2[0]
@@ -324,3 +346,56 @@ def fixture_generator(users):
         rounds_list = []
 
     return fixtures_list
+
+def get_current_matches(league_id):
+    """
+    @returns List[DictRow]: A list of all matches in the current time block. Keys 
+    include `match_id`, `league_id`, `user_id_1`, `user_id_2`, `division_id`, 
+    `score_user_1`, `score_user_2`, `status`, `user_1_name`, `user_2_name`
+    """
+    relevant_matches = league_model.get_matches_in_current_window(
+        league_id, num_periods_before=1, num_periods_after=2
+    )
+    current_matches = defaultdict(list)
+    mapping = {"user_id_1": "user_1_name", "user_id_2": "user_2_name"}
+    for match in relevant_matches:
+        match_dict = dict(**match)
+        for key, val in mapping.items():
+            if match[key] is not None:
+                match_dict[val] = db.execute(
+                    "SELECT name FROM users WHERE user_id = %s",
+                    values=[match[key]]
+                ).fetchone()["name"]
+        current_matches[match_dict["division_id"]].append(match_dict)
+    
+    current_matches = OrderedDict(sorted(current_matches.items(), key=lambda t: t[0]))
+
+    return current_matches
+
+def approve_match(score_info):
+    """
+    @param dict `score_info`: Expected keys: `score_user_1`, `score_user_2`, 
+    `match_id`
+
+    @return `dict`: Keys: `success`, `message`
+    """
+    try:
+        db.execute(
+            "UPDATE match_info SET status = %s, score_user_1 = %s \
+            , score_user_2 = %s WHERE match_id = %s;",
+            values=[
+                league_model.MATCH_STATUS_APPROVED, 
+                score_info["score_user_1"], 
+                score_info["score_user_2"],
+                score_info["match_id"]
+            ]
+        )
+
+        return {
+            "success": True, "message": league_model.MATCH_STATUS_APPROVED
+        }
+
+    except:
+        return {
+            "success": False, "message": "Failed to Update Scores"
+        }

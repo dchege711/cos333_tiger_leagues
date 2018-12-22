@@ -5,35 +5,58 @@
 {% block content %}
     <div class="w3-container">
 
-        <div class="w3-container w3-twothird">
+        <div class="w3-container w3-half">
 
             <div class="w3-container">
-                <h1>{{league_name}}</h1>
-                <h4>League Standings</h4>
-                <table class="w3-table-all">
-                    <tr>
-                        <th>Player Name</th>
-                        <th>W</th>
-                        <th>L</th>
-                        <th>D</th>
-                        <th>GF</th>
-                        <th>GA</th>
-                        <th>GD</th>
-                        <th>PTS</th>
-                    </tr>
-                    {% for standing in standings %}
-                        <tr>
-                            <td>{{ standing["name"] }}</td>
-                            <td>{{ standing["wins"] }}</td>
-                            <td>{{ standing["losses"] }}</td>
-                            <td>{{ standing["draws"] }}</td>
-                            <td>{{ standing["goals_formed"] }}</td>
-                            <td>{{ standing["goals_allowed"] }}</td>
-                            <td>{{ standing["goal_diff"] }}</td>
-                            <td>{{ standing["points"] }}</td>
-                        </tr>
+                <h4>{{league_name}} Standings</h4>
+
+                <ul class="nav nav-tabs">
+                    {% for division_id in standings %}
+                        {% if division_id == user_division_id %}
+                            <li class="active"><a data-toggle="tab" href="#division{{division_id}}">Division {{division_id}}</a></li>
+                        {% else %}
+                            <li><a data-toggle="tab" href="#division{{division_id}}">Division {{division_id}}</a></li>
+                        {% endif %}
                     {% endfor %}
-                </table>
+                </ul>
+
+                <div class="tab-content">
+
+                    {% for division_id in standings %}
+                        {% if division_id == user_division_id %}
+                            <div id="division{{division_id}}" class="tab-pane fade in active">
+                        {% else %}
+                            <div id="division{{division_id}}" class="tab-pane fade">
+                        {% endif %}
+
+                        <table class="w3-table-all">
+                            <tr>
+                                <th>Player Name</th>
+                                <th>W</th><th>L</th><th>D</th>
+                                <th>GF</th><th>GA</th><th>GD</th>
+                                <th>PTS</th>
+                            </tr>
+        
+                            {% for standing in standings[division_id] %}
+                                <tr>
+                                    <td>{{ standing["name"] }}</td>
+                                    <td>{{ standing["wins"] }}</td>
+                                    <td>{{ standing["losses"] }}</td>
+                                    <td>{{ standing["draws"] }}</td>
+                                    <td>{{ standing["goals_for"] }}</td>
+                                    <td>{{ standing["goals_allowed"] }}</td>
+                                    <td>{{ standing["goal_diff"] }}</td>
+                                    <td>{{ standing["points"] }}</td>
+                                </tr>
+                            {% endfor %}
+        
+                        </table>
+
+                        </div>
+                                
+                    {% endfor %}
+
+                </div>
             </div>
 
             <div class="w3-container">
@@ -41,54 +64,48 @@
 
         </div>
 
-        <div class="w3-container w3-third">
-            
-            <!-- Display the coming fixtures -->
-            <div class="w3-container">
-                <h4>Your Upcoming Matches</h4>
-                <hr>
-
-                <table class="w3-table-all">
-                    <tr>
-                        <th>Versus</th>
-                        <th>Deadline</th>
-                        <th>Venue</th>
-                        <th>League</th>
-                    </tr>
-                    {% for match in upcoming_matches %}
-                        <tr>
-                            <td>{{ match["opponent"] }}</td>
-                            <td>{{ match["deadline"] }}</td>
-                            <td>{{ match["venue"] }}</td>
-                            <td>{{ match["league_name"] }}</td>
-                        </tr>
-                    {% endfor %}
-                </table>
-
-            </div>
+        <div class="w3-container w3-half">
 
             <!-- Display reported scores-->
             <div class="w3-container">
-                <h4>Reported Scores</h4>
+                <h4>Your Matches</h4>
                 <hr>
 
                 <table class="w3-table-all">
                     <tr>
-                        <th>Versus</th>
-                        <th>You</th>
-                        <th>Them</th>
+                        <th>Deadline</th>
+                        <th>Your Score</th>
+                        <th></th>
+                        <th>Their Score</th>
+                        <th>Opponent</th>
                         <th>Approved?</th>
                     </tr>
 
-                    {% for match in past_matches %}
-                        <tr>
-                            <td>{{ match["opponent"] }}</td>
-                            <td>{{ match["my_score"] }}</td>
-                            <td>{{ match["opponent_score"] }}</td>
-                            <td>{{ match["score_approved"] }}</td>
+                    {% for match in current_matches %}
+                        <tr id="match_data_{{match['match_id']}}">
+                            <td>{{ match["deadline"].strftime("%a, %b %d") }}</td>
+                            {% if match["status"] == "approved" %}
+                                <td class="w3-center">{{match['your_score']}}</td>
+                                <td class="w3-center"><strong> - </strong></td>
+                                <td class="w3-center">{{match['opponent_score']}}</td>
+                            {% else %}
+                                <td contenteditable="true" class="w3-center" value="{{match['your_score']}}"></td>
+                                <td class="w3-center"><strong> - </strong></td>
+                                <td class="w3-center" contenteditable="true" value="{{match['opponent_score']}}"></td>
+                            {% endif %} 
+                            <td>{{ match["opponent_name"] }}</td>
+                            <td class="w3-center">
+                                {% if match["status"] == "approved" %}
+                                    <span style="color: green">&#10004</span>
+                                {% else %}
+                                    <button class="w3-button w3-blue" onclick="updateReportedScores({{match['match_id']}})">
+                                        Submit
+                                    </button>
+                                {% endif %}
+                            </td>     
                         </tr>
                     {% endfor %}
-
+                        
 
                 </table>
 
@@ -97,5 +114,30 @@
         </div>
            
     </div>
+
+    <script type="text/javascript">
+        function updateReportedScores(match_id)
+        {
+            let matchData = document.getElementById(`match_data_${match_id}`);
+
+            let payload = {
+                my_score: parseInt(matchData.cells[2].innerText),
+                opponent_score: parseInt(matchData.cells[3].innerText),
+                match_id: match_id
+            }
+            sendHTTPRequest("POST", "submit-score/", payload)
+                    .then((response) => {
+                        response = JSON.parse(response);
+                        if (!response.success) {
+                            alert(response.message);
+                        } else {
+                            if (response.message.match_status == "approved") {
+                                matchData.cells[4].innerHTML = `<span style="color: green">&#10004</span>`;
+                            }
+                        }
+                    })
+                    .catch((err) => { alert(err.message); })
+        }
+    </script>
 
 {% endblock %}
