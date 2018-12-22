@@ -60,9 +60,9 @@ def get_league_standings(league_id):
         (
             "SELECT match_id, division_id, user_id_1, user_id_2, score_user_1, "
             "score_user_2 FROM match_info WHERE league_id = %s "
-            "AND score_user_1 IS NOT NULL ORDER BY division_id;"
+            "AND status = %s ORDER BY division_id;"
         ),
-        values=[league_id]
+        values=[league_id, MATCH_STATUS_APPROVED]
     )
 
     all_standings = defaultdict(dict)
