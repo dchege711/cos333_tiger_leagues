@@ -10,6 +10,7 @@ sys.path.insert(0, "..")
 
 from random import randint, sample
 from datetime import date, timedelta
+from math import ceil
 
 from clean_database import clean_database
 from tiger_leagues.models import user_model, league_model, admin_model, db_model
@@ -166,8 +167,9 @@ if __name__ == "__main__":
         league_info_list = create_leagues(admin_user_profile, num_leagues=num_leagues)
 
         fake_users = populate_leagues(league_info_list, fake_users)
-        generate_matches(league_info_list[:num_leagues // 2])
+        generate_matches(league_info_list[:ceil(num_leagues / 2.0)])
         play_matches()
+        generate_matches([league_info_list[ceil(num_leagues / 2.0)]])
     except:
         clean_database()
         raise

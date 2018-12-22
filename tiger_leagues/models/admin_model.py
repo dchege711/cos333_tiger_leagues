@@ -335,7 +335,8 @@ def fixture_generator(users):
     for j in range(0,length-1):
         for i in range(0, half):
             pairs_list = [tempList1[i], tempList2[i]]
-            rounds_list.append(pairs_list)
+            if (pairs_list[0] is not None and pairs_list[1] is not None):
+                rounds_list.append(pairs_list)
             pairs_list = []
         tempList1.insert(1, tempList2[0])
         del tempList2[0]
