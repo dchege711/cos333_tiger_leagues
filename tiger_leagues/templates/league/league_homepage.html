@@ -78,7 +78,7 @@
                         <th></th>
                         <th>Their Score</th>
                         <th>Opponent</th>
-                        <th>Approved?</th>
+                        <th></th>
                     </tr>
 
                     {% for match in current_matches %}
@@ -96,10 +96,10 @@
                             <td>{{ match["opponent_name"] }}</td>
                             <td class="w3-center">
                                 {% if match["status"] == "approved" %}
-                                    <span style="color: green">&#10004</span>
+                                    <span style="color: green">Approved</span>
                                 {% else %}
                                     <button class="w3-button w3-blue" onclick="updateReportedScores({{match['match_id']}})">
-                                        Submit
+                                        Update
                                     </button>
                                 {% endif %}
                             </td>     
@@ -121,7 +121,7 @@
             let matchData = document.getElementById(`match_data_${match_id}`);
 
             let payload = {
-                my_score: parseInt(matchData.cells[2].innerText),
+                my_score: parseInt(matchData.cells[1].innerText),
                 opponent_score: parseInt(matchData.cells[3].innerText),
                 match_id: match_id
             }
@@ -131,8 +131,11 @@
                         if (!response.success) {
                             alert(response.message);
                         } else {
+                            if (response.message.match_status == "pending_approval") {
+                                alert("Score Submitted")
+                            }
                             if (response.message.match_status == "approved") {
-                                matchData.cells[4].innerHTML = `<span style="color: green">&#10004</span>`;
+                                matchData.cells[4].innerHTML = `<span style="color: green">Approved</span>`;
                             }
                         }
                     })
