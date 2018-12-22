@@ -379,6 +379,13 @@ def approve_match(score_info):
 
     @return `dict`: Keys: `success`, `message`
     """
+    if score_info["score_user_1"] is None:
+        return {"success": False, "message": "Score cannot be empty!"}
+
+    elif score_info["score_user_2"] is None:
+        return {"success": False, "message": "Score cannot be empty!"}
+
+
     try:
         db.execute(
             "UPDATE match_info SET status = %s, score_user_1 = %s \

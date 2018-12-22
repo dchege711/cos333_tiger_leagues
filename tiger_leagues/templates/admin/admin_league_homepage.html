@@ -81,6 +81,7 @@
                 "score_user_2": parseInt(matchData.cells[4].innerText),
                 "match_id": match_id
             }
+            
             sendHTTPRequest("POST", document.URL, payload)
                     .then((response) => {
                         response = JSON.parse(response);

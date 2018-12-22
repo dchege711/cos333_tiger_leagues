@@ -236,6 +236,13 @@ def process_player_score_report(user_id, score_details):
     @returns dict: Expected keys: `success`, `message`
 
     """
+    if score_details["my_score"] is None:
+        return {"success": False, "message": "Score cannot be empty!"}
+
+    elif score_details["opponent_score"] is None:
+        return {"success": False, "message": "Score cannot be empty!"}
+
+
     previous_match_details = db.execute(
         "SELECT * FROM match_info WHERE match_id = %s", 
         values=[score_details["match_id"]]
