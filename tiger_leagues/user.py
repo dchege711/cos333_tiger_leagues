@@ -11,7 +11,7 @@ from .models import user_model
 
 bp = Blueprint("user", __name__, url_prefix="/user")
 
-@bp.route("/profile", methods=["GET"])
+@bp.route("/profile/", methods=["GET"])
 @decorators.login_required
 def display_user_profile():
     """
@@ -28,7 +28,7 @@ def display_user_profile():
     """
     return render_template("/user/user_profile.html", user=session.get("user"))
 
-@bp.route("/profile", methods=["POST"])
+@bp.route("/profile/", methods=["POST"])
 @decorators.login_required
 def update_user_profile():
     """

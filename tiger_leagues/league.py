@@ -67,7 +67,7 @@ def process_score_submit(league_id):
         league_model.process_player_score_report(user_id, request.json)
     )
 
-@bp.route("/<int:league_id>/user/<string:net_id>", methods=["GET"])
+@bp.route("/<int:league_id>/user/<string:net_id>/", methods=["GET"])
 @decorators.login_required
 def league_member(league_id, net_id):
     """
@@ -87,7 +87,7 @@ def league_member(league_id, net_id):
         league_name=associated_leagues[str(league_id)]["league_name"]
     )
 
-@bp.route("/create", methods=["GET", "POST"])
+@bp.route("/create/", methods=["GET", "POST"])
 @decorators.login_required
 def create_league():
     """
