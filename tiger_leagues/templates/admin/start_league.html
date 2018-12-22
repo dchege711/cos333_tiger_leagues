@@ -65,10 +65,14 @@
 
             <div class="w3-card w3-padding-small">
 
-                <label>How many days do players have before a game is due?</label>
+                <label for="num_matches">Players have </label>
                 <input 
                     value="{{league_info['match_frequency_in_days']}}" type="number"
-                    name="match_frequency_in_days" id="match_frequency_in_days" min="0">
+                    name="num_matches" id="num_matches" min="0">
+                <label for="num_days"> games every </label>
+                <input 
+                    value="1" type="number" name="num_days" id="num_days" min="0">
+                <span> day(s)</span>
                 <br />
                 <br />
 
@@ -87,14 +91,19 @@
                 <div id="generate_fixtures_container" style="display:none">
                     <p>
                         If you're satisfied with the above allocation, click the button 
-                        below to generate the fixtures. Note that this step is irreversible.
+                        below to generate the fixtures. Note that this step overwrites any 
+                        fixtures that had been generated prior to this.
                     </p>
     
-                    <button class="w3-button w3-green" onclick="generateFixtures();">
+                    <button class="w3-button w3-green w3-padding-bottom" onclick="generateFixtures();">
                         Generate Fixtures
                     </button>
                 </div>
 
+            </div>
+
+            <div class="w3-container w3-margin-top">
+                <button onclick="document.location = './../'" class="w3-button w3-round w3-orange w3-left">Back to Admin Page</button>
             </div>
 
         </div>
@@ -105,7 +114,8 @@
     <script type="text/javascript">
 
         let state = {
-            matchFrequencyInDaysElement: document.getElementById("match_frequency_in_days"),
+            numDaysElement: document.getElementById("num_days"),
+            numMatchesElement: document.getElementById("num_matches"),
             competitionDeadlineElement: document.getElementById("completion_deadline"),
             leagueDivisionsElement: document.getElementById("league_divisions"),
             generateFixturesContainer: document.getElementById("generate_fixtures_container")
@@ -114,8 +124,8 @@
         function generateDivisions() {
             let numSelections = 0;
             let payload = {};
-            if (state.matchFrequencyInDaysElement.value !== "") {
-                payload.match_frequency_in_days = state.matchFrequencyInDaysElement.value;
+            if (state.numDaysElement.value !== "" && state.numMatchesElement.value !== "") {
+                payload.match_frequency_in_days = state.numMatchesElement.value / state.numDaysElement.value;
             }
             if (state.competitionDeadlineElement.value !== "") {
                 payload.completion_deadline = state.competitionDeadlineElement.value;
@@ -169,6 +179,7 @@
                     let responseObject = JSON.parse(response);
                     if (responseObject.success) {
                         alert(responseObject.message);
+                        document.location = `./../`;
                     } else {
                         alert(`Error: ${responseObject.message}`);
                     }

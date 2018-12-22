@@ -19,15 +19,42 @@
             <hr>
             <button class="w3-button w3-large w3-round w3-gray inactive">Change League Info</button>
             <br />
+            {% if league_info["league_status"] == "accepting_users" %}
             <button class="w3-button w3-large w3-round w3-green" onclick="document.location = 'approve-members/'">View & Approve Join Requests</button>
+            {% else %}
+            <button class="w3-button w3-large w3-round w3-gray inactive">View & Approve Join Requests</button>
+            {% endif %}
             <br />
+
+            {% if league_info["league_status"] == "accepting_users" or league_info["league_status"] == "awaiting_admin_greenlight" %}
             <button class="w3-button w3-large w3-round w3-green" onclick="document.location = 'start-league/'">Start League</button>
+            {% else %}
+            <button class="w3-button w3-large w3-round w3-gray inactive">Start League</button>
+            {% endif %}
             <br />
-            <button class="w3-button w3-large w3-round w3-gray inactive">Start Playoffs</button>
-            <br />
+
+            {% if league_info["league_status"] == "league_in_progress" %}
+            <button class="w3-button w3-large w3-round w3-green" onclick="document.location = 'match-reports/'">View & Approve Scores</button>
+            {% else %}
             <button class="w3-button w3-large w3-round w3-gray inactive">View & Approve Scores</button>
+            {% endif %}
             <br />
-            <button class="w3-button w3-large w3-round w3-red inactive">Delete the League</button>
+
+            {% if league_info["league_status"] == "league_matches_completed" %}
+            <button class="w3-button w3-large w3-round w3-green">Start Playoffs</button>
+            {% else %}
+            <button class="w3-button w3-large w3-round w3-gray inactive">Start Playoffs</button>
+            {% endif %}
+            <br />
+
+            {% if league_info["league_status"] == "in_playoffs" %}
+            <button class="w3-button w3-large w3-round w3-green">View Playoffs</button>
+            {% else %}
+            <button class="w3-button w3-large w3-round w3-gray inactive">View Playoffs</button>
+            {% endif %}
+            <br />
+
+            <button class="w3-button w3-large w3-round w3-gray inactive">Delete the League</button>
             <br />
         </div>
     </div>

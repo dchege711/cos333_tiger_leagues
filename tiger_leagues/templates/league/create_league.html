@@ -185,12 +185,12 @@
             }
             payload.additional_questions = state.additionalQuestionsJSON;
 
-            sendHTTPRequest("POST", "/league/create", payload, contentType="application/json")
+            sendHTTPRequest("POST", "/league/create/", payload, contentType="application/json")
                 .then((response) => {
                     let responseObject = JSON.parse(response);
                     if (responseObject.success) {
                         alert(`League created. Invite Link: ${responseObject.message.invite_url}`);
-                        window.location = `/league/${responseObject.message.league_id}`
+                        window.location = `/league/${responseObject.message.league_id}/join/`;
                     } else {
                         alert(`Error: ${responseObject.message}`);
                     }
