@@ -56,6 +56,24 @@ def get_league_standings(league_id):
     points_per_draw = row['points_per_draw']
     points_per_loss = row['points_per_loss']
 
+    all_standings = defaultdict(dict)
+
+    # First pad all the players with zeros...
+    table_name = "league_responses_{}".format(league_id)
+    cursor = db.execute(
+        (
+            "SELECT users.user_id, users.name, division_id FROM {}, users "
+            "WHERE users.user_id = {}.user_id AND division_id IS NOT NULL;"
+        ),
+        dynamic_table_or_column_names=[table_name, table_name]
+    )
+
+    for row in cursor:
+        all_standings[row["division_id"]][row["user_id"]] = {
+            "name": row["name"], "wins": 0, "losses": 0, "draws": 0, 
+            "goals_for": 0, "goals_allowed": 0, "goal_diff": 0, "points": 0
+        }
+
     cursor = db.execute(
         (
             "SELECT match_id, division_id, user_id_1, user_id_2, score_user_1, "
@@ -64,8 +82,6 @@ def get_league_standings(league_id):
         ),
         values=[league_id]
     )
-
-    all_standings = defaultdict(dict)
 
     for row in cursor:
 
@@ -128,26 +144,6 @@ def get_league_standings(league_id):
         standings = [x for x in all_standings[division_id].values()]
         standings.sort(key=cmp_to_key(standings_cmp), reverse=True)
         all_standings[division_id] = standings
-
-    # If games have been scheduled but no one has played, pad with zeros...
-    if not all_standings:
-        table_name = "league_responses_{}".format(league_id)
-        cursor = db.execute(
-            (
-                "SELECT users.user_id, users.name, division_id FROM {}, users "
-                "WHERE users.user_id = {}.user_id AND division_id IS NOT NULL;"
-            ),
-            dynamic_table_or_column_names=[table_name, table_name]
-        )
-
-        for row in cursor:
-            all_standings[row["division_id"]][row["user_id"]] = {
-                "name": row["name"], "wins": 0, "losses": 0, "draws": 0, 
-                "goals_for": 0, "goals_allowed": 0, "goal_diff": 0, "points": 0
-            }
-
-        for division_id in all_standings:
-            all_standings[division_id] = [x for x in all_standings[division_id].values()]
 
     return all_standings
 
