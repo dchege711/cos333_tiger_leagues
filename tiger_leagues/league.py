@@ -25,6 +25,8 @@ def index():
     `league_homepage(leagueid)`
 
     """
+    # Refresh the user object
+    session["user"] = user_model.get_user(session.get("user")["net_id"])
     user = session.get("user")
 
     if user["associated_leagues"]:
@@ -40,11 +42,14 @@ def league_homepage(league_id):
     template should include information such as `standings, media_feed, 
     score_reports, upcoming_matches`, etc.
     """
-    associated_leagues = session.get("user")["associated_leagues"]
+    # Refresh the user object
+    session["user"] = user_model.get_user(session.get("user")["net_id"])
+    user = session.get("user")
+
+    associated_leagues = user["associated_leagues"]
     standings = league_model.get_league_standings(league_id)
-    user_id = session.get("user")["user_id"]
     current_matches = league_model.get_players_current_matches(
-        user_id, league_id
+        user["user_id"], league_id
     )
 
     return render_template(
@@ -78,6 +83,8 @@ def league_member(league_id, net_id):
 
     @param int `league_id`: a list of all the league IDs that a user is associated with
     """
+    # Refresh the user object
+    session["user"] = user_model.get_user(session.get("user")["net_id"])
     associated_leagues = session.get("user")["associated_leagues"]
     standings = league_model.get_league_standings(league_id)
 
@@ -118,6 +125,8 @@ def browse_leagues():
     @GET: Display leagues that the user can join.
 
     """
+    # Refresh the user object
+    session["user"] = user_model.get_user(session.get("user")["net_id"])
     return render_template(
         "/league/browse.html", 
         leagues=league_model.get_leagues_not_yet_joined(session.get("user"))
@@ -141,6 +150,8 @@ def join_league(league_id):
         )
 
     league_info = results["message"]
+    # Refresh the user object
+    session["user"] = user_model.get_user(session.get("user")["net_id"])
     user_profile = session.get("user")
 
     if request.method == "GET":
