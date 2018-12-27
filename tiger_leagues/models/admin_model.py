@@ -406,3 +406,42 @@ def approve_match(score_info):
         return {
             "success": False, "message": "Failed to Update Scores"
         }
+
+def delete_league(league_id):
+
+    # remove league from associated leagues of members
+
+    try:
+        league_members = __fetch_active_league_players(league_id)
+        member_ids = {member["user_id"] for member in league_members}
+
+        for member_id in member_ids:
+            id_list = db.execute(("SELECT league_ids FROM users WHERE user_id = %s;"), values=[member_id])
+            leagues_string = id_list.fetchone()["league_ids"]
+            leagues_list = set(leagues_string.split(','))
+            leagues_list.discard(str(league_id))
+
+            db.execute(
+                "UPDATE users SET league_ids = %s WHERE user_id = %s",
+                values=[", ".join(leagues_list), member_id]
+            )
+
+        # delete league from league_info and match_info tables
+
+        db.execute(("DELETE FROM match_info WHERE league_id = %s;"),values=[league_id])
+
+        db.execute(("DELETE FROM league_info WHERE league_id = %s;"),values=[league_id])
+
+        return {
+            "success": True, "message": "League Successfully Deleted"
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False, "message": "Failed to Delete League"
+        }
+
+
+    
+

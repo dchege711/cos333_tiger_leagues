@@ -118,3 +118,21 @@ def approve_scores(league_id):
 
     if request.method == "POST":
         return jsonify(admin_model.approve_match(request.json))
+
+
+@bp.route("/<int:league_id>/delete-league/", methods=["GET", "POST"])
+def delete_league(league_id):
+    if request.method == "GET":
+        league_data = league_model.get_league_info(league_id)    
+        league_name = league_data["league_name"]
+
+        return render_template(
+                "/admin/delete_league.html",
+                league_id=league_id, league_name=league_name
+            )
+    
+    if request.method == "POST":
+        return jsonify(admin_model.delete_league(league_id))
+
+    
+    
