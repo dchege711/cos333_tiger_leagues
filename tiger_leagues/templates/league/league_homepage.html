@@ -31,14 +31,14 @@
 
                         <table class="w3-table-all">
                             <tr>
-                                <th>Player Name</th>
+                                <th>Rank</th><th>Player Name</th>
                                 <th>W</th><th>L</th><th>D</th>
                                 <th>GF</th><th>GA</th><th>GD</th>
                                 <th>PTS</th>
                             </tr>
-        
                             {% for standing in standings[division_id] %}
                                 <tr>
+                                    <td>{{ loop.index }}</td>
                                     <td>{{ standing["name"] }}</td>
                                     <td>{{ standing["wins"] }}</td>
                                     <td>{{ standing["losses"] }}</td>
