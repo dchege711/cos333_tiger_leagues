@@ -55,10 +55,10 @@ def league_homepage(league_id):
     return render_template(
         "/league/league_homepage.html", 
         standings=standings,
-        user_division_id=associated_leagues[str(league_id)]["division_id"],
+        user_division_id=associated_leagues[league_id]["division_id"],
         current_matches=current_matches, 
         associated_leagues=associated_leagues, 
-        league_name=associated_leagues[str(league_id)]["league_name"]
+        league_name=associated_leagues[league_id]["league_name"]
     )
 
 @bp.route("/<int:league_id>/submit-score/", methods=["POST"])
