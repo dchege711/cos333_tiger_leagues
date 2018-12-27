@@ -54,7 +54,7 @@ def league_homepage(league_id):
 
     return render_template(
         "/league/league_homepage.html", 
-        standings=standings,
+        standings=standings, league_id=league_id,
         user_division_id=associated_leagues[league_id]["division_id"],
         current_matches=current_matches, 
         associated_leagues=associated_leagues, 
@@ -72,9 +72,9 @@ def process_score_submit(league_id):
         league_model.process_player_score_report(user_id, request.json)
     )
 
-@bp.route("/<int:league_id>/user/<string:net_id>/", methods=["GET"])
+@bp.route("/<int:league_id>/user/<int:user_id>/", methods=["GET"])
 @decorators.login_required
-def league_member(league_id, net_id):
+def league_member(league_id, user_id):
     """
     Render a template for the provided league and league member. The 
     template should include information such as ``, etc.

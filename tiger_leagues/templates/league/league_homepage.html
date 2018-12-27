@@ -39,7 +39,7 @@
                             {% for standing in standings[division_id] %}
                                 <tr>
                                     <td>{{ loop.index }}</td>
-                                    <td>{{ standing["name"] }}</td>
+                                    <td><a href="{{url_for('league.league_member', league_id=league_id, user_id=standing['user_id'])}}">{{ standing["name"] }}</a></td>
                                     <td>{{ standing["wins"] }}</td>
                                     <td>{{ standing["losses"] }}</td>
                                     <td>{{ standing["draws"] }}</td>
