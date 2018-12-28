@@ -1,0 +1,183 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome to Tiger Leagues’s documentation! &#8212; Tiger Leagues 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-tiger-leagues-s-documentation">
+<h1>Welcome to Tiger Leagues’s documentation!<a class="headerlink" href="#welcome-to-tiger-leagues-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-tiger_leagues.admin"></span><p>admin.py</p>
+<p>Exposes a blueprint that handles requests made to <cite>/admin/*</cite> endpoint</p>
+<dl class="function">
+<dt id="tiger_leagues.admin.admin_status_required">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">admin_status_required</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#admin_status_required"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.admin_status_required" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator function that asserts that a user has admin privileges for the 
+requested URL. This function is automatically called before any of the 
+functions in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> module are executed. See 
+<a class="reference external" href="http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request">http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.redirect</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>A redirect to the login page if the user hasn’t logged in yet.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.redirect</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>A redirect to the home page if the user doesn’t have admin privileges in 
+the league associated with this request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If the user has admin privileges for the current league, the request will 
+then be passed on to the next function on the chain, typically the handler 
+function for the request.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.allocate_league_divisions">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">allocate_league_divisions</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#allocate_league_divisions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.allocate_league_divisions" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;GET: return a JSON containing allocations of players in a league into 
+divisions</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.league_homepage">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">league_homepage</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#league_homepage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.league_homepage" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;GET: Return the league admin panel</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.league_requests">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">league_requests</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#league_requests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.league_requests" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;GET: An admin can view the requests to join the league and can choose
+to accept or reject the join requests</p>
+<p>&#64;POST: An admins can set the join statuses of the users who requested to 
+join the league.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.start_league">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">start_league</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#start_league"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.start_league" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;GET: Render a template for setting the league configurations.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">Tiger Leagues</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Chege, Ivy, Rui, Obinna.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

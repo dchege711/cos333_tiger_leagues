@@ -17,9 +17,25 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 def admin_status_required():
     """
     A decorator function that asserts that a user has admin privileges for the 
-    requested URL.
-
+    requested URL. This function is automatically called before any of the 
+    functions in the ``admin`` module are executed. See 
     http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request
+
+    :returns: ``flask.redirect``
+
+    A redirect to the login page if the user hasn't logged in yet.
+
+    :returns: ``flask.redirect``
+
+    A redirect to the home page if the user doesn't have admin privileges in 
+    the league associated with this request.
+
+    :returns: ``None``
+    
+    If the user has admin privileges for the current league, the request will 
+    then be passed on to the next function on the chain, typically the handler 
+    function for the request.
+    
     """
     if session.get("user") is None:
         return redirect(url_for("auth.index"))

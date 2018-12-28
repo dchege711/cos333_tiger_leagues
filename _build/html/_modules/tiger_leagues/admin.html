@@ -1,0 +1,257 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>tiger_leagues.admin &#8212; Tiger Leagues 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tiger_leagues.admin</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">admin.py</span>
+
+<span class="sd">Exposes a blueprint that handles requests made to `/admin/*` endpoint</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Blueprint</span><span class="p">,</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">url_for</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">jsonify</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.models</span> <span class="k">import</span> <span class="n">admin_model</span><span class="p">,</span> <span class="n">league_model</span>
+
+<span class="n">bp</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s2">&quot;admin&quot;</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span> <span class="n">url_prefix</span><span class="o">=</span><span class="s2">&quot;/admin&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="admin_status_required"><a class="viewcode-back" href="../../index.html#tiger_leagues.admin.admin_status_required">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">before_request</span>
+<span class="k">def</span> <span class="nf">admin_status_required</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A decorator function that asserts that a user has admin privileges for the </span>
+<span class="sd">    requested URL. This function is automatically called before any of the </span>
+<span class="sd">    functions in the ``admin`` module are executed. See </span>
+<span class="sd">    http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request</span>
+
+<span class="sd">    :returns: ``flask.redirect``</span>
+
+<span class="sd">    A redirect to the login page if the user hasn&#39;t logged in yet.</span>
+
+<span class="sd">    :returns: ``flask.redirect``</span>
+
+<span class="sd">    A redirect to the home page if the user doesn&#39;t have admin privileges in </span>
+<span class="sd">    the league associated with this request.</span>
+
+<span class="sd">    :returns: ``None``</span>
+<span class="sd">    </span>
+<span class="sd">    If the user has admin privileges for the current league, the request will </span>
+<span class="sd">    then be passed on to the next function on the chain, typically the handler </span>
+<span class="sd">    function for the request.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;auth.index&quot;</span><span class="p">))</span>
+
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/admin/&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;league.index&quot;</span><span class="p">))</span>
+
+    <span class="n">league_id</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">associated_leagues</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">associated_leagues</span> <span class="ow">or</span> <span class="n">associated_leagues</span><span class="p">[</span><span class="n">league_id</span><span class="p">][</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;admin&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;league.index&quot;</span><span class="p">))</span>
+    <span class="c1"># If nothing has been returned, the request will be passed to its handler</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="league_homepage"><a class="viewcode-back" href="../../index.html#tiger_leagues.admin.league_homepage">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">league_homepage</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    @GET: Return the league admin panel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+        <span class="s2">&quot;/admin/admin_league_panel.html&quot;</span><span class="p">,</span> <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span>
+    <span class="p">)</span></div>
+
+<div class="viewcode-block" id="league_requests"><a class="viewcode-back" href="../../index.html#tiger_leagues.admin.league_requests">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/approve-members/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">league_requests</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    @GET: An admin can view the requests to join the league and can choose</span>
+<span class="sd">    to accept or reject the join requests</span>
+
+<span class="sd">    @POST: An admins can set the join statuses of the users who requested to </span>
+<span class="sd">    join the league.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GET&quot;</span><span class="p">:</span>
+        <span class="n">join_requests</span> <span class="o">=</span> <span class="n">admin_model</span><span class="o">.</span><span class="n">get_join_league_requests</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+            <span class="s2">&quot;/admin/approve_members.html&quot;</span><span class="p">,</span> <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span><span class="p">,</span> 
+            <span class="n">join_requests</span><span class="o">=</span><span class="n">join_requests</span>
+        <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span>
+            <span class="n">admin_model</span><span class="o">.</span><span class="n">update_join_league_requests</span><span class="p">(</span>
+                <span class="n">league_id</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="start_league"><a class="viewcode-back" href="../../index.html#tiger_leagues.admin.start_league">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/start-league/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">start_league</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    @GET: Render a template for setting the league configurations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GET&quot;</span><span class="p">:</span>
+        <span class="n">registration_stats</span> <span class="o">=</span> <span class="n">admin_model</span><span class="o">.</span><span class="n">get_registration_stats</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+            <span class="s2">&quot;/admin/start_league.html&quot;</span><span class="p">,</span> <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span><span class="p">,</span>
+            <span class="n">registration_stats</span><span class="o">=</span><span class="n">registration_stats</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span>
+            <span class="n">admin_model</span><span class="o">.</span><span class="n">generate_league_fixtures</span><span class="p">(</span>
+                <span class="n">league_id</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="allocate_league_divisions"><a class="viewcode-back" href="../../index.html#tiger_leagues.admin.allocate_league_divisions">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/start-league/allocate-divisions/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">allocate_league_divisions</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    @GET: return a JSON containing allocations of players in a league into </span>
+<span class="sd">    divisions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span>
+        <span class="n">admin_model</span><span class="o">.</span><span class="n">allocate_league_divisions</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+<span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/match-reports/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">approve_scores</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GET&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+            <span class="s2">&quot;/admin/admin_league_homepage.html&quot;</span><span class="p">,</span>
+            <span class="n">reported_matches</span><span class="o">=</span><span class="n">admin_model</span><span class="o">.</span><span class="n">get_current_matches</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">admin_model</span><span class="o">.</span><span class="n">approve_match</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">))</span>
+
+
+<span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/delete-league/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span> <span class="nf">delete_league</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GET&quot;</span><span class="p">:</span>
+        <span class="n">league_data</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>    
+        <span class="n">league_name</span> <span class="o">=</span> <span class="n">league_data</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+                <span class="s2">&quot;/admin/delete_league.html&quot;</span><span class="p">,</span>
+                <span class="n">league_id</span><span class="o">=</span><span class="n">league_id</span><span class="p">,</span> <span class="n">league_name</span><span class="o">=</span><span class="n">league_name</span>
+            <span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">admin_model</span><span class="o">.</span><span class="n">delete_league</span><span class="p">(</span><span class="n">league_id</span><span class="p">))</span>
+
+    
+    
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Tiger Leagues</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  <li><a href="../tiger_leagues.html">tiger_leagues</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Chege, Ivy, Rui, Obinna.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
