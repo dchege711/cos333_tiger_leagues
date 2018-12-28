@@ -91,7 +91,7 @@ def league_member(league_id, user_id):
     return render_template(
         "/league/league_member.html", 
         user=session.get("user"), standings=standings, 
-        league_name=associated_leagues[str(league_id)]["league_name"]
+        league_name=associated_leagues[league_id]["league_name"]
     )
 
 @bp.route("/create/", methods=["GET", "POST"])
