@@ -2,10 +2,8 @@
 __init__.py
 
 Serves two functions:
-    * It will contain the application factory
+    * It will contain the [application factory](http://flask.pocoo.org/docs/1.0/tutorial/factory/)
     * Tells Python that the `tiger_leagues_app` directory should be treated as a package.
-
-More info: http://flask.pocoo.org/docs/1.0/tutorial/factory/
 
 """
 
@@ -16,14 +14,18 @@ from . import league, auth, user, admin
 
 def create_app(test_config=None):
     """
-    Create and configure the Flask application instance.
+    Create and configure the Flask application instance. Register the necessary 
+    blueprints.
+
+    :return: ``Flask`` 
+    
+    The Flask object acts as a central registry for the view functions, the URL 
+    rules, template configuration, etc.
+
     """
     
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        SECRET_KEY='dev'
-        # DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
-    )
+    app.config.from_mapping(SECRET_KEY='dev')
 
     if test_config is None:
         # load the instance config, if it exists, when not testing

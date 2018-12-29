@@ -1,7 +1,7 @@
 """
 admin.py
 
-Exposes a blueprint that handles requests made to `/admin/*` endpoint
+Exposes a blueprint that handles requests made to `/admin/*` endpoint.
 
 """
 
@@ -51,11 +51,16 @@ def admin_status_required():
     # If nothing has been returned, the request will be passed to its handler
     return None
 
-
 @bp.route("/<int:league_id>/", methods=["GET"])
 def league_homepage(league_id):
     """
-    @GET: Return the league admin panel
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype='text/HTML')``
+
+    Render a page with links to admin actions such as 'Approve Members'
     """
     league_info = league_model.get_league_info(league_id)
     return render_template(
@@ -65,11 +70,21 @@ def league_homepage(league_id):
 @bp.route("/<int:league_id>/approve-members/", methods=["GET", "POST"])
 def league_requests(league_id):
     """
-    @GET: An admin can view the requests to join the league and can choose
-    to accept or reject the join requests
+    :param league_id: ``int``
 
-    @POST: An admins can set the join statuses of the users who requested to 
-    join the league.
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype='text/HTML')``
+
+    If responding to a GET request, render a template such that an admin can 
+    view the requests to join the league and can choose to accept or reject the 
+    join requests
+
+    :return: ``flask.Response(mimetype=application/json)``
+
+    If responding to a POST request, update the join status of the users as 
+    instructed in the POST body. The JSON contains the keys ``message`` and 
+    ``success``
 
     """
     league_info = league_model.get_league_info(league_id)
@@ -93,7 +108,20 @@ def league_requests(league_id):
 @bp.route("/<int:league_id>/start-league/", methods=["GET", "POST"])
 def start_league(league_id):
     """
-    @GET: Render a template for setting the league configurations.
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype='text/HTML')``
+
+    If responding to a GET request, render a template for setting the league 
+    configuration, e.g. frequency of matches
+
+    :return: ``flask.Response(mimetype=application/json)``
+
+    If responding to a POST request, generate the league fixtures. Return a 
+    JSON response contains the keys ``success`` and ``message``
+    
     """
     league_info = league_model.get_league_info(league_id)
 
