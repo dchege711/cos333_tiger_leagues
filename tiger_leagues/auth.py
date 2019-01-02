@@ -38,7 +38,7 @@ def cas_login():
     exclude values that you would not like the world to see. If sensitive data 
     is needed, leave it to the caller to query the database themselves.
 
-    :return: ``flask.redirect`` 
+    :return: ``flask.Response(code=302)`` 
     
     A redirect to the account creation page for new users or the homepage for 
     any of the leagues that a returning user is associated with.
@@ -62,7 +62,7 @@ def cas_logout():
     """
     Log out the currently logged in user. 
 
-    :return: ``flask.redirect``
+    :return: ``flask.Response(code=302)``
     
     Redirect to the login page.
 

@@ -101,7 +101,7 @@
 <span class="sd">    exclude values that you would not like the world to see. If sensitive data </span>
 <span class="sd">    is needed, leave it to the caller to query the database themselves.</span>
 
-<span class="sd">    :return: ``flask.redirect`` </span>
+<span class="sd">    :return: ``flask.Response(code=302)`` </span>
 <span class="sd">    </span>
 <span class="sd">    A redirect to the account creation page for new users or the homepage for </span>
 <span class="sd">    any of the leagues that a returning user is associated with.</span>
@@ -125,7 +125,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Log out the currently logged in user. </span>
 
-<span class="sd">    :return: ``flask.redirect``</span>
+<span class="sd">    :return: ``flask.Response(code=302)``</span>
 <span class="sd">    </span>
 <span class="sd">    Redirect to the login page.</span>
 

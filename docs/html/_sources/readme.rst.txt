@@ -60,6 +60,10 @@ Generating the Documentation
 The documentation for this project is modelled after `Matplotlib's Tutorial
 <https://matplotlib.org/sampledoc/index.html>`_
 
+You generally need to run ``$ make html`` to build the documentation. The docs
+are built inside the ``./docs`` folder, so that they may be accessible from
+https://dchege711.github.io/cos333_tiger_leagues
+
 .. _additional_feature_requests:
 
 Additional Feature Requests
