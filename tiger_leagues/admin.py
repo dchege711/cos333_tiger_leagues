@@ -24,11 +24,11 @@ def admin_status_required():
     functions in the ``admin`` module are executed. See 
     http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request
 
-    :returns: ``flask.redirect``
+    :returns: ``flask.Response(code=302)``
 
     A redirect to the login page if the user hasn't logged in yet.
 
-    :returns: ``flask.redirect``
+    :returns: ``flask.Response(code=302)``
 
     A redirect to the home page if the user doesn't have admin privileges in 
     the league associated with this request.

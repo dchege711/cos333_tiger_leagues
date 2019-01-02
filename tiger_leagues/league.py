@@ -18,11 +18,16 @@ bp = Blueprint("league", __name__, url_prefix="/league")
 def index():
     """
     A user that already has an account will be redirected here. The user details 
-    will be present in the session object. The user might be in none or multiple 
-    leagues.
+    will be present in the session object.
 
-    Choose a suitable league id (if possible) and redirect to to 
-    `league_homepage(leagueid)`
+    :return: ``flask.Response(mimetype='text/HTML')``
+
+    If the user is a part of any leagues, render that league's homepage.
+
+    :return: ``flask.Response(code=302)``
+
+    If the user is not a part of any league, redirect them to a page that allows 
+    them to browse available leagues.
 
     """
     # Refresh the user object
@@ -38,9 +43,16 @@ def index():
 @decorators.login_required
 def league_homepage(league_id):
     """
-    @GET: Render a template for the provided league and the associated user. The 
-    template should include information such as `standings, media_feed, 
-    score_reports, upcoming_matches`, etc.
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype='text/html')``
+
+    Render a template for the provided league and the associated user. The 
+    template includes information such as ``standings, media_feed, score_reports, 
+    upcoming_matches``, etc.
+
     """
     # Refresh the user object
     session["user"] = user_model.get_user(session.get("user")["net_id"])
@@ -65,7 +77,18 @@ def league_homepage(league_id):
 @decorators.login_required
 def process_score_submit(league_id):
     """
-    @POST: Respond to a score submit by a user in a non-admin capacity
+    Persist the score submitted by the user. The body of the POST object should 
+    have the following keys: `my_score, opponent_score, match_id`
+
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype='application/json')``
+
+    The JSON object contains the keys ``success`` and ``message`` whose values 
+    set appropriately.
+
     """
     user_id = session.get("user")["user_id"]
     return jsonify(
@@ -76,12 +99,19 @@ def process_score_submit(league_id):
 @decorators.login_required
 def league_member(league_id, user_id):
     """
-    Render a template for the provided league and league member. The 
-    template should include information such as ``, etc.
+    :param league_id: ``int``
 
-    @param int `user_id`: the ID of the associated user.
+    The ID of the league associated with this request
 
-    @param int `league_id`: a list of all the league IDs that a user is associated with
+    :param user_id: ``int``
+
+    The ID of the user whose data should be fetched.
+
+    :return: ``flask.Response(mimetype='text/html')``
+
+    Render a side-by-side comparison of the currently logged in user and the 
+    user whose ID was passed in the URL.
+
     """
     # Refresh the user object
     session["user"] = user_model.get_user(session.get("user")["net_id"])
@@ -98,13 +128,22 @@ def league_member(league_id, user_id):
 @decorators.login_required
 def create_league():
     """
-    @GET: Render a template that can be used to create a new league.
+    :return: ``flask.Response(mimetype='text/html')``
 
-    @POST: Create a league from the submitted data.
+    If responding to a GET request, render a template that can be used to 
+    create a new league.
+
+    :return: ``flask.Response(mimetype='application/json')``
+
+    If responding to a POST request, return a JSON object confirming whether 
+    the league was created. The JSON sent in the POST request should have these 
+    keys: ``league_name, description, points_per_win, points_per_draw, 
+    points_per_loss, registration_deadline and additional_questions``
+
     """
     if request.method == "GET":
         return render_template("/league/create_league.html")
-    elif request.method == "POST":
+    if request.method == "POST":
         create_league_info = request.json
         user_profile = session.get("user")
         results = league_model.create_league(create_league_info, user_profile)
@@ -122,7 +161,9 @@ def create_league():
 @decorators.login_required
 def browse_leagues():
     """
-    @GET: Display leagues that the user can join.
+    :return: ``flask.Response(mimetype='text/html')``
+
+    Render a page with a list of leagues that the user can request to join.
 
     """
     # Refresh the user object
@@ -136,11 +177,20 @@ def browse_leagues():
 @decorators.login_required
 def join_league(league_id):
     """
-    @GET: Render the form that needs to be filled by users that wish to join 
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype='text/html')``
+    
+    Render the form that needs to be filled by users that wish to join 
     this league.
 
-    @POST: Process the information submitted by the form that is rendered by 
-    the @GET request.
+    :return: ``flask.Response(mimetype='text/html')``
+
+    Process the form submitted by the user who wants to join this league. Return 
+    a JSON object that confirms the status of the join request.
+
     """
 
     results = league_model.get_league_info_if_joinable(league_id)
@@ -180,7 +230,15 @@ def join_league(league_id):
 @decorators.login_required
 def leave_league(league_id):
     """
-    @POST process requests to leave a given league
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype='application/json')``
+
+    The JSON object contains a confirmation that the user was removed from the 
+    league.
+    
     """
     user_profile = session.get("user")
     success = league_model.process_leave_league_request(league_id, user_profile)

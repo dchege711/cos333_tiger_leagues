@@ -15,15 +15,11 @@ bp = Blueprint("user", __name__, url_prefix="/user")
 @decorators.login_required
 def display_user_profile():
     """
-    Render a template that contains user information. The user should be able to 
-    request an update some of the displayed information. The userid will be in 
-    the sessions object.
-    
-    Sample information might include:
+    :return: ``flask.Response(mimetype-'text/html')``
 
-    Read-Only: NetID
-    Editables: Preferred Name, Preferred Email, Phone Number, Room Number
-    Links to leagues that a user is involved in
+    Render a template that contains user information such as: ``net_id, 
+    preferred_name, preferred_email, phone_number, room_number, 
+    associated_leagues``
 
     """
     # Refresh the user object
@@ -34,8 +30,11 @@ def display_user_profile():
 @decorators.login_required
 def update_user_profile():
     """
-    Update the information stored about a user. This method will most likely 
-    receive POST requests from the template rendered by user.displayUserProfile
+    :return: ``flask.Response(mimetype-'text/html')``
+
+    Update the information stored about a user. Render a template that contains 
+    user information such as: ``net_id, preferred_name, preferred_email, 
+    phone_number, room_number, associated_leagues``
 
     """
     session["user"] = user_model.update_user_profile(

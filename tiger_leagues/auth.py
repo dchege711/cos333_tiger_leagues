@@ -18,8 +18,10 @@ bp = Blueprint("auth", __name__, url_prefix="")
 @bp.route("/", methods=["GET"])
 def index():
     """
-    @GET Render the login page if the person isn't logged in, otherwise 
-    transfer them to the `league.index()` method.
+    :return: ``flask.Response(mimetype='text/HTML')`` 
+    
+    Render the login page if the person isn't logged in, otherwise render a 
+    homepage for any of the leagues that they're involved in.
 
     """
     if session.get("user") is not None: 
@@ -30,15 +32,16 @@ def index():
 def cas_login():
     """
     Log in users through CAS. At the end of the CAS-related stuff, the rest of 
-    the application expects to find a user object set in the flask session. 
-    http://flask.pocoo.org/docs/1.0/api/#flask.session
+    the application expects to find a user object set in the session object.
 
     Note that the contents of the session are public, but immutable. Please 
     exclude values that you would not like the world to see. If sensitive data 
     is needed, leave it to the caller to query the database themselves.
 
-    @returns 302 Response: A redirect to the account creation page for new users 
-    or the league homepage for returning users.
+    :return: ``flask.redirect`` 
+    
+    A redirect to the account creation page for new users or the homepage for 
+    any of the leagues that a returning user is associated with.
 
     """
 
@@ -57,7 +60,12 @@ def cas_login():
 @bp.route("/logout/", methods=["GET"])
 def cas_logout():
     """
-    @GET Log out the currently logged in user. Redirect to the login page.
+    Log out the currently logged in user. 
+
+    :return: ``flask.redirect``
+    
+    Redirect to the login page.
+
     """
     session.clear()
     return redirect(url_for("auth.index"))
