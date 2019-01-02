@@ -1,0 +1,226 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>tiger_leagues.models.user_model &#8212; Tiger Leagues 1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../../../index.html"><h1 style="font-size: 3em;">Tiger Leagues</h1></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">home</a>|&nbsp;</li>
+        <li><a href="../../../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../tiger_leagues.html" accesskey="U">tiger_leagues</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tiger_leagues.models.user_model</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">user_model.py</span>
+
+<span class="sd">Exposes functions that are used by the controller for the `/user/*` endpoint</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">db_model</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">db_model</span><span class="o">.</span><span class="n">Database</span><span class="p">()</span>
+
+<div class="viewcode-block" id="get_user"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.user_model.get_user">[docs]</a><span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="n">net_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param net_id: str</span>
+<span class="sd">    </span>
+<span class="sd">    The Princeton Net ID of the user</span>
+
+<span class="sd">    :return: ``dict`` </span>
+<span class="sd">    </span>
+<span class="sd">    A representation of the user as stored in the database</span>
+<span class="sd">    </span>
+<span class="sd">    :return: ``NoneType``</span>
+
+<span class="sd">    If there is no user in the database with the provided net id</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">((</span>
+        <span class="s2">&quot;SELECT user_id, name, net_id, email, phone_num, room, league_ids &quot;</span>
+        <span class="s2">&quot;FROM users WHERE net_id = </span><span class="si">%s</span><span class="s2">&quot;</span>
+    <span class="p">),</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">net_id</span><span class="p">])</span>
+    <span class="n">user_profile</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">user_profile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="k">return</span> <span class="n">user_profile</span>
+
+    <span class="c1"># Although psycopg2 allows us to change values already in the table, we </span>
+    <span class="c1"># cannot add new fields that weren&#39;t columns, thus the need for a new dict</span>
+    <span class="n">mutable_user_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="n">user_profile</span><span class="p">)</span> <span class="c1"># https://www.python.org/dev/peps/pep-0448/#abstract</span>
+    <span class="k">if</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mutable_user_data</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">mutable_user_data</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mutable_user_data</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="p">)]</span>
+        <span class="n">mutable_user_data</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">__get_user_leagues_info</span><span class="p">(</span>
+            <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">],</span> <span class="n">mutable_user_data</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">mutable_user_data</span></div>
+
+<div class="viewcode-block" id="update_user_profile"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.user_model.update_user_profile">[docs]</a><span class="k">def</span> <span class="nf">update_user_profile</span><span class="p">(</span><span class="n">user_profile</span><span class="p">,</span> <span class="n">net_id</span><span class="p">,</span> <span class="n">submitted_data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param user_profile: dict </span>
+<span class="sd">    </span>
+<span class="sd">    A representation of the user, usually obtained from ``get_user(net_id)``. If </span>
+<span class="sd">    set to ``None``, a new user will be created and added to the database.</span>
+
+<span class="sd">    :param net_id: str</span>
+<span class="sd">    </span>
+<span class="sd">    The Princeton Net ID of the user</span>
+
+<span class="sd">    :param submitted_data: dict</span>
+<span class="sd">    </span>
+<span class="sd">    Keys may include `name`, `email`, `phone_num`, `room`</span>
+
+<span class="sd">    :return: dict</span>
+<span class="sd">    </span>
+<span class="sd">    The updated user profile</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">changeable_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">,</span> <span class="s2">&quot;phone_num&quot;</span><span class="p">,</span> <span class="s2">&quot;room&quot;</span><span class="p">]</span>
+    <span class="n">updated_col_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">updated_col_values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">changeable_cols</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">submitted_data</span><span class="p">:</span>
+            <span class="n">updated_col_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+            <span class="n">updated_col_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">submitted_data</span><span class="p">[</span><span class="n">column</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">user_profile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> 
+        <span class="c1"># Then we have a new user...</span>
+        <span class="n">updated_col_names</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;net_id&quot;</span><span class="p">]</span>
+        <span class="n">updated_col_values</span> <span class="o">+=</span> <span class="p">[</span><span class="n">net_id</span><span class="p">]</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;INSERT INTO users (</span><span class="si">{}</span><span class="s2">) VALUES (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">updated_col_names</span><span class="p">]),</span>
+                <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">updated_col_values</span><span class="p">])</span>
+            <span class="p">),</span>
+            <span class="n">values</span><span class="o">=</span><span class="n">updated_col_values</span><span class="p">,</span>
+            <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="n">updated_col_names</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;UPDATE users SET </span><span class="si">{}</span><span class="s2"> WHERE user_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">updated_col_names</span><span class="p">])</span>
+            <span class="p">),</span> 
+            <span class="n">values</span><span class="o">=</span><span class="n">updated_col_values</span> <span class="o">+</span> <span class="p">[</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]],</span>
+            <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="n">updated_col_names</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">get_user</span><span class="p">(</span><span class="n">net_id</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">__get_user_leagues_info</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">league_ids</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param user_id: int</span>
+<span class="sd">    </span>
+<span class="sd">    The ID of the associated user.</span>
+
+<span class="sd">    :param league_ids: list[int]</span>
+<span class="sd">    </span>
+<span class="sd">    A list of all the league IDs that a user is associated with</span>
+
+<span class="sd">    :return: `dict[dict]`</span>
+<span class="sd">    </span>
+<span class="sd">    Contains all leagues that a user is associated with. Each dict is keyed by: </span>
+<span class="sd">    ``league_name``, ``league_id``, ``status``.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_leagues_info</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">league_id</span> <span class="ow">in</span> <span class="n">league_ids</span><span class="p">:</span>
+        <span class="n">league_responses_tablename</span> <span class="o">=</span> <span class="s2">&quot;league_responses_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;SELECT league_info.league_id, league_name, status, </span><span class="si">{}</span><span class="s2">.division_id &quot;</span>
+                <span class="s2">&quot;FROM league_info, </span><span class="si">{}</span><span class="s2"> &quot;</span>
+                <span class="s2">&quot;WHERE </span><span class="si">{}</span><span class="s2">.user_id = </span><span class="si">%s</span><span class="s2"> AND league_info.league_id = </span><span class="si">%s</span><span class="s2">&quot;</span>
+            <span class="p">),</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">league_id</span><span class="p">],</span>
+            <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">league_responses_tablename</span><span class="p">,</span>
+                <span class="n">league_responses_tablename</span><span class="p">,</span>
+                <span class="n">league_responses_tablename</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">user_leagues_info</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">league_id</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="n">info</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">user_leagues_info</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">home</a>|&nbsp;</li>
+        <li><a href="../../../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../tiger_leagues.html" >tiger_leagues</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>

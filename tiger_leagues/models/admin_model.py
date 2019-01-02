@@ -16,10 +16,13 @@ db = db_model.Database()
 
 def get_join_league_requests(league_id):
     """
-    @param int `league_id`: The ID of the league
+    :param league_id: int
+    
+    The ID of the league
 
-    @returns List[DictCursor]: A row for each user who submitted a request to 
-    join this league.
+    :return: ``List[DictCursor]`` 
+    
+    A row for each user who submitted a request to join this league.
 
     """
     league_response_table_name = "league_responses_{}".format(league_id)
@@ -35,13 +38,18 @@ def get_join_league_requests(league_id):
 
 def update_join_league_requests(league_id, league_statuses):
     """
-    @param int `league_id`: The ID of the league
+    :param league_id: int
+    
+    The ID of the league
 
-    @param dict `league_statuses`: The keys are user_ids and the values are any 
-    of the supported status strings
+    :param league_statuses: dict 
+    
+    The keys are user_ids and the values are any of the supported status strings
 
-    @returns dict: If `success` is set, `message` will contain a user_id->status 
-    matching. Otherwise, `message` will contain an error description.
+    :return: ``dict`` 
+    
+    If ``success`` is set, ``message`` will contain a user_id->status matching. 
+    Otherwise, ``message`` will contain an error description.
 
     """
     league_info = league_model.get_league_info(league_id)
@@ -73,10 +81,13 @@ def update_join_league_requests(league_id, league_statuses):
 
 def get_registration_stats(league_id):
     """
-    @param int `league_id`: The ID of the league
+    :param league_id: int 
+    
+    The ID of the league
 
-    @return dict: The keys are various join statuses and the values are their 
-    frequency.
+    :return: ``dict``
+    
+    The keys are various join statuses and the values are their frequency.
 
     """
     league_response_table_name = "league_responses_{}".format(league_id)
@@ -92,15 +103,20 @@ def get_registration_stats(league_id):
 
 def generate_league_fixtures(league_id, div_allocations):
     """
-    @param int `league_id`: The ID of the league
+    :param league_id: int 
+    
+    The ID of the league
 
-    @param dict `div_allocations`: The keys are the division IDs. The values 
-    dicts keyed by `name` and `user_id` representing a player associated with 
-    the league.
+    :param div_allocations: dict
+    
+    The keys are the division IDs. Each value is a dict keyed by ``name`` and 
+    ``user_id`` representing a player associated with the league.
 
-    @return dict: If `success` is `False`, `message` will have a description of 
-    why the call failed. Otherwise, `message` will contain a string confirming 
-    that the fixtures were generated.
+    :return: ``dict`` 
+    
+    If ``success`` is ``False``, ``message`` will have a description of why the 
+    call failed. Otherwise, ``message`` will contain a string confirming that 
+    the fixtures were generated.
 
     """
 
@@ -191,8 +207,13 @@ def generate_league_fixtures(league_id, div_allocations):
 
 def __fetch_active_league_players(league_id):
     """
-    @returns List[DictRow]: a list of all players in the league who are eligible 
-    to play league games.
+    :param league_id: int 
+    
+    The ID of the league
+
+    :return: ``List[DictRow]`` 
+    
+    A list of all players in the league who are eligible to play league games.
 
     """
     table_name = "league_responses_{}".format(league_id)
@@ -206,14 +227,20 @@ def __fetch_active_league_players(league_id):
 
 def allocate_league_divisions(league_id, desired_allocation_config):
     """
-    @param int `league_id`: The ID of the league
+    :param league_id: int 
+    
+    The ID of the league
 
-    @param dict `desired_allocation_config`: Options to use when allocating the 
-    divisions. Keys may include `match_frequency_in_days`, `completion_deadline`
+    :param desired_allocation_config: dict 
+    
+    Options to use when allocating the divisions. Keys may include 
+    ``match_frequency_in_days`` and ``completion_deadline``
 
-    @returns dict: if `success` is `False`, `message` contains a string 
-    describing what went wrong. Otherwise, `message` is a dict keyed by `divisions` 
-    and `end_date`
+    :return: ``dict``
+    
+    If ``success`` is ``False``, ``message`` contains a string describing what 
+    went wrong. 
+    Otherwise, ``message`` is a dict keyed by ``divisions`` and ``end_date``
 
     """
     allocation_config = {}
@@ -299,17 +326,24 @@ def allocate_league_divisions(league_id, desired_allocation_config):
         }
     }
 
-def fixture_generator(users):
+def fixture_generator(user_ids):
     """
-    @return `List[List[List]]` the innermost list is has 2 elements (the IDs of 
-    the players involved in a game). The middle list has a collection of all the 
-    games being played at a particular timeslot. The outermost list encompasses 
-    all the games that will be played between all the users.
+
+    :param user_ids: List[int]
+
+    A list of the IDs of users who are supposed to play each other.
+
+    :return: ``List[List[List]]`` 
+    
+    The innermost list has 2 elements (the IDs of the players involved in a game). 
+    The middle list has a collection of all the games being played at a 
+    particular timeslot. The outermost list encompasses all the games that will 
+    be played between all the users.
 
     """
     # we need a more effective of finding all the users in the league. 
     # as of right now we need to iterate through every user and the league_ids they pertain to
-    length = len(users)
+    length = len(user_ids)
     odd = 0
 
     if length % 2 is not 0:
@@ -321,11 +355,11 @@ def fixture_generator(users):
     tempList2 = [None] * half
 
     for i in range(0, half):
-    	tempList1[i] = users[i]
+    	tempList1[i] = user_ids[i]
 
     j = 0
     for i in range(length-1, half-1, -1):
-    	tempList2[j] = users[i]
+    	tempList2[j] = user_ids[i]
     	j += 1
 
     fixtures_list = []
@@ -349,9 +383,17 @@ def fixture_generator(users):
 
 def get_current_matches(league_id):
     """
-    @returns List[DictRow]: A list of all matches in the current time block. Keys 
-    include `match_id`, `league_id`, `user_id_1`, `user_id_2`, `division_id`, 
-    `score_user_1`, `score_user_2`, `status`, `user_1_name`, `user_2_name`
+    :param league_id: int 
+    
+    The ID of the league
+
+    :return: ``List[DictRow]``
+    
+    A list of all matches in the current time block. 
+    Keys include ``match_id``, ``league_id``, ``user_id_1``, ``user_id_2``, 
+    ``division_id``, ``score_user_1``, ``score_user_2``, ``status``, 
+    ``user_1_name``, ``user_2_name``
+
     """
     relevant_matches = league_model.get_matches_in_current_window(
         league_id, num_periods_before=1, num_periods_after=2
@@ -374,10 +416,16 @@ def get_current_matches(league_id):
 
 def approve_match(score_info):
     """
-    @param dict `score_info`: Expected keys: `score_user_1`, `score_user_2`, 
-    `match_id`
+    :param score_info: dict
+    
+    Expected keys: ``score_user_1``, ``score_user_2``, ``match_id``
 
-    @return `dict`: Keys: `success`, `message`
+    :return: ``dict``
+    
+    Keys: ``success``, ``message``. If ``success`` is ``True``, ``message`` has 
+    the updated status of the match. Otherwise, ``message`` explains why the 
+    update failed.
+
     """
     if score_info["score_user_1"] is None:
         return {"success": False, "message": "Score cannot be empty!"}
@@ -408,8 +456,17 @@ def approve_match(score_info):
         }
 
 def delete_league(league_id):
+    """
+    :param league_id: int 
+    
+    The ID of the league
 
-    # remove league from associated leagues of members
+    :return: ``dict``
+
+    Keys: ``success``, ``message``. If ``success`` is ``True``, ``message`` has 
+    a confirmation message. Otherwise, ``message`` explains why the deletion failed.
+
+    """
 
     try:
         league_members = __fetch_active_league_players(league_id)

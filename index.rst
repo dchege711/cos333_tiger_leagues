@@ -10,9 +10,9 @@ The source code for this project lives in https://github.com/dchege711/cos333_ti
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    readme.rst
+   tiger_leagues/models/readme.rst
    tiger_leagues/readme.rst
 
 Indices and tables

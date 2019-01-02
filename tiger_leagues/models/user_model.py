@@ -11,10 +11,17 @@ db = db_model.Database()
 
 def get_user(net_id):
     """
-    @param `net_id` [str]: The Princeton Net ID of the user
+    :param net_id: str
+    
+    The Princeton Net ID of the user
 
-    @returns `dict` representing a user in the database who has the specified 
-    net ID, otherwise returns `None`
+    :return: ``dict`` 
+    
+    A representation of the user as stored in the database
+    
+    :return: ``NoneType``
+
+    If there is no user in the database with the provided net id
     """
     cursor = db.execute((
         "SELECT user_id, name, net_id, email, phone_num, room, league_ids "
@@ -38,15 +45,22 @@ def get_user(net_id):
 
 def update_user_profile(user_profile, net_id, submitted_data):
     """
-    @param dict `user_profile`: usually obtained from session.get('user'). If 
-    this is set to `None`, a new user will be created and added to the database.
+    :param user_profile: dict 
+    
+    A representation of the user, usually obtained from ``get_user(net_id)``. If 
+    set to ``None``, a new user will be created and added to the database.
 
-    @param str `net_id`: the Princeton Net ID of the user
+    :param net_id: str
+    
+    The Princeton Net ID of the user
 
-    @param dict `submitted_data`: Keys may include `name`, `email`, `phone_num`, 
-    `room`
+    :param submitted_data: dict
+    
+    Keys may include `name`, `email`, `phone_num`, `room`
 
-    @returns dict: the updated user profile
+    :return: dict
+    
+    The updated user profile
 
     """
     changeable_cols = ["name", "email", "phone_num", "room"]
@@ -82,12 +96,19 @@ def update_user_profile(user_profile, net_id, submitted_data):
 
 def __get_user_leagues_info(user_id, league_ids):
     """
-    @param int `user_id`: the ID of the associated user.
+    :param user_id: int
+    
+    The ID of the associated user.
 
-    @param List[int] `league_ids`: a list of all the league IDs that a user is associated with
+    :param league_ids: list[int]
+    
+    A list of all the league IDs that a user is associated with
 
-    @return `Dict[dict]` containing all leagues that a user is associated with. 
-    Expected keys: `league_name`, `league_id`, `status`.
+    :return: `dict[dict]`
+    
+    Contains all leagues that a user is associated with. Each dict is keyed by: 
+    ``league_name``, ``league_id``, ``status``.
+    
     """
     user_leagues_info = {}
     for league_id in league_ids:

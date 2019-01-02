@@ -8,7 +8,7 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 import json
 from datetime import date, timedelta
 from math import ceil
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from functools import cmp_to_key
 
 from . import db_model
@@ -36,11 +36,13 @@ db = db_model.Database()
 
 def get_league_standings(league_id):
     """
-    @param int `league_id`: The ID of the league
+    :param league_id: int
+    
+    The ID of the league
 
-    @param int `division_id`: The ID of the division within the league
-
-    @returns List[dict]: The sorted league standings
+    :return: ``List[dict]``
+    
+    The sorted league standings
     """
 
     cursor = db.execute(
@@ -150,18 +152,30 @@ def get_league_standings(league_id):
 def get_matches_in_current_window(league_id, num_periods_before=1, 
                                   num_periods_after=2, user_id=None):
     """
-    @param int `league_id`: The ID of the league.
+    :param league_id: int
+    
+    The ID of the league
 
-    @kwargs int `num_periods_before`, `num_periods_after`: Each league has a defined 
-    period between game deadlines. This method fetches matches that have deadlines 
-    in the range `[today - period * num_periods_before, today + period * num_periods_after]`
+    :kwarg num_periods_before: int
 
-    @kwargs int `user_id`: If set, filter matches that are associated with this user ID
+    The fetched matches will have deadlines that are at least on/later than 
+    ``today - num_days_between_games * num_periods_before``
+    
+    :kwarg num_periods_after: int
+    
+    The fetched matches will have deadlines that are at least on/earlier than 
+    ``today + num_days_between_games * num_periods_before``
 
-    @return List[DictRow]: A list of all the matches within the current time 
-    window. These are the matches that are about to be played or have been played. 
-    Keys include: `match_id` `user_id_1`, `user_id_2`, `league_id`, `division_id`, 
-    `score_user_1`, `score_user_2`, `status`, `deadline`
+    :kwarg user_id: int 
+    
+    If set, only return matches that are associated with this user ID
+
+    :return: ``List[DictRow]``
+    
+    A list of all the matches within the current time window. These are the 
+    matches that are about to be played or have been played. Keys include: 
+    ```match_id``` ```user_id_1```, ```user_id_2```, ```league_id```, ```division_id```, 
+    ```score_user_1```, ```score_user_2```, ```status```, ```deadline```
     """
     cursor = db.execute(
         "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s", 
@@ -194,7 +208,17 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
 
 def get_players_current_matches(user_id, league_id):
     """
-    @returns List[dict]: the player's current matches ordered by the deadline.
+    :param user_id: int
+
+    The ID of the player (equivalent to user)
+
+    :param league_id: int
+
+    The ID of the league
+
+    :return: ``List[dict]``
+    
+    The player's current matches ordered by the deadline.
     """
 
     relevant_matches = get_matches_in_current_window(league_id, user_id=user_id)
@@ -224,12 +248,19 @@ def get_players_current_matches(user_id, league_id):
 
 def process_player_score_report(user_id, score_details):
     """
-    @param int `user_id`: The ID of the user submitting the score report
+    :param user_id: int
+    
+    The ID of the user submitting the score report
 
-    @param dict `score_details`: Expected keys: `my_score`, `opponent_score`, 
-    `match_id`.
+    :param score_details: dict
+    
+    Expected keys: ``my_score``, ``opponent_score``, ``match_id``.
 
-    @returns dict: Expected keys: `success`, `message`
+    :return: ```dict```
+    
+    Keys: ```success```, ```message```. If ```success``` is ```True```, ```message``` 
+    contains the status of the match after the score has been processed. 
+    Otherwise, ```message``` contains an explanation of what went wrong.
 
     """
     if score_details["my_score"] is None:
@@ -278,17 +309,22 @@ def process_player_score_report(user_id, score_details):
 
 def create_league(league_info, creator_user_profile):
     """
-    Create a league from the submitted data. 
+    :param league_info: dict
     
-    @param dict `league_info`: Expected keys `league_name`, 
-    `description`, `points_per_win`, `points_per_draw`, `points_per_loss`, 
-    `registration_deadline` and `additional_questions`.
+    Expected keys: ``league_name``, ``description``, ``points_per_win``, 
+    ``points_per_draw``, ``points_per_loss``, ``registration_deadline``, 
+    ``additional_questions``.
 
-    @param dict `creator_user_profile`: the user who created this league
+    :param creator_user_profile: dict
+    
+    Expected keys: ``user_id, league_ids``
 
-    @returns `dict`: `success` is set to `True` only if the league was created. 
-    If `success` is `False`, the `message` field will contain a decriptive error.
-    Otherwise, the `message` field will be an `int` representing the league ID
+    :return: ``dict``
+    
+    ``success`` is set to ``True`` only if the league was created. 
+    If ``success`` is ``False``, the ``message`` field will contain a 
+    decriptive error message. Otherwise, the ``message`` field will be an 
+    ``int`` representing the league ID
 
     """
     sanitized_additional_questions = {}
@@ -367,12 +403,21 @@ def create_league(league_info, creator_user_profile):
 
 def get_league_info(league_id):
     """
-    @returns `dict` Keys: `league_id`, `league_id`, `league_name`, `description`, 
-    `points_per_win`, `points_per_draw`, `points_per_loss`, `league_status`, 
-    `additional_questions`, `registration_deadline`, `match_frequency_in_days`, 
-    `max_num_players`
+    :param league_id: int
 
-    @returns `None` if the league_id is not found
+    The ID of this league
+
+    :return: ``dict``
+    
+    Keys: ``league_id``, ``league_id``, ``league_name``, ``description``, 
+    ``points_per_win``, ``points_per_draw``, ``points_per_loss``, ``league_status``, 
+    ``additional_questions``, ``registration_deadline``, ``match_frequency_in_days``, 
+    ``max_num_players``
+
+    :return: ``NoneType``
+    
+    ``None`` is returned if the league_id is not found in the database.
+
     """
     cursor = db.execute(
         (
@@ -393,10 +438,14 @@ def get_league_info(league_id):
 
 def get_leagues_not_yet_joined(user_profile):
     """
-    @param dict `user_profile`: the user profile of the user
+    :param user_profile: dict 
+    
+    Expected keys: ``associated_leagues``
 
-    @return List[DictRow]: Each item has `league_id`, `league_name`, 
-    `registration_deadline` and `description` as keys.
+    :return: ``List[DictRow]``
+    
+    Each item is keyed by ``league_id``, ``league_name``, ``registration_deadline`` 
+    and ``description``
 
     """
     ids_associated_leagues = set(user_profile["associated_leagues"].keys())
@@ -419,11 +468,15 @@ def get_leagues_not_yet_joined(user_profile):
 
 def get_league_info_if_joinable(league_id):
     """
-    @param int `league_id`: The ID of the league
+    :param league_id: int 
+    
+    The ID of the league
 
-    @returns `dict`: If `succcess` is `False`, `message` will contain a 
-    descriptive error message. If `success` is `True`, `message` will contain 
-    the league information needed to join the league.
+    :return: ``dict``
+    
+    If ``succcess`` is ``False``, ``message`` will contain a descriptive error 
+    message. If ``success`` is ``True``, ``message`` will contain the league 
+    information needed to join the league.
     """
 
     league_info = get_league_info(league_id)
@@ -448,15 +501,22 @@ def get_league_info_if_joinable(league_id):
 
 def get_previous_responses(league_id, user_profile):
     """
-    @param int `league_id`: The ID of the league
+    :param league_id: int 
+    
+    The ID of the league
 
-    @param dict `user_profile`: A representation of the user as stored in the 
-    session object.
+    :param user_profile: dict
+    
+    Expected keys: ``associated_leagues, user_id``
 
-    @returns `None`: if the user has not tried to join this league before
+    :return: ``NoneType``
+    
+    If the user has not tried to join this league before
 
-    @returns `DictRow`: the responses that the user previously entered while 
-    trying to join this league.
+    :return: ``DictRow``
+    
+    The responses that the user previously entered while trying to join this 
+    league.
 
     """
     ids_associated_leagues = set(user_profile["associated_leagues"].keys())
@@ -471,12 +531,18 @@ def get_previous_responses(league_id, user_profile):
 
 def process_join_league_request(league_id, user_profile, submitted_data):
     """
-    @param int `league_id` the ID of this league
+    :param league_id: int
+    
+    The ID of this league
 
-    @param dict `user_profile`: the user data as stored in the session object
+    :param user_profile: dict
+    
+    Expected keys: ``user_id, league_ids``
 
-    @returns `dict`: If `succcess` is `False`, `message` will contain a 
-    descriptive error message. If `success` is `True`, `message` will contain a 
+    :return: ``dict``
+    
+    If ``succcess`` is ``False``, ``message`` will contain a descriptive error 
+    message. If ``success`` is ``True``, ``message`` will contain a 
     dict containing the updated user profile.
     """
     results = get_league_info_if_joinable(league_id)
@@ -529,12 +595,18 @@ def process_join_league_request(league_id, user_profile, submitted_data):
 
 def process_leave_league_request(league_id, user_profile):
     """
-    @param int `league_id`: The ID of the league
+    :param league_id: int
+    
+    The ID of the league
 
-    @param dict `user_profile`: A representation of the user as stored in the 
-    session object.
+    :param user_profile: dict 
+    
+    Expected keys: ``user_id, league_ids``
 
-    @return `bool`: `True` if the user was successfully removed from the league
+    :return: ``bool``: 
+    
+    ``True`` if the user was successfully removed from the league, ``False`` 
+    otherwise
 
     """
     db.execute(

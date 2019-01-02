@@ -1,15 +1,10 @@
 .. _tiger_leagues_controllers:
 
-*************************
+***********
 Controllers
-*************************
+***********
 
 This application loosely follows the model-controller-view architecture.
-
-tiger_leagues.config
---------------------
-.. automodule:: tiger_leagues.config
-   :members:
 
 tiger_leagues.auth
 ------------------

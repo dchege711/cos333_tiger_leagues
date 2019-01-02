@@ -1,0 +1,720 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>tiger_leagues.models.league_model &#8212; Tiger Leagues 1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+  </head><body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../../../index.html"><h1 style="font-size: 3em;">Tiger Leagues</h1></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">home</a>|&nbsp;</li>
+        <li><a href="../../../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../tiger_leagues.html" accesskey="U">tiger_leagues</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for tiger_leagues.models.league_model</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">league.py</span>
+
+<span class="sd">Exposes a blueprint that handles requests made to `/league/*` endpoint</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">ceil</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">cmp_to_key</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">db_model</span>
+
+<span class="n">generic_500_msg</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Internal Server Error&quot;</span>
+<span class="p">}</span>
+
+<span class="n">STATUS_PENDING</span> <span class="o">=</span> <span class="s2">&quot;pending&quot;</span>
+<span class="n">STATUS_MEMBER</span> <span class="o">=</span> <span class="s2">&quot;member&quot;</span>
+<span class="n">STATUS_DENIED</span> <span class="o">=</span> <span class="s2">&quot;denied&quot;</span>
+<span class="n">STATUS_ADMIN</span> <span class="o">=</span> <span class="s2">&quot;admin&quot;</span>
+<span class="n">STATUS_INACTIVE</span> <span class="o">=</span> <span class="s2">&quot;inactive&quot;</span>
+
+<span class="n">LEAGUE_STAGE_ACCEPTING_USERS</span> <span class="o">=</span> <span class="s2">&quot;accepting_users&quot;</span>
+<span class="n">LEAGUE_STAGE_DEADLINE_PASSED_NOT_YET_STARTED</span> <span class="o">=</span> <span class="s2">&quot;awaiting_admin_greenlight&quot;</span>
+<span class="n">LEAGUE_STAGE_IN_PROGRESS</span> <span class="o">=</span> <span class="s2">&quot;league_in_progress&quot;</span>
+<span class="n">LEAGUE_STAGE_COMPLETED</span> <span class="o">=</span> <span class="s2">&quot;league_matches_completed&quot;</span>
+<span class="n">LEAGUE_STAGE_IN_PLAYOFFS</span> <span class="o">=</span> <span class="s2">&quot;in_playoffs&quot;</span>
+
+<span class="n">MATCH_STATUS_APPROVED</span> <span class="o">=</span> <span class="s2">&quot;approved&quot;</span>
+<span class="n">MATCH_STATUS_PENDING_APPROVAL</span> <span class="o">=</span> <span class="s2">&quot;pending_approval&quot;</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">db_model</span><span class="o">.</span><span class="n">Database</span><span class="p">()</span>
+
+<div class="viewcode-block" id="get_league_standings"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_league_standings">[docs]</a><span class="k">def</span> <span class="nf">get_league_standings</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: int</span>
+<span class="sd">    </span>
+<span class="sd">    The ID of the league</span>
+
+<span class="sd">    :return: ``List[dict]``</span>
+<span class="sd">    </span>
+<span class="sd">    The sorted league standings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;SELECT points_per_win, points_per_draw, points_per_loss &quot;</span>
+            <span class="s2">&quot;FROM league_info WHERE league_id = </span><span class="si">%s</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+    <span class="n">points_per_win</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;points_per_win&#39;</span><span class="p">]</span>
+    <span class="n">points_per_draw</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;points_per_draw&#39;</span><span class="p">]</span>
+    <span class="n">points_per_loss</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;points_per_loss&#39;</span><span class="p">]</span>
+
+    <span class="n">all_standings</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="c1"># First pad all the players with zeros...</span>
+    <span class="n">table_name</span> <span class="o">=</span> <span class="s2">&quot;league_responses_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;SELECT users.user_id, users.name, division_id FROM </span><span class="si">{}</span><span class="s2">, users &quot;</span>
+            <span class="s2">&quot;WHERE users.user_id = </span><span class="si">{}</span><span class="s2">.user_id AND division_id IS NOT NULL;&quot;</span>
+        <span class="p">),</span>
+        <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="n">table_name</span><span class="p">,</span> <span class="n">table_name</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">:</span>
+        <span class="n">all_standings</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;division_id&quot;</span><span class="p">]][</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="s2">&quot;wins&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;draws&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> 
+            <span class="s2">&quot;goals_for&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;goals_allowed&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;goal_diff&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;points&quot;</span><span class="p">:</span> <span class="mi">0</span>
+        <span class="p">}</span>
+
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;SELECT match_id, division_id, user_id_1, user_id_2, score_user_1, &quot;</span>
+            <span class="s2">&quot;score_user_2 FROM match_info WHERE league_id = </span><span class="si">%s</span><span class="s2"> &quot;</span>
+            <span class="s2">&quot;AND status = </span><span class="si">%s</span><span class="s2"> ORDER BY division_id;&quot;</span>
+        <span class="p">),</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">,</span> <span class="n">MATCH_STATUS_APPROVED</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">:</span>
+
+        <span class="n">div_standings_info</span> <span class="o">=</span> <span class="n">all_standings</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;division_id&quot;</span><span class="p">]]</span>
+
+        <span class="n">user_id_1</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;user_id_1&#39;</span><span class="p">]</span>
+        <span class="n">user_id_2</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;user_id_2&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">user_id_1</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">div_standings_info</span><span class="p">:</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_1</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">user_id_2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">div_standings_info</span><span class="p">:</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_2</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_1</span><span class="p">][</span><span class="s1">&#39;goals_for&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;score_user_1&#39;</span><span class="p">]</span>
+        <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_2</span><span class="p">][</span><span class="s1">&#39;goals_for&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;score_user_2&#39;</span><span class="p">]</span>
+        <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_1</span><span class="p">][</span><span class="s1">&#39;goals_allowed&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;score_user_2&#39;</span><span class="p">]</span>
+        <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_2</span><span class="p">][</span><span class="s1">&#39;goals_allowed&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;score_user_1&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;score_user_1&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;score_user_2&#39;</span><span class="p">]):</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_1</span><span class="p">][</span><span class="s1">&#39;wins&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_1</span><span class="p">][</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">points_per_win</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_2</span><span class="p">][</span><span class="s1">&#39;losses&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_2</span><span class="p">][</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">points_per_loss</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;score_user_1&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;score_user_2&#39;</span><span class="p">]):</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_2</span><span class="p">][</span><span class="s1">&#39;wins&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_2</span><span class="p">][</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">points_per_win</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_1</span><span class="p">][</span><span class="s1">&#39;losses&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_1</span><span class="p">][</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">points_per_loss</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_1</span><span class="p">][</span><span class="s1">&#39;draws&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_1</span><span class="p">][</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">points_per_draw</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_2</span><span class="p">][</span><span class="s1">&#39;draws&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id_2</span><span class="p">][</span><span class="s1">&#39;points&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">points_per_draw</span>
+
+    <span class="k">for</span> <span class="n">division_id</span> <span class="ow">in</span> <span class="n">all_standings</span><span class="p">:</span>
+        <span class="n">div_standings_info</span> <span class="o">=</span> <span class="n">all_standings</span><span class="p">[</span><span class="n">division_id</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">div_standings_info</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">user_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="s2">&quot;SELECT name FROM users WHERE user_id = </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="p">),</span>
+                    <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_id</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+                <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id</span><span class="p">][</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_id</span>
+                <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id</span><span class="p">][</span><span class="s1">&#39;goal_diff&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id</span><span class="p">][</span><span class="s1">&#39;goals_for&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">div_standings_info</span><span class="p">[</span><span class="n">user_id</span><span class="p">][</span><span class="s1">&#39;goals_allowed&#39;</span><span class="p">]</span>
+        
+    <span class="k">def</span> <span class="nf">standings_cmp</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A comparator function for sorting the standings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">]:</span> <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">]:</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;goal_diff&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;goal_diff&quot;</span><span class="p">]:</span> <span class="k">return</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;goal_diff&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;goal_diff&quot;</span><span class="p">]:</span> <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">return</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;losses&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;draws&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;wins&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;losses&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;draws&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;wins&quot;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">division_id</span> <span class="ow">in</span> <span class="n">all_standings</span><span class="p">:</span>
+        <span class="n">standings</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">all_standings</span><span class="p">[</span><span class="n">division_id</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="n">standings</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">cmp_to_key</span><span class="p">(</span><span class="n">standings_cmp</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">all_standings</span><span class="p">[</span><span class="n">division_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">standings</span>
+
+    <span class="k">return</span> <span class="n">all_standings</span></div>
+
+<div class="viewcode-block" id="get_matches_in_current_window"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_matches_in_current_window">[docs]</a><span class="k">def</span> <span class="nf">get_matches_in_current_window</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">num_periods_before</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                                  <span class="n">num_periods_after</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: int</span>
+<span class="sd">    </span>
+<span class="sd">    The ID of the league</span>
+
+<span class="sd">    :kwarg num_periods_before: int</span>
+
+<span class="sd">    The fetched matches will have deadlines that are at least on/later than </span>
+<span class="sd">    ``today - num_days_between_games * num_periods_before``</span>
+<span class="sd">    </span>
+<span class="sd">    :kwarg num_periods_after: int</span>
+<span class="sd">    </span>
+<span class="sd">    The fetched matches will have deadlines that are at least on/earlier than </span>
+<span class="sd">    ``today + num_days_between_games * num_periods_before``</span>
+
+<span class="sd">    :kwarg user_id: int </span>
+<span class="sd">    </span>
+<span class="sd">    If set, only return matches that are associated with this user ID</span>
+
+<span class="sd">    :return: ``List[DictRow]``</span>
+<span class="sd">    </span>
+<span class="sd">    A list of all the matches within the current time window. These are the </span>
+<span class="sd">    matches that are about to be played or have been played. Keys include: </span>
+<span class="sd">    ```match_id``` ```user_id_1```, ```user_id_2```, ```league_id```, ```division_id```, </span>
+<span class="sd">    ```score_user_1```, ```score_user_2```, ```status```, ```deadline```</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;SELECT match_frequency_in_days FROM league_info WHERE league_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> 
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">time_window_days</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s2">&quot;match_frequency_in_days&quot;</span><span class="p">])</span>
+
+    <span class="n">latest_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">time_window_days</span> <span class="o">*</span> <span class="n">num_periods_after</span><span class="p">)</span>
+    <span class="n">earliest_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">time_window_days</span> <span class="o">*</span> <span class="n">num_periods_before</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">user_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;SELECT * FROM match_info WHERE league_id = </span><span class="si">%s</span><span class="s2"> &quot;</span>
+                <span class="s2">&quot;AND (user_id_1 = </span><span class="si">%s</span><span class="s2"> OR user_id_2 = </span><span class="si">%s</span><span class="s2">) &quot;</span>
+                <span class="s2">&quot;AND (user_id_1 IS NOT NULL AND user_id_2 IS NOT NULL) &quot;</span>
+                <span class="s2">&quot;AND deadline &gt;= </span><span class="si">%s</span><span class="s2"> AND deadline &lt;= </span><span class="si">%s</span><span class="s2"> ORDER BY deadline;&quot;</span>
+            <span class="p">),</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">earliest_date</span><span class="p">,</span> <span class="n">latest_date</span><span class="p">]</span>
+        <span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;SELECT * FROM match_info WHERE league_id = </span><span class="si">%s</span><span class="s2"> &quot;</span>
+            <span class="s2">&quot;AND (user_id_1 IS NOT NULL AND user_id_2 IS NOT NULL) &quot;</span>
+            <span class="s2">&quot;AND deadline &gt;= </span><span class="si">%s</span><span class="s2"> AND deadline &lt;= </span><span class="si">%s</span><span class="s2"> ORDER BY deadline;&quot;</span>
+        <span class="p">),</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">,</span> <span class="n">earliest_date</span><span class="p">,</span> <span class="n">latest_date</span><span class="p">]</span>
+    <span class="p">)</span></div>
+
+<div class="viewcode-block" id="get_players_current_matches"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_players_current_matches">[docs]</a><span class="k">def</span> <span class="nf">get_players_current_matches</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param user_id: int</span>
+
+<span class="sd">    The ID of the player (equivalent to user)</span>
+
+<span class="sd">    :param league_id: int</span>
+
+<span class="sd">    The ID of the league</span>
+
+<span class="sd">    :return: ``List[dict]``</span>
+<span class="sd">    </span>
+<span class="sd">    The player&#39;s current matches ordered by the deadline.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">relevant_matches</span> <span class="o">=</span> <span class="n">get_matches_in_current_window</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="n">current_matches</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">relevant_matches</span><span class="p">:</span>
+        <span class="n">mutable_match</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="n">match</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;user_id_1&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">user_id</span><span class="p">:</span> 
+            <span class="n">mutable_match</span><span class="p">[</span><span class="s2">&quot;opponent_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;user_id_1&quot;</span><span class="p">]</span>
+            <span class="n">mutable_match</span><span class="p">[</span><span class="s2">&quot;opponent_score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s1">&#39;score_user_1&#39;</span><span class="p">]</span>
+            <span class="n">mutable_match</span><span class="p">[</span><span class="s2">&quot;your_score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s1">&#39;score_user_2&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">mutable_match</span><span class="p">[</span><span class="s2">&quot;opponent_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;user_id_2&quot;</span><span class="p">]</span>
+            <span class="n">mutable_match</span><span class="p">[</span><span class="s2">&quot;opponent_score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s1">&#39;score_user_2&#39;</span><span class="p">]</span>
+            <span class="n">mutable_match</span><span class="p">[</span><span class="s2">&quot;your_score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s1">&#39;score_user_1&#39;</span><span class="p">]</span>
+
+        <span class="n">current_matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mutable_match</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">current_matches</span><span class="p">:</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;SELECT name FROM users WHERE user_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">match</span><span class="p">[</span><span class="s2">&quot;opponent_id&quot;</span><span class="p">]]</span>
+        <span class="p">)</span>
+        <span class="n">match</span><span class="p">[</span><span class="s2">&quot;opponent_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">current_matches</span></div>
+
+<div class="viewcode-block" id="process_player_score_report"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.process_player_score_report">[docs]</a><span class="k">def</span> <span class="nf">process_player_score_report</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">score_details</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param user_id: int</span>
+<span class="sd">    </span>
+<span class="sd">    The ID of the user submitting the score report</span>
+
+<span class="sd">    :param score_details: dict</span>
+<span class="sd">    </span>
+<span class="sd">    Expected keys: ``my_score``, ``opponent_score``, ``match_id``.</span>
+
+<span class="sd">    :return: ```dict```</span>
+<span class="sd">    </span>
+<span class="sd">    Keys: ```success```, ```message```. If ```success``` is ```True```, ```message``` </span>
+<span class="sd">    contains the status of the match after the score has been processed. </span>
+<span class="sd">    Otherwise, ```message``` contains an explanation of what went wrong.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">score_details</span><span class="p">[</span><span class="s2">&quot;my_score&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Score cannot be empty!&quot;</span><span class="p">}</span>
+
+    <span class="k">elif</span> <span class="n">score_details</span><span class="p">[</span><span class="s2">&quot;opponent_score&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Score cannot be empty!&quot;</span><span class="p">}</span>
+
+
+    <span class="n">previous_match_details</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;SELECT * FROM match_info WHERE match_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> 
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">score_details</span><span class="p">[</span><span class="s2">&quot;match_id&quot;</span><span class="p">]]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">previous_match_details</span><span class="p">[</span><span class="s2">&quot;user_id_1&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">:</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;my_score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;score_user_1&quot;</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;score_user_1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;my_score&quot;</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;opponent_score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;score_user_2&quot;</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;score_user_2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;opponent_score&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;my_score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;score_user_2&quot;</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;score_user_2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;my_score&quot;</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;opponent_score&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;score_user_1&quot;</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;score_user_1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;opponent_score&quot;</span>
+    
+    <span class="k">if</span> <span class="n">previous_match_details</span><span class="p">[</span><span class="s2">&quot;recent_updater_id&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">user_id</span> <span class="ow">and</span> \
+        <span class="n">previous_match_details</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;my_score&quot;</span><span class="p">]]</span> <span class="o">==</span> <span class="n">score_details</span><span class="p">[</span><span class="s2">&quot;my_score&quot;</span><span class="p">]</span> <span class="ow">and</span> \
+        <span class="n">previous_match_details</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;opponent_score&quot;</span><span class="p">]]</span> <span class="o">==</span> <span class="n">score_details</span><span class="p">[</span><span class="s2">&quot;opponent_score&quot;</span><span class="p">]:</span>
+        <span class="n">match_status</span> <span class="o">=</span> <span class="n">MATCH_STATUS_APPROVED</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">match_status</span> <span class="o">=</span> <span class="n">MATCH_STATUS_PENDING_APPROVAL</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;UPDATE match_info &quot;</span>
+            <span class="s2">&quot;SET score_user_1 = </span><span class="si">%s</span><span class="s2">, score_user_2 = </span><span class="si">%s</span><span class="s2">, status = </span><span class="si">%s</span><span class="s2">, recent_updater_id = </span><span class="si">%s</span><span class="s2"> &quot;</span>
+            <span class="s2">&quot;WHERE match_id = </span><span class="si">%s</span><span class="s2">&quot;</span>
+        <span class="p">),</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">score_details</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;score_user_1&quot;</span><span class="p">]],</span> <span class="n">score_details</span><span class="p">[</span><span class="n">mapping</span><span class="p">[</span><span class="s2">&quot;score_user_2&quot;</span><span class="p">]],</span>
+            <span class="n">match_status</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">score_details</span><span class="p">[</span><span class="s2">&quot;match_id&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;match_status&quot;</span><span class="p">:</span> <span class="n">match_status</span><span class="p">}}</span></div>
+
+<div class="viewcode-block" id="create_league"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.create_league">[docs]</a><span class="k">def</span> <span class="nf">create_league</span><span class="p">(</span><span class="n">league_info</span><span class="p">,</span> <span class="n">creator_user_profile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_info: dict</span>
+<span class="sd">    </span>
+<span class="sd">    Expected keys: ``league_name``, ``description``, ``points_per_win``, </span>
+<span class="sd">    ``points_per_draw``, ``points_per_loss``, ``registration_deadline``, </span>
+<span class="sd">    ``additional_questions``.</span>
+
+<span class="sd">    :param creator_user_profile: dict</span>
+<span class="sd">    </span>
+<span class="sd">    Expected keys: ``user_id, league_ids``</span>
+
+<span class="sd">    :return: ``dict``</span>
+<span class="sd">    </span>
+<span class="sd">    ``success`` is set to ``True`` only if the league was created. </span>
+<span class="sd">    If ``success`` is ``False``, the ``message`` field will contain a </span>
+<span class="sd">    decriptive error message. Otherwise, the ``message`` field will be an </span>
+<span class="sd">    ``int`` representing the league ID</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sanitized_additional_questions</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">question</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sanitized_additional_questions</span><span class="p">[</span><span class="s2">&quot;question</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;question&quot;</span><span class="p">:</span> <span class="n">question</span><span class="p">[</span><span class="s2">&quot;question&quot;</span><span class="p">],</span> <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="n">question</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span>
+            <span class="p">}</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> 
+                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Malformed input detected!&quot;</span>
+            <span class="p">}</span>
+    <span class="n">creator_user_id</span> <span class="o">=</span> <span class="n">creator_user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
+
+    <span class="n">league_basics</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;creator_user_id&quot;</span><span class="p">:</span> <span class="n">creator_user_id</span><span class="p">,</span>
+        <span class="s2">&quot;league_status&quot;</span><span class="p">:</span> <span class="n">LEAGUE_STAGE_ACCEPTING_USERS</span><span class="p">,</span>
+        <span class="s2">&quot;league_name&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">],</span> 
+        <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">],</span> 
+        <span class="s2">&quot;points_per_win&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;points_per_win&quot;</span><span class="p">],</span> 
+        <span class="s2">&quot;points_per_draw&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;points_per_draw&quot;</span><span class="p">],</span> 
+        <span class="s2">&quot;max_num_players&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;max_num_players&quot;</span><span class="p">],</span> 
+        <span class="s2">&quot;match_frequency_in_days&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;match_frequency_in_days&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;points_per_loss&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;points_per_loss&quot;</span><span class="p">],</span> 
+        <span class="s2">&quot;registration_deadline&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;registration_deadline&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;additional_questions&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">sanitized_additional_questions</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">keys_in_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">league_basics</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;INSERT INTO league_info (</span><span class="si">{}</span><span class="s2">) VALUES (</span><span class="si">{}</span><span class="s2">) RETURNING league_id;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">keys_in_order</span><span class="p">]),</span>
+            <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;%(</span><span class="si">{}</span><span class="s2">)s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_in_order</span><span class="p">])</span>
+        <span class="p">),</span>
+        <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="n">keys_in_order</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">league_basics</span>
+    <span class="p">)</span>
+    <span class="n">league_id</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s2">&quot;league_id&quot;</span><span class="p">]</span>
+
+    <span class="c1"># questions provided by the creator of league, given as the keys in league_info</span>
+    <span class="k">if</span> <span class="n">sanitized_additional_questions</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;CREATE TABLE league_responses_</span><span class="si">{}</span><span class="s2"> (&quot;</span>
+                <span class="s2">&quot;user_id INT PRIMARY KEY UNIQUE, status VARCHAR(255), division_id INT, </span><span class="si">{}</span><span class="s2">);&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">league_id</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> VARCHAR(255)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">sanitized_additional_questions</span>
+                <span class="p">])</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">((</span>
+            <span class="s2">&quot;CREATE TABLE league_responses_</span><span class="si">{}</span><span class="s2"> (&quot;</span>
+            <span class="s2">&quot;user_id INT PRIMARY KEY UNIQUE, status VARCHAR(255), division_id INT);&quot;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_id</span><span class="p">))</span>
+
+    <span class="c1"># Set a default row for the league creator as an admin</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;INSERT INTO </span><span class="si">{}</span><span class="s2"> (user_id, status) VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">);&quot;</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">creator_user_id</span><span class="p">,</span> <span class="n">STATUS_ADMIN</span><span class="p">],</span>
+        <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span>
+            <span class="s2">&quot;league_responses_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;UPDATE users SET league_ids = </span><span class="si">%s</span><span class="s2"> WHERE user_id = </span><span class="si">%s</span><span class="s2">;&quot;</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span>
+            <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">creator_user_profile</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">league_id</span><span class="p">]),</span>
+            <span class="n">creator_user_id</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">league_id</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="get_league_info"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_league_info">[docs]</a><span class="k">def</span> <span class="nf">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: int</span>
+
+<span class="sd">    The ID of this league</span>
+
+<span class="sd">    :return: ``dict``</span>
+<span class="sd">    </span>
+<span class="sd">    Keys: ``league_id``, ``league_id``, ``league_name``, ``description``, </span>
+<span class="sd">    ``points_per_win``, ``points_per_draw``, ``points_per_loss``, ``league_status``, </span>
+<span class="sd">    ``additional_questions``, ``registration_deadline``, ``match_frequency_in_days``, </span>
+<span class="sd">    ``max_num_players``</span>
+
+<span class="sd">    :return: ``NoneType``</span>
+<span class="sd">    </span>
+<span class="sd">    ``None`` is returned if the league_id is not found in the database.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;SELECT league_id, league_name, description, points_per_win, &quot;</span>
+            <span class="s2">&quot;points_per_draw, points_per_loss, additional_questions, league_status, &quot;</span>
+            <span class="s2">&quot;registration_deadline, match_frequency_in_days, max_num_players &quot;</span>
+            <span class="s2">&quot;FROM league_info WHERE league_id = </span><span class="si">%s</span><span class="s2">&quot;</span>
+        <span class="p">),</span> 
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">league_info</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">league_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">]:</span>
+            <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">league_info</span></div>
+
+<div class="viewcode-block" id="get_leagues_not_yet_joined"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_leagues_not_yet_joined">[docs]</a><span class="k">def</span> <span class="nf">get_leagues_not_yet_joined</span><span class="p">(</span><span class="n">user_profile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param user_profile: dict </span>
+<span class="sd">    </span>
+<span class="sd">    Expected keys: ``associated_leagues``</span>
+
+<span class="sd">    :return: ``List[DictRow]``</span>
+<span class="sd">    </span>
+<span class="sd">    Each item is keyed by ``league_id``, ``league_name``, ``registration_deadline`` </span>
+<span class="sd">    and ``description``</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ids_associated_leagues</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">((</span>
+        <span class="s2">&quot;SELECT league_id, league_name, registration_deadline, description&quot;</span>
+        <span class="s2">&quot; FROM league_info;&quot;</span>
+    <span class="p">))</span>
+
+    <span class="n">unjoined_leagues</span><span class="p">,</span> <span class="n">today</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">iterator</span><span class="p">(</span><span class="n">cursor</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;league_id&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ids_associated_leagues</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">today</span> <span class="o">&lt;=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;registration_deadline&quot;</span><span class="p">]:</span>
+                <span class="n">unjoined_leagues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+    <span class="n">unjoined_leagues</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
+        <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">league_info</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;registration_deadline&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">unjoined_leagues</span></div>
+
+<div class="viewcode-block" id="get_league_info_if_joinable"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_league_info_if_joinable">[docs]</a><span class="k">def</span> <span class="nf">get_league_info_if_joinable</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: int </span>
+<span class="sd">    </span>
+<span class="sd">    The ID of the league</span>
+
+<span class="sd">    :return: ``dict``</span>
+<span class="sd">    </span>
+<span class="sd">    If ``succcess`` is ``False``, ``message`` will contain a descriptive error </span>
+<span class="sd">    message. If ``success`` is ``True``, ``message`` will contain the league </span>
+<span class="sd">    information needed to join the league.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">league_info</span> <span class="o">=</span> <span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+
+    <span class="c1"># If the league doesn&#39;t exist, let the user know</span>
+    <span class="k">if</span> <span class="n">league_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> 
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;League not found&quot;</span>
+        <span class="p">}</span>
+
+    <span class="c1"># If the league&#39;s deadline is already passed, communicate that to the user</span>
+    <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">today</span> <span class="o">&gt;</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;registration_deadline&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;The League&#39;s registration deadline (</span><span class="si">{}</span><span class="s2">) has passed&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;registration_deadline&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%A, %B </span><span class="si">%d</span><span class="s2">, %Y&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="get_previous_responses"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_previous_responses">[docs]</a><span class="k">def</span> <span class="nf">get_previous_responses</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">user_profile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: int </span>
+<span class="sd">    </span>
+<span class="sd">    The ID of the league</span>
+
+<span class="sd">    :param user_profile: dict</span>
+<span class="sd">    </span>
+<span class="sd">    Expected keys: ``associated_leagues, user_id``</span>
+
+<span class="sd">    :return: ``NoneType``</span>
+<span class="sd">    </span>
+<span class="sd">    If the user has not tried to join this league before</span>
+
+<span class="sd">    :return: ``DictRow``</span>
+<span class="sd">    </span>
+<span class="sd">    The responses that the user previously entered while trying to join this </span>
+<span class="sd">    league.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ids_associated_leagues</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ids_associated_leagues</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;SELECT * from </span><span class="si">{}</span><span class="s2"> WHERE user_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> 
+        <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;league_responses_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_id</span><span class="p">)],</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="process_join_league_request"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.process_join_league_request">[docs]</a><span class="k">def</span> <span class="nf">process_join_league_request</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">user_profile</span><span class="p">,</span> <span class="n">submitted_data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: int</span>
+<span class="sd">    </span>
+<span class="sd">    The ID of this league</span>
+
+<span class="sd">    :param user_profile: dict</span>
+<span class="sd">    </span>
+<span class="sd">    Expected keys: ``user_id, league_ids``</span>
+
+<span class="sd">    :return: ``dict``</span>
+<span class="sd">    </span>
+<span class="sd">    If ``succcess`` is ``False``, ``message`` will contain a descriptive error </span>
+<span class="sd">    message. If ``success`` is ``True``, ``message`` will contain a </span>
+<span class="sd">    dict containing the updated user profile.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">get_league_info_if_joinable</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span> <span class="k">return</span> <span class="n">results</span>
+
+    <span class="n">league_info</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span>
+    <span class="n">expected_info</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">]:</span>
+        <span class="n">expected_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">expected_info</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">submitted_data</span><span class="p">:</span> 
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Missing </span><span class="si">{}</span><span class="s2"> in the submitted form&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="n">expected_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">submitted_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="n">expected_info</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
+    <span class="n">expected_info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">STATUS_PENDING</span>
+    <span class="n">table_name</span> <span class="o">=</span> <span class="s2">&quot;league_responses_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;DELETE FROM </span><span class="si">{}</span><span class="s2"> WHERE user_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]],</span> 
+        <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;INSERT INTO </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">) VALUES (</span><span class="si">{}</span><span class="s2">);&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">expected_info</span><span class="p">),</span> 
+                <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;%(</span><span class="si">{}</span><span class="s2">)s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">expected_info</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">expected_info</span><span class="p">,</span>
+        <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Indicate on the user object that they&#39;re involved in this league</span>
+    <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]:</span>
+        <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;UPDATE users SET league_ids = </span><span class="si">%s</span><span class="s2"> WHERE user_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span>
+                <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]),</span> 
+                <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">user_profile</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="process_leave_league_request"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.process_leave_league_request">[docs]</a><span class="k">def</span> <span class="nf">process_leave_league_request</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">user_profile</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: int</span>
+<span class="sd">    </span>
+<span class="sd">    The ID of the league</span>
+
+<span class="sd">    :param user_profile: dict </span>
+<span class="sd">    </span>
+<span class="sd">    Expected keys: ``user_id, league_ids``</span>
+
+<span class="sd">    :return: ``bool``: </span>
+<span class="sd">    </span>
+<span class="sd">    ``True`` if the user was successfully removed from the league, ``False`` </span>
+<span class="sd">    otherwise</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;UPDATE </span><span class="si">{}</span><span class="s2"> SET status = </span><span class="si">%s</span><span class="s2"> WHERE user_id =  </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">STATUS_INACTIVE</span><span class="p">,</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]],</span> 
+        <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;league_responses_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_id</span><span class="p">)]</span>
+    <span class="p">)</span>
+    <span class="n">associated_league_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">league_id</span> <span class="ow">in</span> <span class="n">associated_league_ids</span><span class="p">:</span>
+        <span class="n">associated_league_ids</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;UPDATE users SET league_ids=</span><span class="si">%s</span><span class="s2"> WHERE user_id=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span>
+            <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">associated_league_ids</span><span class="p">]),</span>
+            <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">home</a>|&nbsp;</li>
+        <li><a href="../../../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../../tiger_leagues.html" >tiger_leagues</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>
