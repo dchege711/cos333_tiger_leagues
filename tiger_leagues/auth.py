@@ -1,8 +1,8 @@
 """
 auth.py
 
-Handles authentication-related requests e.g. `login`, `logout`
-Exposes a blueprint that handles requests made to `` endpoint
+Handles authentication-related requests e.g. ``login``, ``logout``.
+Exposes a blueprint that handles requests made to the `auth` endpoint
 
 """
 

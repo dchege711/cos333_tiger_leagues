@@ -1,0 +1,185 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>App Overview &#8212; Tiger Leagues 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Controllers" href="tiger_leagues/readme.html" />
+    <link rel="prev" title="Welcome to Tiger Leagues’s Documentation!" href="index.html" /> 
+  </head><body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html"><h1 style="font-size: 3em;">Tiger Leagues</h1></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tiger_leagues/readme.html" title="Controllers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Tiger Leagues’s Documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">App Overview</a><ul>
+<li><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li><a class="reference internal" href="#generating-the-documentation">Generating the Documentation</a></li>
+<li><a class="reference internal" href="#additional-feature-requests">Additional Feature Requests</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Tiger Leagues’s Documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tiger_leagues/readme.html"
+                        title="next chapter">Controllers</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/readme.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="app-overview">
+<span id="tiger-leagues-overview"></span><h1>App Overview<a class="headerlink" href="#app-overview" title="Permalink to this headline">¶</a></h1>
+<p>Tiger Leagues is a web application hosted at <a class="reference external" href="https://tiger-leagues.herokuapp.com/">https://tiger-leagues.herokuapp.com/</a>.
+It is used by Princeton students that wish to run a league amongst themselves.
+The application was created in lieu of managing leagues over Google Docs.
+Features include:</p>
+<ul class="simple">
+<li>Creating leagues and registering members</li>
+<li>Scheduling league games</li>
+<li>Keeping track of scores and leaderboards</li>
+</ul>
+<div class="section" id="getting-started">
+<span id="id1"></span><h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>Clone the repository with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/dchege711/cos333_tiger_leagues.git
+$ cd cos333_tiger_leagues
+</pre></div>
+</div>
+<p>Install the python packages (preferably in a new virtual environment):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install requirements.txt
+</pre></div>
+</div>
+<p>We modelled the application after this <a class="reference external" href="http://flask.pocoo.org/docs/1.0/tutorial/">flask tutorial</a>.
+Installing Flask usually installs <code class="docutils literal notranslate"><span class="pre">ItsDangerous</span></code> v1.0.0 as a prerequisite.
+However, Heroku cannot install v1.0.0. For this reason, <code class="docutils literal notranslate"><span class="pre">./requirements.txt</span></code>
+was manually updated to have <code class="docutils literal notranslate"><span class="pre">ItsDangerous==0.24</span></code>.</p>
+<p>We’re using a POSTGRESQL database that is managed by Heroku. Since Heroku can
+change the connection URI at anytime, we initially ran <code class="docutils literal notranslate"><span class="pre">subprocess.run</span></code> to
+get the most current connection string. However, it seems that the child
+processes do not get terminated appropriately. Restarting the initialization
+script a couple of times leads to a shortage of I/O resources.</p>
+<p>We therefore decided to use a locally hosted database for development purposes.
+We found this <a class="reference external" href="https://www.codementor.io/engineerapart/getting-started-with-postgresql-on-mac-osx-are8jcopb">tutorial</a>.
+useful when setting up PostgreSQL.</p>
+<p>Set the values of the environment variables defined in <a class="reference external" href="tiger_leagues/config.py">config.py</a>.</p>
+<p>Run the application server:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ./run_flask_server
+</pre></div>
+</div>
+</div>
+<div class="section" id="generating-the-documentation">
+<span id="id2"></span><h2>Generating the Documentation<a class="headerlink" href="#generating-the-documentation" title="Permalink to this headline">¶</a></h2>
+<p>The documentation for this project is modelled after <a class="reference external" href="https://matplotlib.org/sampledoc/index.html">Matplotlib’s Tutorial</a></p>
+</div>
+<div class="section" id="additional-feature-requests">
+<span id="id3"></span><h2>Additional Feature Requests<a class="headerlink" href="#additional-feature-requests" title="Permalink to this headline">¶</a></h2>
+<p>The following are remarks made by users. In case you’re looking for features to
+implement, this is it Chief!</p>
+<ul class="simple">
+<li>You should add a feature to upload and share pictures and videos of the
+match to brag.</li>
+<li>We can have a puskas award (most beautiful goal) for the league at the end of
+the tourney</li>
+<li>In-depth stats, highlights, something to track playoff probability/scenarios
+toward the end would be pretty cool.</li>
+<li>Also a schedule for all the games.</li>
+<li>We can watch other ppl’s matches right? Would be cool to have an audience</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tiger_leagues/readme.html" title="Controllers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Tiger Leagues’s Documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>

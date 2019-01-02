@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>tiger_leagues.admin &#8212; Tiger Leagues 1.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../_static/jquery.js"></script>
@@ -15,28 +15,60 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-   
-  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
-  
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../../index.html"><h1 style="font-size: 3em;">Tiger Leagues</h1></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">home</a>|&nbsp;</li>
+        <li><a href="../../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../tiger_leagues.html" accesskey="U">tiger_leagues</a> &#187;</li> 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <h1>Source code for tiger_leagues.admin</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">admin.py</span>
 
-<span class="sd">Exposes a blueprint that handles requests made to `/admin/*` endpoint</span>
+<span class="sd">Exposes a blueprint that handles requests made to `/admin/*` endpoint. </span>
+
+<span class="sd">The blueprint is then registered in the ``__init__.py`` file and made available </span>
+<span class="sd">to the rest of the Flask application</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 
@@ -48,7 +80,7 @@
 
 <span class="n">bp</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s2">&quot;admin&quot;</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span> <span class="n">url_prefix</span><span class="o">=</span><span class="s2">&quot;/admin&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="admin_status_required"><a class="viewcode-back" href="../../index.html#tiger_leagues.admin.admin_status_required">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">before_request</span>
+<div class="viewcode-block" id="admin_status_required"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.admin.admin_status_required">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">before_request</span>
 <span class="k">def</span> <span class="nf">admin_status_required</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A decorator function that asserts that a user has admin privileges for the </span>
@@ -56,11 +88,11 @@
 <span class="sd">    functions in the ``admin`` module are executed. See </span>
 <span class="sd">    http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request</span>
 
-<span class="sd">    :returns: ``flask.redirect``</span>
+<span class="sd">    :returns: ``flask.Response(code=302)``</span>
 
 <span class="sd">    A redirect to the login page if the user hasn&#39;t logged in yet.</span>
 
-<span class="sd">    :returns: ``flask.redirect``</span>
+<span class="sd">    :returns: ``flask.Response(code=302)``</span>
 
 <span class="sd">    A redirect to the home page if the user doesn&#39;t have admin privileges in </span>
 <span class="sd">    the league associated with this request.</span>
@@ -86,25 +118,40 @@
     <span class="c1"># If nothing has been returned, the request will be passed to its handler</span>
     <span class="k">return</span> <span class="kc">None</span></div>
 
-
-<div class="viewcode-block" id="league_homepage"><a class="viewcode-back" href="../../index.html#tiger_leagues.admin.league_homepage">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="league_homepage"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.admin.league_homepage">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="k">def</span> <span class="nf">league_homepage</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    @GET: Return the league admin panel</span>
+<span class="sd">    :param league_id: ``int``</span>
+
+<span class="sd">    The ID of the league associated with this request</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=&#39;text/HTML&#39;)``</span>
+
+<span class="sd">    Render a page with links to admin actions such as &#39;Approve Members&#39;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
         <span class="s2">&quot;/admin/admin_league_panel.html&quot;</span><span class="p">,</span> <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span>
     <span class="p">)</span></div>
 
-<div class="viewcode-block" id="league_requests"><a class="viewcode-back" href="../../index.html#tiger_leagues.admin.league_requests">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/approve-members/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="league_requests"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.admin.league_requests">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/approve-members/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span> <span class="nf">league_requests</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    @GET: An admin can view the requests to join the league and can choose</span>
-<span class="sd">    to accept or reject the join requests</span>
+<span class="sd">    :param league_id: ``int``</span>
 
-<span class="sd">    @POST: An admins can set the join statuses of the users who requested to </span>
-<span class="sd">    join the league.</span>
+<span class="sd">    The ID of the league associated with this request</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=&#39;text/HTML&#39;)``</span>
+
+<span class="sd">    If responding to a GET request, render a template such that an admin can </span>
+<span class="sd">    view the requests to join the league and can choose to accept or reject the </span>
+<span class="sd">    join requests</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=application/json)``</span>
+
+<span class="sd">    If responding to a POST request, update the join status of the users as </span>
+<span class="sd">    instructed in the POST body. The JSON contains the keys ``message`` and </span>
+<span class="sd">    ``success``</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
@@ -125,10 +172,23 @@
 
     <span class="k">return</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="start_league"><a class="viewcode-back" href="../../index.html#tiger_leagues.admin.start_league">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/start-league/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="start_league"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.admin.start_league">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/start-league/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span> <span class="nf">start_league</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    @GET: Render a template for setting the league configurations.</span>
+<span class="sd">    :param league_id: ``int``</span>
+
+<span class="sd">    The ID of the league associated with this request</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=&#39;text/HTML&#39;)``</span>
+
+<span class="sd">    If responding to a GET request, render a template for setting the league </span>
+<span class="sd">    configuration, e.g. frequency of matches</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=application/json)``</span>
+
+<span class="sd">    If responding to a POST request, generate the league fixtures. Return a </span>
+<span class="sd">    JSON response contains the keys ``success`` and ``message``</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
 
@@ -148,19 +208,42 @@
     
     <span class="k">return</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="allocate_league_divisions"><a class="viewcode-back" href="../../index.html#tiger_leagues.admin.allocate_league_divisions">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/start-league/allocate-divisions/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="allocate_league_divisions"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.admin.allocate_league_divisions">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/start-league/allocate-divisions/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span> <span class="nf">allocate_league_divisions</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    @GET: return a JSON containing allocations of players in a league into </span>
-<span class="sd">    divisions</span>
+<span class="sd">    :param league_id: ``int``</span>
+
+<span class="sd">    The ID of the league associated with this request</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=application/json)``</span>
+
+<span class="sd">    A JSON object containing allocations of players in a league into divisions</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span>
         <span class="n">admin_model</span><span class="o">.</span><span class="n">allocate_league_divisions</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
     <span class="p">)</span></div>
 
 
-<span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/match-reports/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="approve_scores"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.admin.approve_scores">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/match-reports/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span> <span class="nf">approve_scores</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: ``int``</span>
+
+<span class="sd">    The ID of the league associated with this request</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=text/html)``</span>
+
+<span class="sd">    If responding to a GET request, render a HTML page that allows the admin to </span>
+<span class="sd">    approve any reported scores.</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=application/json)``</span>
+
+<span class="sd">    If responding to a POST request, approve the scores as reported in the body </span>
+<span class="sd">    of the POST request. Return a JSON object that confirms that the scores </span>
+<span class="sd">    updated on the server.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GET&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
             <span class="s2">&quot;/admin/admin_league_homepage.html&quot;</span><span class="p">,</span>
@@ -168,90 +251,68 @@
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">admin_model</span><span class="o">.</span><span class="n">approve_match</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">admin_model</span><span class="o">.</span><span class="n">approve_match</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">))</span></div>
 
 
-<span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/delete-league/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="delete_league"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.admin.delete_league">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/delete-league/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span> <span class="nf">delete_league</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: ``int``</span>
+
+<span class="sd">    The ID of the league associated with this request</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=text/html)``</span>
+
+<span class="sd">    If responding to a GET request, render a HTML page that prompts the admin </span>
+<span class="sd">    to delete the league, or abort the deletion</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=application/json)``</span>
+
+<span class="sd">    If responding to a POST request, delete the league as specified in the POST </span>
+<span class="sd">    request&#39;s body. Return a JSON object that confirms that the league was </span>
+<span class="sd">    indeed deleted from the server.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GET&quot;</span><span class="p">:</span>
         <span class="n">league_data</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>    
         <span class="n">league_name</span> <span class="o">=</span> <span class="n">league_data</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
-                <span class="s2">&quot;/admin/delete_league.html&quot;</span><span class="p">,</span>
-                <span class="n">league_id</span><span class="o">=</span><span class="n">league_id</span><span class="p">,</span> <span class="n">league_name</span><span class="o">=</span><span class="n">league_name</span>
-            <span class="p">)</span>
+            <span class="s2">&quot;/admin/delete_league.html&quot;</span><span class="p">,</span>
+            <span class="n">league_id</span><span class="o">=</span><span class="n">league_id</span><span class="p">,</span> <span class="n">league_name</span><span class="o">=</span><span class="n">league_name</span>
+        <span class="p">)</span>
     
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">admin_model</span><span class="o">.</span><span class="n">delete_league</span><span class="p">(</span><span class="n">league_id</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">admin_model</span><span class="o">.</span><span class="n">delete_league</span><span class="p">(</span><span class="n">league_id</span><span class="p">))</span></div>
 
     
     
 </pre></div>
 
           </div>
-          
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">Tiger Leagues</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
-  <li><a href="../tiger_leagues.html">tiger_leagues</a><ul>
-  </ul></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="footer">
-      &copy;2018, Chege, Ivy, Rui, Obinna.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">home</a>|&nbsp;</li>
+        <li><a href="../../search.html">search</a>|&nbsp;</li>
+
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../tiger_leagues.html" >tiger_leagues</a> &#187;</li> 
+      </ul>
     </div>
-
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
   </body>
 </html>

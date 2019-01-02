@@ -4,3 +4,6 @@ Controllers
 
 .. automodule:: tiger_leagues.admin
    :members:
+
+.. automodule:: tiger_leagues.config
+   :members:

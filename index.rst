@@ -13,7 +13,7 @@ The source code for this project lives in https://github.com/dchege711/cos333_ti
    :caption: Contents:
 
    readme.rst
-   tiger_leagues_controllers.rst
+   tiger_leagues/readme.rst
 
 Indices and tables
 ==================

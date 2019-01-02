@@ -1,0 +1,341 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Controllers &#8212; Tiger Leagues 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Tiger Leagues Overview" href="readme.html" /> 
+  </head><body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="index.html"><h1 style="font-size: 3em;">Tiger Leagues</h1></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="readme.html" title="Tiger Leagues Overview"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="readme.html"
+                        title="previous chapter">Tiger Leagues Overview</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/tiger_leagues_controllers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-tiger_leagues.admin">
+<span id="controllers"></span><h1>Controllers<a class="headerlink" href="#module-tiger_leagues.admin" title="Permalink to this headline">¶</a></h1>
+<p>admin.py</p>
+<p>Exposes a blueprint that handles requests made to <cite>/admin/*</cite> endpoint.</p>
+<p>The blueprint is then registered in the <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file and made available 
+to the rest of the Flask application</p>
+<dl class="function">
+<dt id="tiger_leagues.admin.admin_status_required">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">admin_status_required</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#admin_status_required"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.admin_status_required" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator function that asserts that a user has admin privileges for the 
+requested URL. This function is automatically called before any of the 
+functions in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> module are executed. See 
+<a class="reference external" href="http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request">http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(code=302)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>A redirect to the login page if the user hasn’t logged in yet.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(code=302)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>A redirect to the home page if the user doesn’t have admin privileges in 
+the league associated with this request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If the user has admin privileges for the current league, the request will 
+then be passed on to the next function on the chain, typically the handler 
+function for the request.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.allocate_league_divisions">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">allocate_league_divisions</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#allocate_league_divisions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.allocate_league_divisions" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – <code class="docutils literal notranslate"><span class="pre">int</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the league associated with this request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype=application/json)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>A JSON object containing allocations of players in a league into divisions</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.approve_scores">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">approve_scores</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#approve_scores"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.approve_scores" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – <code class="docutils literal notranslate"><span class="pre">int</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the league associated with this request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype=text/html)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If responding to a GET request, render a HTML page that allows the admin to 
+approve any reported scores.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype=application/json)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If responding to a POST request, approve the scores as reported in the body 
+of the POST request. Return a JSON object that confirms that the scores 
+updated on the server.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.delete_league">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">delete_league</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#delete_league"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.delete_league" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – <code class="docutils literal notranslate"><span class="pre">int</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the league associated with this request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype=text/html)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If responding to a GET request, render a HTML page that prompts the admin 
+to delete the league, or abort the deletion</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype=application/json)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If responding to a POST request, delete the league as specified in the POST 
+request’s body. Return a JSON object that confirms that the league was 
+indeed deleted from the server.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.league_homepage">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">league_homepage</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#league_homepage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.league_homepage" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – <code class="docutils literal notranslate"><span class="pre">int</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the league associated with this request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype='text/HTML')</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>Render a page with links to admin actions such as ‘Approve Members’</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.league_requests">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">league_requests</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#league_requests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.league_requests" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – <code class="docutils literal notranslate"><span class="pre">int</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the league associated with this request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype='text/HTML')</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If responding to a GET request, render a template such that an admin can 
+view the requests to join the league and can choose to accept or reject the 
+join requests</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype=application/json)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If responding to a POST request, update the join status of the users as 
+instructed in the POST body. The JSON contains the keys <code class="docutils literal notranslate"><span class="pre">message</span></code> and 
+<code class="docutils literal notranslate"><span class="pre">success</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.start_league">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">start_league</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tiger_leagues/admin.html#start_league"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.start_league" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – <code class="docutils literal notranslate"><span class="pre">int</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the league associated with this request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype='text/HTML')</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If responding to a GET request, render a template for setting the league 
+configuration, e.g. frequency of matches</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype=application/json)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If responding to a POST request, generate the league fixtures. Return a 
+JSON response contains the keys <code class="docutils literal notranslate"><span class="pre">success</span></code> and <code class="docutils literal notranslate"><span class="pre">message</span></code></p>
+</dd></dl>
+
+<span class="target" id="module-tiger_leagues.config"></span><p>config.py</p>
+<p>The central source for variables that span the entire application. As a rule of 
+thumb, if you find yourself using <cite>os.environ</cite>, you should probably include the 
+variable here instead.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="readme.html" title="Tiger Leagues Overview"
+             >previous</a> |</li>
+        <li><a href="index.html">home</a>|&nbsp;</li>
+        <li><a href="search.html">search</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>
