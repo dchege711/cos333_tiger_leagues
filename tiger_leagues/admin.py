@@ -1,7 +1,10 @@
 """
 admin.py
 
-Exposes a blueprint that handles requests made to `/admin/*` endpoint.
+Exposes a blueprint that handles requests made to `/admin/*` endpoint. 
+
+The blueprint is then registered in the ``__init__.py`` file and made available 
+to the rest of the Flask application
 
 """
 
@@ -144,8 +147,14 @@ def start_league(league_id):
 @bp.route("/<int:league_id>/start-league/allocate-divisions/", methods=["POST"])
 def allocate_league_divisions(league_id):
     """
-    @GET: return a JSON containing allocations of players in a league into 
-    divisions
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype=application/json)``
+
+    A JSON object containing allocations of players in a league into divisions
+
     """
     return jsonify(
         admin_model.allocate_league_divisions(league_id, request.json)
@@ -154,6 +163,23 @@ def allocate_league_divisions(league_id):
 
 @bp.route("/<int:league_id>/match-reports/", methods=["GET", "POST"])
 def approve_scores(league_id):
+    """
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype=text/html)``
+
+    If responding to a GET request, render a HTML page that allows the admin to 
+    approve any reported scores.
+
+    :return: ``flask.Response(mimetype=application/json)``
+
+    If responding to a POST request, approve the scores as reported in the body 
+    of the POST request. Return a JSON object that confirms that the scores 
+    updated on the server.
+
+    """
     if request.method == "GET":
         return render_template(
             "/admin/admin_league_homepage.html",
@@ -166,14 +192,31 @@ def approve_scores(league_id):
 
 @bp.route("/<int:league_id>/delete-league/", methods=["GET", "POST"])
 def delete_league(league_id):
+    """
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype=text/html)``
+
+    If responding to a GET request, render a HTML page that prompts the admin 
+    to delete the league, or abort the deletion
+
+    :return: ``flask.Response(mimetype=application/json)``
+
+    If responding to a POST request, delete the league as specified in the POST 
+    request's body. Return a JSON object that confirms that the league was 
+    indeed deleted from the server.
+
+    """
     if request.method == "GET":
         league_data = league_model.get_league_info(league_id)    
         league_name = league_data["league_name"]
 
         return render_template(
-                "/admin/delete_league.html",
-                league_id=league_id, league_name=league_name
-            )
+            "/admin/delete_league.html",
+            league_id=league_id, league_name=league_name
+        )
     
     if request.method == "POST":
         return jsonify(admin_model.delete_league(league_id))

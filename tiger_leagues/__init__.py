@@ -2,8 +2,9 @@
 __init__.py
 
 Serves two functions:
-    * It will contain the [application factory](http://flask.pocoo.org/docs/1.0/tutorial/factory/)
-    * Tells Python that the `tiger_leagues_app` directory should be treated as a package.
+
+* Contains the [application factory](http://flask.pocoo.org/docs/1.0/tutorial/factory/)
+* Tells Python that the `tiger_leagues_app` directory should be treated as a package.
 
 """
 
