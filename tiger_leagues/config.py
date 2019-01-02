@@ -5,6 +5,10 @@ The central source for variables that span the entire application. As a rule of
 thumb, if you find yourself using `os.environ`, you should probably include the 
 variable here instead.
 
+Expected environment variables: ``TIGER_LEAGUES_ENVIRONMENT``, 
+``TIGER_LEAGUES_POSTGRESQL_DBNAME``, ``TIGER_LEAGUES_POSTGRESQL_USERNAME``, 
+``TIGER_LEAGUES_POSTGRESQL_PASSWORD``
+
 """
 
 from os import environ

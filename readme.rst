@@ -46,7 +46,7 @@ useful when setting up PostgreSQL.
 
 Set the values of the environment variables defined in config.py_.
 
-.. _config.py: tiger_leagues/config.py
+.. _config.py: tiger_leagues/readme.html#module-tiger_leagues.config
 
 Run the application server::
 
