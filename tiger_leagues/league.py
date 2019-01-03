@@ -113,11 +113,13 @@ def league_member(league_id, user_id):
 
     """
     associated_leagues = session.get("user")["associated_leagues"]
-    standings = league_model.get_league_standings(league_id)
+    other_user = user_model.get_user(None, user_id)
 
+    standings = league_model.get_league_standings(league_id)
+    
     return render_template(
         "/league/league_member.html", 
-        user=session.get("user"), standings=standings, 
+        user=session.get("user"), standings=standings, other_user=other_user,
         league_name=associated_leagues[league_id]["league_name"]
     )
 
