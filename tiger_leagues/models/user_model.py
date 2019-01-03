@@ -9,24 +9,37 @@ from . import db_model
 
 db = db_model.Database()
 
-def get_user(net_id):
+def get_user(net_id, user_id=None):
     """
     :param net_id: str
     
     The Princeton Net ID of the user
 
+    :kwarg user_id: int
+
+    The ID of the user as assigned in Tiger Leagues
+
     :return: ``dict`` 
     
-    A representation of the user as stored in the database
+    A representation of the user as stored in the database. Keys include: 
+    ``user_id, name, net_id, email, phone_num, room, league_ids, 
+    associated_leagues``
     
     :return: ``NoneType``
 
     If there is no user in the database with the provided net id
     """
-    cursor = db.execute((
-        "SELECT user_id, name, net_id, email, phone_num, room, league_ids "
-        "FROM users WHERE net_id = %s"
-    ), values=[net_id])
+    if net_id is not None:
+        cursor = db.execute((
+            "SELECT user_id, name, net_id, email, phone_num, room, league_ids "
+            "FROM users WHERE net_id = %s"
+        ), values=[net_id])
+    else:
+        cursor = db.execute((
+            "SELECT user_id, name, net_id, email, phone_num, room, league_ids "
+            "FROM users WHERE user_id = %s"
+        ), values=[user_id])
+
     user_profile = cursor.fetchone()
     if user_profile is None: return user_profile
 
