@@ -11,6 +11,7 @@ http://flask.pocoo.org/docs/1.0/patterns/viewdecorators/
 
 from functools import wraps
 from flask import session, redirect, url_for
+from tiger_leagues.models import user_model
 
 def login_required(f):
     """
@@ -36,5 +37,29 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if session.get("net_id") is None:
             return redirect(url_for("auth.index"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def refresh_user_profile(f):
+    """
+    A decorator function that is updates the user object stored in the session 
+    object. This is helpful when keeping the user up to date.
+
+    http://flask.pocoo.org/docs/1.0/patterns/viewdecorators/#login-required-decorator
+
+    :param f: ``function``
+
+    A function that would benefit from an updated user object
+
+    :return: ``function``
+
+    The incoming function is always returned as updating the user object is a 
+    side effect.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        prev_user_profile = session.get("user")
+        if prev_user_profile is not None:
+            session["user"] = user_model.get_user(prev_user_profile["net_id"])
         return f(*args, **kwargs)
     return decorated_function
