@@ -529,6 +529,46 @@ def get_previous_responses(league_id, user_profile):
         values=[user_profile["user_id"]]
     ).fetchone()
 
+def get_player_comparison(league_id, user_id_1, user_id_2):
+    """
+    :param league_id: int
+
+    The ID of the associated league
+
+    :param user_id_1: int
+
+    The ID of the first user
+
+    :param user_id_2: int
+
+    The ID of the second user
+
+    :return: ``dict``
+
+    Keyed by ``success`` and ``message``. 
+    If ``success`` is ``True``, ``message`` will be a dict keyed by ``rank, 
+    goals_for, goals_allowed, wins, draws, losses, goal_diff, points, 
+    mutual_opponents, player_form``
+
+    """
+
+    return {
+        "success": True,
+        "message": {
+            "rank": [2, 8],
+            "goals_for": [56, 30],
+            "goals_allowed": [51, 40],
+            "wins": [12, 7],
+            "draws": [2, 1],
+            "losses": [4, 10],
+            "goal_diff": [5, -10],
+            "points": [34, 12],
+            "head_to_head": [[1, 2], [5, 1]],
+            "mutual_opponents": {"12": {"opponent": ["Chege", "1"], "results":[[1, 2], [2, 5]]}},
+            "player_form": [["W", "W", "L"], ["W", "D", "L"]]
+        }
+    }
+
 def process_join_league_request(league_id, user_profile, submitted_data):
     """
     :param league_id: int

@@ -93,16 +93,16 @@ def process_score_submit(league_id):
         league_model.process_player_score_report(user_id, request.json)
     )
 
-@bp.route("/<int:league_id>/user/<int:user_id>/", methods=["GET"])
+@bp.route("/<int:league_id>/user/<int:other_user_id>/", methods=["GET"])
 @decorators.login_required
 @decorators.refresh_user_profile
-def league_member(league_id, user_id):
+def league_member(league_id, other_user_id):
     """
     :param league_id: ``int``
 
     The ID of the league associated with this request
 
-    :param user_id: ``int``
+    :param other_user_id: ``int``
 
     The ID of the user whose data should be fetched.
 
@@ -112,15 +112,18 @@ def league_member(league_id, user_id):
     user whose ID was passed in the URL.
 
     """
-    associated_leagues = session.get("user")["associated_leagues"]
-    other_user = user_model.get_user(None, user_id)
+    current_user = session.get("user")
+    other_user = user_model.get_user(None, other_user_id)
+    comparison_obj = league_model.get_player_comparison(
+        league_id, current_user["user_id"], other_user_id
+    )
 
     standings = league_model.get_league_standings(league_id)
     
     return render_template(
-        "/league/league_member.html", 
-        user=session.get("user"), standings=standings, other_user=other_user,
-        league_name=associated_leagues[league_id]["league_name"]
+        "/league/league_member.html", comparison=comparison_obj["message"],
+        current_user=current_user, standings=standings, other_user=other_user,
+        league_name=current_user["associated_leagues"][league_id]["league_name"]
     )
 
 @bp.route("/create/", methods=["GET", "POST"])
