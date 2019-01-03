@@ -3,35 +3,157 @@
 {% block title %}League Member Profile{% endblock %}
 
 {% block content %}
+
+    <style>
+        th, td {
+            text-align: center!important;
+        }
+
+        .large-text {
+            font-size: x-large;
+        }
+
+        .bold-text {
+            font-weight: bolder;
+        }
+
+        .win-text {
+            color: green;
+        }
+
+        .loss-text {
+            color: red;
+        }
+
+        .draw-text {
+            color: rgb(126, 126, 126);;
+        }
+
+        .box {
+            border-radius: 2px;
+            padding: 1%;
+        }
+
+        .win-box {
+            background-color: green;
+            color: white;
+        }
+
+        .loss-box {
+            background-color: red;
+            color: white;
+        }
+
+        .draw-box {
+            background-color: rgb(126, 126, 126);
+            color: white;
+        }
+
+    </style>
+
     <div class="w3-container">
 
-        <div class="w3-container w3-twothird w3-left">
+        <h3>{{league_name}}</h3>
 
-            <div class="w3-container">
-                <h1>{{league_name}}: {{user['name']}}</h1>
-                <h4>Player Summary</h4>
-                <table class="w3-table-all">
-                    <tr>
-                        <th>W</th>
-                        <th>L</th>
-                        <th>D</th>
-                        <th>GF</th>
-                        <th>GA</th>
-                        <th>GD</th>
-                        <th>PTS</th>
+        <div class="w3-container w3-twothird w3-left">
+            <div class="w3-card">
+                <table class="w3-table" style="text-align:center;">
+                    <tr class="w3-large">
+                        <th></th>
+                        <th>You</th>
+                        <th>{{other_user["name"]}}</th>
                     </tr>
                     <tr>
-                        <td>{{ standings["wins"] }}</td>
-                        <td>{{ standings["losses"] }}</td>
-                        <td>{{ standings["draws"] }}</td>
-                        <td>{{ standings["goals_formed"] }}</td>
-                        <td>{{ standings["goals_allowed"] }}</td>
-                        <td>{{ standings["goal_diff"] }}</td>
-                        <td>{{ standings["points"] }}</td>
+                        <td class="w3-large">Rank</td>
+                        {% if comparison["rank"][0] < comparison["rank"][1] %}
+                            <td class="large-text bold-text win-text">{{comparison["rank"][0]}}</td>
+                            <td class="large-text bold-text loss-text">{{comparison["rank"][1]}}</td>
+                        {% else %}
+                            <td class="large-text bold-text loss-text">{{comparison["rank"][0]}}</td>
+                            <td class="large-text bold-text win-text">{{comparison["rank"][1]}}</td>
+                        {% endif %}
                     </tr>
+    
+                    <tr>
+                        <td class="w3-large">Points</td>
+                        {% if comparison["points"][0] > comparison["points"][1] %}
+                            <td class="large-text bold-text win-text">{{comparison["points"][0]}}</td>
+                            <td class="large-text bold-text loss-text">{{comparison["points"][1]}}</td>
+                        {% else %}
+                            <td class="large-text bold-text loss-text">{{comparison["points"][0]}}</td>
+                            <td class="large-text bold-text win-text">{{comparison["points"][1]}}</td>
+                        {% endif %}
+                    </tr>
+    
+                    <tr>
+                        <td class="w3-large">Form</td>
+                        {% for player_form in comparison["player_form"] %}
+                            <td class="">
+                            {% for indicator in player_form %}
+                                {% if indicator == "W" %}
+                                    <span class="box bold-text win-box">
+                                {% elif indicator == "L" %}
+                                    <span class="box bold-text loss-box">
+                                {% elif indicator == "D" %}
+                                    <span class="box bold-text draw-box">
+                                {% endif %}
+                                {{indicator}}</span>
+                            {% endfor %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+    
                 </table>
             </div>
+            {% if comparison["head_to_head"] | length > 0 %}
+                <br />
+                <br />
+                <div class="w3-container w3-card">
+                    <h5>Head to Head Stats</h5>
+                    <table class="w3-table" style="text-align:center;">
+                        <tr><td>You</td><td></td><td>{{other_user["name"]}}</td></tr>
+                        {% for match_result in comparison["head_to_head"] %}
+                            {% if match_result[0] < match_result[1] %}
+                                <tr class="bold-text loss-text">
+                            {% elif match_result[0] > match_result[1] %}
+                                <tr class="bold-text win-text">
+                            {% else %}
+                                <tr class="bold-text draw-text">
+                            {% endif %}
+                            <td>{{match_result[0]}}</td><td>-</td><td>{{match_result[1]}}</td>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endif %}
+            <br />
+            <br />
 
+            <div class="w3-container w3-card">
+
+                <table class="w3-table" style="text-align:center;">
+                    <tr class="w3-large">
+                        <th>Mutual Opponent</th>
+                        <th>Your Results</th>
+                        <th>{{other_user["name"]}}'s Results</th>
+                    </tr>
+                    {% for match_id in comparison["mutual_opponents"] %}
+                        {% set info = comparison["mutual_opponents"][match_id] %}
+                        <td><a href="../{{info['opponent'][1]}}">{{info["opponent"][0]}}</a></td>
+                        {% for match_result in info["results"] %}
+                            {% if match_result[0] < match_result[1] %}
+                                <td class="bold-text loss-text">
+                            {% elif match_result[0] > match_result[1] %}
+                                <td class="bold-text win-text">
+                            {% else %}
+                                <td class="bold-text draw-text">
+                            {% endif %}
+                            {{match_result[0]}} - {{match_result[1]}}
+                            </td>
+                        {% endfor %}
+
+                    {% endfor %}
+                </table>
+            </div>
         </div>
         
         <div class="w3-container w3-third w3-right">
