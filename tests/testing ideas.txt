@@ -1,0 +1,42 @@
+REGULAR MEMBER:
+report scores
+report empty scores
+report scores greater than number range?
+report negative scores
+report invalid scores
+change reported scores
+change validated scores
+report scores after deadline?
+join league
+join closed league
+leave league?
+change user profile
+change league responses?
+delete profile?
+sort table based on other stats?
+view personal results?
+
+ADMIN:
+leave league?
+leave league when only admin?
+change status of admin to regular member
+change status to regular member when only admin
+change reported scores
+change reported scores to empty scores
+change reported scores to scores greater than score range
+change reported scores to invalid score
+change validated scores?
+create league with no name
+create league with no league data responses
+start league with no members
+change league deadline after league creation
+change league points per win, draw, loss after league creation
+change league name after creation
+sort table based on other stats?
+generate fixtures for odd number of league members
+generate divisions of uneven sizes
+delete nonexistent league
+
+NEW USER:
+join closed league
+
