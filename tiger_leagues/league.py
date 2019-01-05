@@ -117,12 +117,10 @@ def league_member(league_id, other_user_id):
     comparison_obj = league_model.get_player_comparison(
         league_id, current_user["user_id"], other_user_id
     )
-
-    standings = league_model.get_league_standings(league_id)
     
     return render_template(
         "/league/league_member.html", comparison=comparison_obj["message"],
-        current_user=current_user, standings=standings, other_user=other_user,
+        current_user=current_user, other_user=other_user,
         league_name=current_user["associated_leagues"][league_id]["league_name"]
     )
 
