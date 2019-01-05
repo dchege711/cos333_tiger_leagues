@@ -30,7 +30,7 @@ def check_fixtures(players):
 
     fixtures = admin_model.fixture_generator(players)
     # for fixture in fixtures: print(fixture)
-    expected_games = N - 1 if N > 1 else N
+    expected_games = N - 1 if N >= 1 else N
     assert len(fixtures) == expected_games, "Expected {} sets of games; received {}".format(expected_games, len(fixtures))
 
     not_yet_played = set()
@@ -50,7 +50,8 @@ def check_fixtures(players):
             __check_player(player_a, current_matches)
             __check_player(player_b, current_matches)
             
-        if not_yet_played:
+        # If there's an odd number of players, one of them will not have a game
+        if not_yet_played and not (N % 2 == 1 and len(not_yet_played) == 1):
             raise ValueError(
                 "{} are missing games in {}".format(
                     str(not_yet_played), str(current_matches)
