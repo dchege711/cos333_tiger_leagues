@@ -12,7 +12,6 @@ from random import randint, sample
 from datetime import date, timedelta
 from math import ceil
 
-from clean_database import clean_database
 from tiger_leagues.models import user_model, league_model, admin_model, db_model
 
 db = db_model.Database()
@@ -71,6 +70,8 @@ def create_leagues(admin_user_profile, num_leagues=4):
 
 def populate_leagues(league_info_list, player_profiles):
     """
+    Randomly choose players to enroll into each provided league.
+
     @return List[dict]: a list of updated user profiles
     """
     player_indexes = range(len(player_profiles))
@@ -115,6 +116,8 @@ def generate_matches(league_info_list):
         if results["message"] != "Fixtures successfully created!":
             raise RuntimeError(results["message"])
 
+    return True
+
 def play_matches():
     """
     Generate scores and approve the matches for the provided league.
@@ -127,6 +130,7 @@ def play_matches():
         })
 
 if __name__ == "__main__":
+    from clean_database import clean_database
     try:
         net_id = sys.argv[1]
     except IndexError:
@@ -166,6 +170,6 @@ if __name__ == "__main__":
         print("Generating more matches...")
         generate_matches([league_info_list[ceil(num_leagues / 2.0)]])
     except:
-        # clean_database()
+        clean_database()
         raise
     
