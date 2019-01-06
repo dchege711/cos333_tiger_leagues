@@ -37,7 +37,7 @@ class Database:
         """
         self.execute((
             "CREATE TABLE IF NOT EXISTS users ("
-            "user_id SERIAL PRIMARY KEY, name VARCHAR(255), net_id VARCHAR(255), "
+            "user_id SERIAL PRIMARY KEY, name VARCHAR(255), net_id VARCHAR(255) UNIQUE, "
             "email VARCHAR(255), phone_num VARCHAR(255), room VARCHAR(255), "
             "league_ids TEXT);"
         ))
