@@ -189,7 +189,7 @@ raised.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>values</strong> – list[list]</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>values</strong> – iterable</td>
 </tr>
 </tbody>
 </table>
@@ -407,11 +407,14 @@ information needed to join the league.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">List[dict]</span></code></td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">dict[list[dict]]</span></code></td>
 </tr>
 </tbody>
 </table>
-<p>The sorted league standings</p>
+<p>The sorted league standings. The outermost dict is keyed by the division ID. 
+The <code class="docutils literal notranslate"><span class="pre">list[dict]</span></code> is sorted by points and then by goal difference. This 
+innermost is keyed by <code class="docutils literal notranslate"><span class="pre">wins,</span> <span class="pre">losses,</span> <span class="pre">draws,</span> <span class="pre">games_played,</span> <span class="pre">goals_for,</span> 
+<span class="pre">goals_allowed,</span> <span class="pre">goal_diff,</span> <span class="pre">points,</span> <span class="pre">rank,</span> <span class="pre">rank_delta</span></code></p>
 </dd></dl>
 
 <dl class="function">
@@ -454,22 +457,26 @@ and <code class="docutils literal notranslate"><span class="pre">description</sp
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>num_periods_before</strong> – int</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>num_periods_before</strong> – int (or infinity)</td>
 </tr>
 </tbody>
 </table>
 <p>The fetched matches will have deadlines that are at least on/later than 
-<code class="docutils literal notranslate"><span class="pre">today</span> <span class="pre">-</span> <span class="pre">num_days_between_games</span> <span class="pre">*</span> <span class="pre">num_periods_before</span></code></p>
+<code class="docutils literal notranslate"><span class="pre">today</span> <span class="pre">-</span> <span class="pre">num_days_between_games</span> <span class="pre">*</span> <span class="pre">num_periods_before</span></code>
+If the value is <code class="docutils literal notranslate"><span class="pre">inf</span></code>, then all matches that have deadlines earlier than 
+today will be included in the results.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>num_periods_after</strong> – int</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>num_periods_after</strong> – int (or infinity)</td>
 </tr>
 </tbody>
 </table>
 <p>The fetched matches will have deadlines that are at least on/earlier than 
-<code class="docutils literal notranslate"><span class="pre">today</span> <span class="pre">+</span> <span class="pre">num_days_between_games</span> <span class="pre">*</span> <span class="pre">num_periods_before</span></code></p>
+<code class="docutils literal notranslate"><span class="pre">today</span> <span class="pre">+</span> <span class="pre">num_days_between_games</span> <span class="pre">*</span> <span class="pre">num_periods_before</span></code>
+If the value is <code class="docutils literal notranslate"><span class="pre">inf</span></code>, then all matches that have deadlines later than 
+today will be included in the results.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -489,14 +496,61 @@ and <code class="docutils literal notranslate"><span class="pre">description</sp
 </table>
 <p>A list of all the matches within the current time window. These are the 
 matches that are about to be played or have been played. Keys include: 
-<code class="docutils literal notranslate"><span class="pre">`match_id`</span></code> <code class="docutils literal notranslate"><span class="pre">`user_id_1`</span></code>, <code class="docutils literal notranslate"><span class="pre">`user_id_2`</span></code>, <code class="docutils literal notranslate"><span class="pre">`league_id`</span></code>, <code class="docutils literal notranslate"><span class="pre">`division_id`</span></code>, 
+<code class="docutils literal notranslate"><span class="pre">`match_id`</span></code> <code class="docutils literal notranslate"><span class="pre">`user_1_id`</span></code>, <code class="docutils literal notranslate"><span class="pre">`user_2_id`</span></code>, <code class="docutils literal notranslate"><span class="pre">`league_id`</span></code>, <code class="docutils literal notranslate"><span class="pre">`division_id`</span></code>, 
 <code class="docutils literal notranslate"><span class="pre">`score_user_1`</span></code>, <code class="docutils literal notranslate"><span class="pre">`score_user_2`</span></code>, <code class="docutils literal notranslate"><span class="pre">`status`</span></code>, <code class="docutils literal notranslate"><span class="pre">`deadline`</span></code></p>
 </dd></dl>
 
 <dl class="function">
-<dt id="tiger_leagues.models.league_model.get_players_current_matches">
-<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">get_players_current_matches</code><span class="sig-paren">(</span><em>user_id</em>, <em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#get_players_current_matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.get_players_current_matches" title="Permalink to this definition">¶</a></dt>
+<dt id="tiger_leagues.models.league_model.get_player_comparison">
+<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">get_player_comparison</code><span class="sig-paren">(</span><em>league_id</em>, <em>user_1_id</em>, <em>user_2_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#get_player_comparison"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.get_player_comparison" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the associated league</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>user_1_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the first user. By convention, user 1 is the initiator of the 
+request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>user_2_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the second user</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">dict</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>Keyed by <code class="docutils literal notranslate"><span class="pre">success</span></code> and <code class="docutils literal notranslate"><span class="pre">message</span></code>. 
+If <code class="docutils literal notranslate"><span class="pre">success</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">message</span></code> will be a dict keyed by <code class="docutils literal notranslate"><span class="pre">rank,</span> 
+<span class="pre">points,</span> <span class="pre">mutual_opponents,</span> <span class="pre">head_to_head,</span> <span class="pre">player_form</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.models.league_model.get_players_current_matches">
+<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">get_players_current_matches</code><span class="sig-paren">(</span><em>user_id</em>, <em>league_id</em>, <em>num_periods_before=1</em>, <em>num_periods_after=2</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#get_players_current_matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.get_players_current_matches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unlike <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_matches_in_current_window()</span></code>, this method resolves the 
+opponent names as well as adding convenient fields such as <code class="docutils literal notranslate"><span class="pre">my_score,</span> 
+<span class="pre">opponent_score,</span> <span class="pre">opponent_id,</span> <span class="pre">opponent_name</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
@@ -518,11 +572,91 @@ matches that are about to be played or have been played. Keys include:
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>num_periods_before</strong> – int (or infinity)</td>
+</tr>
+</tbody>
+</table>
+<p>The fetched matches will have deadlines that are at least on/later than 
+<code class="docutils literal notranslate"><span class="pre">today</span> <span class="pre">-</span> <span class="pre">num_days_between_games</span> <span class="pre">*</span> <span class="pre">num_periods_before</span></code>
+If the value is <code class="docutils literal notranslate"><span class="pre">inf</span></code>, then all matches that have deadlines earlier than 
+today will be included in the results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>num_periods_after</strong> – int (or infinity)</td>
+</tr>
+</tbody>
+</table>
+<p>The fetched matches will have deadlines that are at least on/earlier than 
+<code class="docutils literal notranslate"><span class="pre">today</span> <span class="pre">+</span> <span class="pre">num_days_between_games</span> <span class="pre">*</span> <span class="pre">num_periods_before</span></code>
+If the value is <code class="docutils literal notranslate"><span class="pre">inf</span></code>, then all matches that have deadlines later than 
+today will be included in the results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">List[dict]</span></code></td>
 </tr>
 </tbody>
 </table>
 <p>The player’s current matches ordered by the deadline.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.models.league_model.get_players_league_stats">
+<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">get_players_league_stats</code><span class="sig-paren">(</span><em>league_id</em>, <em>user_id</em>, <em>matches=None</em>, <em>k=5</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#get_players_league_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.get_players_league_stats" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the associated league</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>user_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the user</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>matches</strong> – <code class="docutils literal notranslate"><span class="pre">list[dict]</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>A list of matches to calculate the player’s form from. The matches should be 
+ordered such that the most recent matches appear last in the list.
+If <code class="docutils literal notranslate"><span class="pre">NoneType</span></code>, this method queries the database for such matches.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>k</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The max number of matches to calculate a player’s form from.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">dict</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>Keyed by <code class="docutils literal notranslate"><span class="pre">success</span></code> and <code class="docutils literal notranslate"><span class="pre">message</span></code>. 
+If <code class="docutils literal notranslate"><span class="pre">success</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">message</span></code> will be a dict keyed by <code class="docutils literal notranslate"><span class="pre">rank,</span> 
+<span class="pre">points,</span> <span class="pre">player_form</span></code>
+If <code class="docutils literal notranslate"><span class="pre">success</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">message</span></code> will contain a descriptive error 
+message.</p>
 </dd></dl>
 
 <dl class="function">
@@ -666,6 +800,40 @@ otherwise</p>
 <p>Keys: <code class="docutils literal notranslate"><span class="pre">`success`</span></code>, <code class="docutils literal notranslate"><span class="pre">`message`</span></code>. If <code class="docutils literal notranslate"><span class="pre">`success`</span></code> is <code class="docutils literal notranslate"><span class="pre">`True`</span></code>, <code class="docutils literal notranslate"><span class="pre">`message`</span></code> 
 contains the status of the match after the score has been processed. 
 Otherwise, <code class="docutils literal notranslate"><span class="pre">`message`</span></code> contains an explanation of what went wrong.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.models.league_model.update_league_standings">
+<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">update_league_standings</code><span class="sig-paren">(</span><em>league_id</em>, <em>division_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#update_league_standings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.update_league_standings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the new league standings and persist them into the database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the league</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>division_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the division within the league of interest</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">NoneType</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>This method affects the state of the database. It doesn’t return anything. 
+To fetch the standings, call <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_league_standings()</span></code> instead.</p>
 </dd></dl>
 
 </div>
@@ -839,7 +1007,7 @@ the fixtures were generated.</p>
 </tbody>
 </table>
 <p>A list of all matches in the current time block. 
-Keys include <code class="docutils literal notranslate"><span class="pre">match_id</span></code>, <code class="docutils literal notranslate"><span class="pre">league_id</span></code>, <code class="docutils literal notranslate"><span class="pre">user_id_1</span></code>, <code class="docutils literal notranslate"><span class="pre">user_id_2</span></code>, 
+Keys include <code class="docutils literal notranslate"><span class="pre">match_id</span></code>, <code class="docutils literal notranslate"><span class="pre">league_id</span></code>, <code class="docutils literal notranslate"><span class="pre">user_1_id</span></code>, <code class="docutils literal notranslate"><span class="pre">user_2_id</span></code>, 
 <code class="docutils literal notranslate"><span class="pre">division_id</span></code>, <code class="docutils literal notranslate"><span class="pre">score_user_1</span></code>, <code class="docutils literal notranslate"><span class="pre">score_user_2</span></code>, <code class="docutils literal notranslate"><span class="pre">status</span></code>, 
 <code class="docutils literal notranslate"><span class="pre">user_1_name</span></code>, <code class="docutils literal notranslate"><span class="pre">user_2_name</span></code></p>
 </dd></dl>
@@ -930,7 +1098,7 @@ Otherwise, <code class="docutils literal notranslate"><span class="pre">message<
 <p>Exposes functions that are used by the controller for the <cite>/user/*</cite> endpoint</p>
 <dl class="function">
 <dt id="tiger_leagues.models.user_model.get_user">
-<code class="descclassname">tiger_leagues.models.user_model.</code><code class="descname">get_user</code><span class="sig-paren">(</span><em>net_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/user_model.html#get_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.user_model.get_user" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tiger_leagues.models.user_model.</code><code class="descname">get_user</code><span class="sig-paren">(</span><em>net_id</em>, <em>user_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/user_model.html#get_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.user_model.get_user" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -944,11 +1112,22 @@ Otherwise, <code class="docutils literal notranslate"><span class="pre">message<
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>user_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the user as assigned in Tiger Leagues</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">dict</span></code></td>
 </tr>
 </tbody>
 </table>
-<p>A representation of the user as stored in the database</p>
+<p>A representation of the user as stored in the database. Keys include: 
+<code class="docutils literal notranslate"><span class="pre">user_id,</span> <span class="pre">name,</span> <span class="pre">net_id,</span> <span class="pre">email,</span> <span class="pre">phone_num,</span> <span class="pre">room,</span> <span class="pre">league_ids,</span> 
+<span class="pre">associated_leagues</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
