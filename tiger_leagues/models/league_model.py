@@ -34,17 +34,24 @@ MATCH_STATUS_PENDING_APPROVAL = "pending_approval"
 
 db = db_model.Database()
 
-def get_league_standings(league_id):
+def update_league_standings(league_id, division_id):
     """
+    Compute the new league standings and persist them into the database.
+
     :param league_id: int
     
     The ID of the league
 
-    :return: ``List[dict]``
+    :param division_id: int
     
-    The sorted league standings
-    """
+    The ID of the division within the league of interest
 
+    :return: ``NoneType``
+
+    This method affects the state of the database. It doesn't return anything. 
+    To fetch the standings, call :py:meth:`.get_league_standings` instead.
+    """
+    print("Updating league", league_id, "division", division_id, "...")
     cursor = db.execute(
         (
             "SELECT points_per_win, points_per_draw, points_per_loss "
@@ -58,49 +65,39 @@ def get_league_standings(league_id):
     points_per_draw = row['points_per_draw']
     points_per_loss = row['points_per_loss']
 
-    all_standings = defaultdict(dict)
-
-    # First pad all the players with zeros...
-    table_name = "league_responses_{}".format(league_id)
+    div_standings_info = {}
     cursor = db.execute(
-        (
-            "SELECT users.user_id, users.name, division_id FROM {}, users "
-            "WHERE users.user_id = {}.user_id AND division_id IS NOT NULL;"
-        ),
-        dynamic_table_or_column_names=[table_name, table_name]
+        "SELECT user_id FROM {} WHERE division_id = %s;", values=[division_id],
+        dynamic_table_or_column_names=["league_responses_{}".format(league_id)]
     )
-
     for row in cursor:
-        all_standings[row["division_id"]][row["user_id"]] = {
-            "name": row["name"], "wins": 0, "losses": 0, "draws": 0, 
-            "goals_for": 0, "goals_allowed": 0, "goal_diff": 0, "points": 0
+        div_standings_info[row["user_id"]] = {
+            "games_played": 0, "goals_for": 0, "goals_allowed": 0, "wins": 0, 
+            "draws": 0, "losses": 0, "points": 0, "user_id": row["user_id"]
         }
 
     cursor = db.execute(
         (
-            "SELECT match_id, division_id, user_id_1, user_id_2, score_user_1, "
-            "score_user_2 FROM match_info WHERE league_id = %s "
-            "AND status = %s ORDER BY division_id;"
+            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2 "
+            "FROM match_info WHERE league_id = %s AND division_id = %s AND status = %s;"
         ),
-        values=[league_id, MATCH_STATUS_APPROVED]
+        values=[league_id, division_id, MATCH_STATUS_APPROVED]
     )
-
+    
     for row in cursor:
-
-        div_standings_info = all_standings[row["division_id"]]
-
         user_id_1 = row['user_id_1']
         user_id_2 = row['user_id_2']
+        if user_id_1 is None or user_id_2 is None: continue
 
-        if user_id_1 not in div_standings_info:
-            div_standings_info[user_id_1] = defaultdict(lambda: 0)
-        if user_id_2 not in div_standings_info:
-            div_standings_info[user_id_2] = defaultdict(lambda: 0)
+        div_standings_info[user_id_1]['games_played'] += 1
+        div_standings_info[user_id_2]['games_played'] += 1
 
         div_standings_info[user_id_1]['goals_for'] += row['score_user_1']
         div_standings_info[user_id_2]['goals_for'] += row['score_user_2']
+
         div_standings_info[user_id_1]['goals_allowed'] += row['score_user_2']
         div_standings_info[user_id_2]['goals_allowed'] += row['score_user_1']
+        
         if (row['score_user_1'] > row['score_user_2']):
             div_standings_info[user_id_1]['wins'] += 1
             div_standings_info[user_id_1]['points'] += points_per_win
@@ -117,19 +114,9 @@ def get_league_standings(league_id):
             div_standings_info[user_id_2]['draws'] += 1
             div_standings_info[user_id_2]['points'] += points_per_draw
 
-    for division_id in all_standings:
-        div_standings_info = all_standings[division_id]
-        for user_id in div_standings_info:
-            if user_id is not None:
-                cursor = db.execute(
-                    (
-                        "SELECT name FROM users WHERE user_id = %s"
-                    ),
-                    values=[user_id]
-                )
-                div_standings_info[user_id]['name'] = cursor.fetchone()['name']
-                div_standings_info[user_id]['user_id'] = user_id
-                div_standings_info[user_id]['goal_diff'] = div_standings_info[user_id]['goals_for'] - div_standings_info[user_id]['goals_allowed']
+    for user_id in div_standings_info:
+        div_standings_info[user_id]['goal_diff'] = div_standings_info[user_id]['goals_for'] \
+             - div_standings_info[user_id]['goals_allowed']
         
     def standings_cmp(a, b):
         """
@@ -137,15 +124,69 @@ def get_league_standings(league_id):
         """
         if a["points"] > b["points"]: return 1
         if a["points"] < b["points"]: return -1
-        else:
-            if a["goal_diff"] > b["goal_diff"]: return 1
-            if a["goal_diff"] < b["goal_diff"]: return -1
-            return a["losses"] + a["draws"] + a["wins"] - b["losses"] - b["draws"] - b["wins"]
+        
+        if a["goal_diff"] > b["goal_diff"]: return 1
+        if a["goal_diff"] < b["goal_diff"]: return -1
+        return a["losses"] + a["draws"] + a["wins"] - b["losses"] - b["draws"] - b["wins"]
 
-    for division_id in all_standings:
-        standings = [x for x in all_standings[division_id].values()]
-        standings.sort(key=cmp_to_key(standings_cmp), reverse=True)
-        all_standings[division_id] = standings
+    standings = [x for x in div_standings_info.values()]
+    standings.sort(key=cmp_to_key(standings_cmp), reverse=True)
+    for rank, standing in enumerate(standings, 1): 
+        standing["rank"] = rank
+        standing["division_id"] = division_id
+        standing["league_id"] = league_id
+        div_standings_info[standing["user_id"]] = standing
+
+    # Persist the standings in the database
+    cursor = db.execute(
+        "SELECT rank, user_id FROM league_standings WHERE league_id = %s AND division_id = %s;",
+        values=[league_id, division_id]
+    )
+    for row in cursor:
+        if row["rank"] is not None:
+            div_standings_info[row["user_id"]]["rank_delta"] = row["rank"] - div_standings_info[row["user_id"]]["rank"]
+        else:
+            div_standings_info[row["user_id"]]["rank_delta"] = None
+
+    standings_list = list(div_standings_info.values())
+    if standings_list:
+        db.execute(
+            "DELETE FROM league_standings WHERE league_id = %s AND division_id = %s;",
+            values=[league_id, division_id]
+        )
+        db.execute_many(
+            "INSERT INTO league_standings ({}) VALUES %s;".format(
+                ", ".join(standings_list[0].keys())
+            ), values=standings_list
+        )
+
+    return div_standings_info
+
+def get_league_standings(league_id):
+    """
+    :param league_id: int
+    
+    The ID of the league
+
+    :return: ``dict[list[dict]]``
+    
+    The sorted league standings. The outermost dict is keyed by the division ID. 
+    The ``list[dict]`` is sorted by points and then by goal difference. This 
+    innermost is keyed by ``wins, losses, draws, games_played, goals_for, 
+    goals_allowed, goal_diff, points, rank, rank_delta``
+
+    """
+    all_standings = defaultdict(list)
+    cursor = db.execute(
+        (
+            "SELECT league_standings.*, users.name FROM league_standings, users "
+            "WHERE league_id = %s AND league_standings.user_id = users.user_id "
+            "ORDER BY division_id ASC, rank ASC;"
+        ),
+        values=[league_id] 
+    )
+    for row in cursor:
+        all_standings[row["division_id"]].append(row)
 
     return all_standings
 
@@ -304,6 +345,13 @@ def process_player_score_report(user_id, score_details):
             match_status, user_id, score_details["match_id"]
         ]
     )
+
+    # If the score has been approved update the standings
+    if match_status == MATCH_STATUS_APPROVED:
+        update_league_standings(
+            previous_match_details["division_id"], 
+            previous_match_details["league_id"]
+        )
 
     return {"success": True, "message": {"match_status": match_status}}
 
@@ -547,21 +595,17 @@ def get_player_comparison(league_id, user_id_1, user_id_2):
 
     Keyed by ``success`` and ``message``. 
     If ``success`` is ``True``, ``message`` will be a dict keyed by ``rank, 
-    goals_for, goals_allowed, wins, draws, losses, goal_diff, points, 
-    mutual_opponents, player_form``
+    points, mutual_opponents, head_to_head, player_form``
 
     """
+    # Works, sort of inefficient, but can be improved with better db design
+    league_standings = get_league_standings(league_id)
+
 
     return {
         "success": True,
         "message": {
             "rank": [2, 8],
-            "goals_for": [56, 30],
-            "goals_allowed": [51, 40],
-            "wins": [12, 7],
-            "draws": [2, 1],
-            "losses": [4, 10],
-            "goal_diff": [5, -10],
             "points": [34, 12],
             "head_to_head": [[1, 2], [5, 1]],
             "mutual_opponents": {"12": {"opponent": ["Chege", "1"], "results":[[1, 2], [2, 5]]}},
