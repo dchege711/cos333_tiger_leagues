@@ -161,9 +161,9 @@ def generate_league_fixtures(league_id, div_allocations):
 
     player_ids_to_div_ids = {}
     for division_id, division_players in div_allocations.items():
-        fixtures = fixture_generator([x["user_id"] for x in division_players])
+        player_ids = [x["user_id"] for x in division_players]
+        fixtures = fixture_generator(player_ids)
         deadline = match_deadline
-        note_division_ids = True
         for current_matches in fixtures:
             for matchup in current_matches:
                 db.execute(
@@ -175,13 +175,17 @@ def generate_league_fixtures(league_id, div_allocations):
                         matchup[0], matchup[1], league_id, division_id, deadline
                     ]
                 )
-                if note_division_ids:
-                    for player_id in (matchup[0], matchup[1]):
-                        if player_id not in player_ids_to_div_ids:
-                            player_ids_to_div_ids[player_id] = division_id
-
-            note_division_ids = False
             deadline += timeslot_length
+        
+        for player_id in player_ids:
+            if player_id not in player_ids_to_div_ids:
+                player_ids_to_div_ids[player_id] = division_id
+            else:
+                raise AssertionError(
+                    "Player ID {} is in 2 divisions ({} and {})".format(
+                        player_id, player_ids_to_div_ids[player_id], division_id
+                    )
+                )
 
     responses_table_name = "league_responses_{}".format(league_id)
     player_ids_to_div_ids = [
@@ -194,6 +198,15 @@ def generate_league_fixtures(league_id, div_allocations):
         ),
         player_ids_to_div_ids, 
         dynamic_table_or_column_names=[responses_table_name, responses_table_name]
+    )
+
+    cursor = db.execute(
+        "SELECT * FROM {} WHERE division_id IS NULL;",
+        dynamic_table_or_column_names=[responses_table_name]
+    )
+    players = cursor.fetchall()
+    assert not players, "Num unallocated players: {}, {}".format(
+        cursor.rowcount, str([x["user_id"] for x in players])
     )
 
     db.execute(
@@ -218,10 +231,10 @@ def __fetch_active_league_players(league_id):
     """
     table_name = "league_responses_{}".format(league_id)
     cursor = db.execute(
-        "SELECT users.user_id, users.name FROM {}, users WHERE (status = %s "
-        "OR status = %s) AND users.user_id = {}.user_id;",
+        "SELECT users.user_id, users.name FROM {}, users WHERE ({}.status = %s "
+        "OR {}.status = %s) AND users.user_id = {}.user_id;",
         values=[league_model.STATUS_ADMIN, league_model.STATUS_MEMBER],
-        dynamic_table_or_column_names=[table_name, table_name]
+        dynamic_table_or_column_names=[table_name, table_name, table_name, table_name]
     )
     return cursor.fetchall()
 
@@ -316,6 +329,16 @@ def allocate_league_divisions(league_id, desired_allocation_config):
         i += 1
         j += 1
 
+    # Assert that everyone has a league
+    players_with_divs = set()
+    for allocations in division_allocations.values():
+        for allocation in allocations:
+            players_with_divs.add(allocation["user_id"])
+
+    assert len(players_with_divs) == num_players, "{}/{} are missing divisions".format(
+        num_players - len(players_with_divs), num_players
+    )
+
     league_end_date = start_date + timedelta(
         days=ceil((num_players_per_div - 1) * allocation_config["match_frequency_in_days"])
     )
@@ -344,10 +367,6 @@ def fixture_generator(user_ids):
     # we need a more effective of finding all the users in the league. 
     # as of right now we need to iterate through every user and the league_ids they pertain to
     length = len(user_ids)
-    odd = 0
-
-    if length % 2 is not 0:
-        odd = 1
 
     half = ceil(length/2)
 
@@ -433,27 +452,21 @@ def approve_match(score_info):
     elif score_info["score_user_2"] is None:
         return {"success": False, "message": "Score cannot be empty!"}
 
+    row = db.execute(
+        "UPDATE match_info SET status = %s, score_user_1 = %s , score_user_2 = %s \
+        WHERE match_id = %s RETURNING league_id, division_id;",
+        values=[
+            league_model.MATCH_STATUS_APPROVED, 
+            score_info["score_user_1"], 
+            score_info["score_user_2"],
+            score_info["match_id"]
+        ]
+    ).fetchone()
+    league_model.update_league_standings(row["league_id"], row["division_id"])
 
-    try:
-        db.execute(
-            "UPDATE match_info SET status = %s, score_user_1 = %s \
-            , score_user_2 = %s WHERE match_id = %s;",
-            values=[
-                league_model.MATCH_STATUS_APPROVED, 
-                score_info["score_user_1"], 
-                score_info["score_user_2"],
-                score_info["match_id"]
-            ]
-        )
-
-        return {
-            "success": True, "message": league_model.MATCH_STATUS_APPROVED
-        }
-
-    except:
-        return {
-            "success": False, "message": "Failed to Update Scores"
-        }
+    return {
+        "success": True, "message": league_model.MATCH_STATUS_APPROVED
+    }
 
 def delete_league(league_id):
     """
@@ -498,7 +511,3 @@ def delete_league(league_id):
         return {
             "success": False, "message": "Failed to Delete League"
         }
-
-
-    
-

@@ -51,7 +51,6 @@ def update_league_standings(league_id, division_id):
     This method affects the state of the database. It doesn't return anything. 
     To fetch the standings, call :py:meth:`.get_league_standings` instead.
     """
-    print("Updating league", league_id, "division", division_id, "...")
     cursor = db.execute(
         (
             "SELECT points_per_win, points_per_draw, points_per_loss "
