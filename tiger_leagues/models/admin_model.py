@@ -168,7 +168,7 @@ def generate_league_fixtures(league_id, div_allocations):
             for matchup in current_matches:
                 db.execute(
                     (
-                        "INSERT INTO match_info (user_id_1, user_id_2, league_id, "
+                        "INSERT INTO match_info (user_1_id, user_2_id, league_id, "
                         "division_id, deadline) VALUES (%s, %s, %s, %s, %s);"
                     ), 
                     values=[
@@ -409,7 +409,7 @@ def get_current_matches(league_id):
     :return: ``List[DictRow]``
     
     A list of all matches in the current time block. 
-    Keys include ``match_id``, ``league_id``, ``user_id_1``, ``user_id_2``, 
+    Keys include ``match_id``, ``league_id``, ``user_1_id``, ``user_2_id``, 
     ``division_id``, ``score_user_1``, ``score_user_2``, ``status``, 
     ``user_1_name``, ``user_2_name``
 
@@ -418,7 +418,7 @@ def get_current_matches(league_id):
         league_id, num_periods_before=1, num_periods_after=2
     )
     current_matches = defaultdict(list)
-    mapping = {"user_id_1": "user_1_name", "user_id_2": "user_2_name"}
+    mapping = {"user_1_id": "user_1_name", "user_2_id": "user_2_name"}
     for match in relevant_matches:
         match_dict = dict(**match)
         for key, val in mapping.items():
