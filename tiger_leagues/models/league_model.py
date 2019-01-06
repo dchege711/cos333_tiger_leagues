@@ -7,7 +7,7 @@ Exposes a blueprint that handles requests made to `/league/*` endpoint
 
 import json
 from datetime import date, timedelta
-from math import ceil
+from math import ceil, inf
 from collections import defaultdict
 from functools import cmp_to_key
 
@@ -77,41 +77,41 @@ def update_league_standings(league_id, division_id):
 
     cursor = db.execute(
         (
-            "SELECT match_id, user_id_1, user_id_2, score_user_1, score_user_2 "
+            "SELECT match_id, user_1_id, user_2_id, score_user_1, score_user_2 "
             "FROM match_info WHERE league_id = %s AND division_id = %s AND status = %s;"
         ),
         values=[league_id, division_id, MATCH_STATUS_APPROVED]
     )
     
     for row in cursor:
-        user_id_1 = row['user_id_1']
-        user_id_2 = row['user_id_2']
-        if user_id_1 is None or user_id_2 is None: continue
+        user_1_id = row['user_1_id']
+        user_2_id = row['user_2_id']
+        if user_1_id is None or user_2_id is None: continue
 
-        div_standings_info[user_id_1]['games_played'] += 1
-        div_standings_info[user_id_2]['games_played'] += 1
+        div_standings_info[user_1_id]['games_played'] += 1
+        div_standings_info[user_2_id]['games_played'] += 1
 
-        div_standings_info[user_id_1]['goals_for'] += row['score_user_1']
-        div_standings_info[user_id_2]['goals_for'] += row['score_user_2']
+        div_standings_info[user_1_id]['goals_for'] += row['score_user_1']
+        div_standings_info[user_2_id]['goals_for'] += row['score_user_2']
 
-        div_standings_info[user_id_1]['goals_allowed'] += row['score_user_2']
-        div_standings_info[user_id_2]['goals_allowed'] += row['score_user_1']
+        div_standings_info[user_1_id]['goals_allowed'] += row['score_user_2']
+        div_standings_info[user_2_id]['goals_allowed'] += row['score_user_1']
         
         if (row['score_user_1'] > row['score_user_2']):
-            div_standings_info[user_id_1]['wins'] += 1
-            div_standings_info[user_id_1]['points'] += points_per_win
-            div_standings_info[user_id_2]['losses'] += 1
-            div_standings_info[user_id_2]['points'] += points_per_loss
+            div_standings_info[user_1_id]['wins'] += 1
+            div_standings_info[user_1_id]['points'] += points_per_win
+            div_standings_info[user_2_id]['losses'] += 1
+            div_standings_info[user_2_id]['points'] += points_per_loss
         elif (row['score_user_1'] < row['score_user_2']):
-            div_standings_info[user_id_2]['wins'] += 1
-            div_standings_info[user_id_2]['points'] += points_per_win
-            div_standings_info[user_id_1]['losses'] += 1
-            div_standings_info[user_id_1]['points'] += points_per_loss
+            div_standings_info[user_2_id]['wins'] += 1
+            div_standings_info[user_2_id]['points'] += points_per_win
+            div_standings_info[user_1_id]['losses'] += 1
+            div_standings_info[user_1_id]['points'] += points_per_loss
         else:
-            div_standings_info[user_id_1]['draws'] += 1
-            div_standings_info[user_id_1]['points'] += points_per_draw
-            div_standings_info[user_id_2]['draws'] += 1
-            div_standings_info[user_id_2]['points'] += points_per_draw
+            div_standings_info[user_1_id]['draws'] += 1
+            div_standings_info[user_1_id]['points'] += points_per_draw
+            div_standings_info[user_2_id]['draws'] += 1
+            div_standings_info[user_2_id]['points'] += points_per_draw
 
     for user_id in div_standings_info:
         div_standings_info[user_id]['goal_diff'] = div_standings_info[user_id]['goals_for'] \
@@ -196,15 +196,19 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
     
     The ID of the league
 
-    :kwarg num_periods_before: int
+    :kwarg num_periods_before: int (or infinity)
 
     The fetched matches will have deadlines that are at least on/later than 
     ``today - num_days_between_games * num_periods_before``
+    If the value is ``inf``, then all matches that have deadlines earlier than 
+    today will be included in the results.
     
-    :kwarg num_periods_after: int
+    :kwarg num_periods_after: int (or infinity)
     
     The fetched matches will have deadlines that are at least on/earlier than 
     ``today + num_days_between_games * num_periods_before``
+    If the value is ``inf``, then all matches that have deadlines later than 
+    today will be included in the results.
 
     :kwarg user_id: int 
     
@@ -214,24 +218,37 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
     
     A list of all the matches within the current time window. These are the 
     matches that are about to be played or have been played. Keys include: 
-    ```match_id``` ```user_id_1```, ```user_id_2```, ```league_id```, ```division_id```, 
+    ```match_id``` ```user_1_id```, ```user_2_id```, ```league_id```, ```division_id```, 
     ```score_user_1```, ```score_user_2```, ```status```, ```deadline```
     """
     cursor = db.execute(
-        "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s", 
+        "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s;", 
         values=[league_id]
     )
     time_window_days = ceil(cursor.fetchone()["match_frequency_in_days"])
 
-    latest_date = date.today() + timedelta(days=time_window_days * num_periods_after)
-    earliest_date = date.today() - timedelta(days=time_window_days * num_periods_before)
+    date_limits = db.execute(
+        "SELECT min(deadline), max(deadline) FROM match_info WHERE league_id = %s;",
+        values=[league_id]
+    ).fetchone()
 
+    today = date.today()
+    if num_periods_before == inf:
+        earliest_date = min(today, date_limits["min"])
+    else:
+        earliest_date = date.today() - timedelta(days=time_window_days * num_periods_before)
+
+    if num_periods_after == inf:
+        latest_date = max(today, date_limits["max"])
+    else:
+        latest_date = date.today() + timedelta(days=time_window_days * num_periods_after)
+    
     if user_id is not None:
         return db.execute(
             (
                 "SELECT * FROM match_info WHERE league_id = %s "
-                "AND (user_id_1 = %s OR user_id_2 = %s) "
-                "AND (user_id_1 IS NOT NULL AND user_id_2 IS NOT NULL) "
+                "AND (user_1_id = %s OR user_2_id = %s) "
+                "AND (user_1_id IS NOT NULL AND user_2_id IS NOT NULL) "
                 "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
             ),
             values=[league_id, user_id, user_id, earliest_date, latest_date]
@@ -240,14 +257,19 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
     return db.execute(
         (
             "SELECT * FROM match_info WHERE league_id = %s "
-            "AND (user_id_1 IS NOT NULL AND user_id_2 IS NOT NULL) "
+            "AND (user_1_id IS NOT NULL AND user_2_id IS NOT NULL) "
             "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
         ),
         values=[league_id, earliest_date, latest_date]
     )
 
-def get_players_current_matches(user_id, league_id):
+def get_players_current_matches(user_id, league_id, num_periods_before=1, 
+                                num_periods_after=2,):
     """
+    Unlike :py:meth:`.get_matches_in_current_window`, this method resolves the 
+    opponent names as well as adding convenient fields such as ``my_score, 
+    opponent_score, opponent_id, opponent_name``.
+
     :param user_id: int
 
     The ID of the player (equivalent to user)
@@ -256,24 +278,41 @@ def get_players_current_matches(user_id, league_id):
 
     The ID of the league
 
+    :kwarg num_periods_before: int (or infinity)
+
+    The fetched matches will have deadlines that are at least on/later than 
+    ``today - num_days_between_games * num_periods_before``
+    If the value is ``inf``, then all matches that have deadlines earlier than 
+    today will be included in the results.
+    
+    :kwarg num_periods_after: int (or infinity)
+    
+    The fetched matches will have deadlines that are at least on/earlier than 
+    ``today + num_days_between_games * num_periods_before``
+    If the value is ``inf``, then all matches that have deadlines later than 
+    today will be included in the results.
+
     :return: ``List[dict]``
     
     The player's current matches ordered by the deadline.
     """
 
-    relevant_matches = get_matches_in_current_window(league_id, user_id=user_id)
+    relevant_matches = get_matches_in_current_window(
+        league_id, user_id=user_id, num_periods_after=num_periods_after, 
+        num_periods_before=num_periods_before
+    )
     current_matches = []
 
     for match in relevant_matches:
         mutable_match = dict(**match)
-        if match["user_id_1"] != user_id: 
-            mutable_match["opponent_id"] = match["user_id_1"]
+        if match["user_1_id"] != user_id: 
+            mutable_match["opponent_id"] = match["user_1_id"]
             mutable_match["opponent_score"] = match['score_user_1']
-            mutable_match["your_score"] = match['score_user_2']
+            mutable_match["my_score"] = match['score_user_2']
         else: 
-            mutable_match["opponent_id"] = match["user_id_2"]
+            mutable_match["opponent_id"] = match["user_2_id"]
             mutable_match["opponent_score"] = match['score_user_2']
-            mutable_match["your_score"] = match['score_user_1']
+            mutable_match["my_score"] = match['score_user_1']
 
         current_matches.append(mutable_match)
 
@@ -315,7 +354,7 @@ def process_player_score_report(user_id, score_details):
         values=[score_details["match_id"]]
     ).fetchone()
     mapping = {}
-    if previous_match_details["user_id_1"] == user_id:
+    if previous_match_details["user_1_id"] == user_id:
         mapping["my_score"] = "score_user_1"
         mapping["score_user_1"] = "my_score"
         mapping["opponent_score"] = "score_user_2"
@@ -576,17 +615,76 @@ def get_previous_responses(league_id, user_profile):
         values=[user_profile["user_id"]]
     ).fetchone()
 
-def get_player_comparison(league_id, user_id_1, user_id_2):
+def get_players_league_stats(league_id, user_id, matches=None, k=5):
     """
     :param league_id: int
 
     The ID of the associated league
 
-    :param user_id_1: int
+    :param user_id: int
 
-    The ID of the first user
+    The ID of the user
 
-    :param user_id_2: int
+    :kwarg matches: ``list[dict]``
+
+    A list of matches to calculate the player's form from. The matches should be 
+    ordered such that the most recent matches appear last in the list.
+    If ``NoneType``, this method queries the database for such matches.
+
+    :kwarg k: int
+
+    The max number of matches to calculate a player's form from.
+
+    :return: ``dict``
+
+    Keyed by ``success`` and ``message``. 
+    If ``success`` is ``True``, ``message`` will be a dict keyed by ``rank, 
+    points, player_form``
+    If ``success`` is ``False``, ``message`` will contain a descriptive error 
+    message.
+
+    """
+    player_standing = db.execute(
+        "SELECT * FROM league_standings WHERE user_id = %s AND league_id = %s;",
+        values=[user_id, league_id]
+    ).fetchone()
+
+    if player_standing is None:
+        return {
+            "success": False, 
+            "message": "The player is not participating in this league"
+        }
+
+    player_stats = dict(**player_standing)
+    if matches is None:
+        matches = get_players_current_matches(
+            user_id, league_id, num_periods_before=5, num_periods_after=0
+        )
+
+    player_form = []
+    for match in reversed(matches):
+        if match["status"] == MATCH_STATUS_APPROVED:
+            form_marker = "W"
+            if match["my_score"] < match["opponent_score"]: form_marker = "L"
+            elif match["my_score"] == match["opponent_score"]: form_marker = "D"
+            player_form.append([form_marker, match["my_score"], match["opponent_score"]])
+            if len(player_form) == k: break
+
+    player_stats["player_form"] = player_form
+    return {"success": True, "message": player_stats}
+
+def get_player_comparison(league_id, user_1_id, user_2_id):
+    """
+    :param league_id: int
+
+    The ID of the associated league
+
+    :param user_1_id: int
+
+    The ID of the first user. By convention, user 1 is the initiator of the 
+    request.
+
+    :param user_2_id: int
 
     The ID of the second user
 
@@ -597,18 +695,45 @@ def get_player_comparison(league_id, user_id_1, user_id_2):
     points, mutual_opponents, head_to_head, player_form``
 
     """
-    # Works, sort of inefficient, but can be improved with better db design
-    league_standings = get_league_standings(league_id)
+    user_1_matches = get_players_current_matches(
+        user_1_id, league_id, num_periods_before=inf, num_periods_after=inf
+    )
+    user_2_matches = get_players_current_matches(
+        user_2_id, league_id, num_periods_before=inf, num_periods_after=inf
+    )
 
+    user_1_stats = get_players_league_stats(league_id, user_1_id, matches=user_1_matches)["message"]
+    user_2_stats = get_players_league_stats(league_id, user_2_id, matches=user_2_matches)["message"]
+
+    user_1_opponents = set(x["opponent_id"] for x in user_1_matches)
+    user_2_opponents = set(x["opponent_id"] for x in user_2_matches)
+
+    mutual_opponent_ids = user_1_opponents.intersection(user_2_opponents)
+
+    head_to_head_matches = []
+    if user_2_id in user_1_opponents:
+        for match in user_1_matches:
+            if match["opponent_id"] == user_2_id:
+                head_to_head_matches.append(match)
+
+    mutual_opponent_ids.discard(user_1_id)
+    mutual_opponent_ids.discard(user_2_id)
+
+    def collect_mutual_opponents(stats_obj, matches_obj):
+        stats_obj["mutual_opponents"] = defaultdict(list)
+        for match in matches_obj:
+            if match["opponent_id"] in mutual_opponent_ids:
+                stats_obj["mutual_opponents"][match["opponent_id"]].append(match)
+
+    collect_mutual_opponents(user_1_stats, user_1_matches)
+    collect_mutual_opponents(user_2_stats, user_2_matches)
 
     return {
         "success": True,
         "message": {
-            "rank": [2, 8],
-            "points": [34, 12],
-            "head_to_head": [[1, 2], [5, 1]],
-            "mutual_opponents": {"12": {"opponent": ["Chege", "1"], "results":[[1, 2], [2, 5]]}},
-            "player_form": [["W", "W", "L"], ["W", "D", "L"]]
+            "user_1": user_1_stats,
+            "user_2": user_2_stats,
+            "head_to_head": head_to_head_matches
         }
     }
 
