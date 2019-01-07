@@ -24,7 +24,6 @@ def page_not_found(e):
 def forbidden(e):
     """
     For forbidden pages, like admin stuff.
-
     """
     # Refresh the user object
     return render_template('error/403.html'), 403
