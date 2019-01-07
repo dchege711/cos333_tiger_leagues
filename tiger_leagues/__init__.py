@@ -9,6 +9,7 @@ Serves two functions:
 """
 
 import os
+from .models.exception import TigerLeaguesException
 
 from flask import Flask, render_template
 from . import league, auth, user, admin, error
@@ -46,9 +47,7 @@ def create_app(test_config=None):
     app.register_blueprint(league.bp) 
     app.register_blueprint(user.bp)
     app.register_blueprint(admin.bp)
-    app.register_error_handler(403, error.forbidden)
-    app.register_error_handler(404, error.page_not_found)
-    app.register_error_handler(500, error.internal_server_error)
+    app.register_error_handler(TigerLeaguesException, error.error_page)
 
     
     return app
