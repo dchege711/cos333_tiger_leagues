@@ -54,6 +54,7 @@
 <li><a class="reference internal" href="#module-tiger_leagues.models.league_model">tiger_leagues.models.league_model</a></li>
 <li><a class="reference internal" href="#module-tiger_leagues.models.admin_model">tiger_leagues.models.admin_model</a></li>
 <li><a class="reference internal" href="#module-tiger_leagues.models.user_model">tiger_leagues.models.user_model</a></li>
+<li><a class="reference internal" href="#module-tiger_leagues.models.exception">tiger_leagues.models.exception</a></li>
 </ul>
 </li>
 </ul>
@@ -1178,6 +1179,50 @@ set to <code class="docutils literal notranslate"><span class="pre">None</span><
 </tbody>
 </table>
 <p>The updated user profile</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-tiger_leagues.models.exception">
+<span id="tiger-leagues-models-exception"></span><h2>tiger_leagues.models.exception<a class="headerlink" href="#module-tiger_leagues.models.exception" title="Permalink to this headline">¶</a></h2>
+<p>exception.py</p>
+<p>Allows for error pages with custom exception messages.</p>
+<dl class="exception">
+<dt id="tiger_leagues.models.exception.TigerLeaguesException">
+<em class="property">exception </em><code class="descclassname">tiger_leagues.models.exception.</code><code class="descname">TigerLeaguesException</code><span class="sig-paren">(</span><em>message</em>, <em>status_code=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/exception.html#TigerLeaguesException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.exception.TigerLeaguesException" title="Permalink to this definition">¶</a></dt>
+<dd><p>A catchall exception for all problems.
+Status code and message can be customized wherever it’s raised.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>message</strong> – str</td>
+</tr>
+</tbody>
+</table>
+<p>human readable string explaining the problem</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>status_code</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>To specify the error code in the response. Like 400, 404, 500, etc.</p>
+<dl class="method">
+<dt id="tiger_leagues.models.exception.TigerLeaguesException.to_dict">
+<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/exception.html#TigerLeaguesException.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.exception.TigerLeaguesException.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">dict</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>A dict representation of the exception</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
