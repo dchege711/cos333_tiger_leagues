@@ -1,0 +1,52 @@
+{% extends "league/member_stats/league_comparison_base.html" %}
+
+{% block comparison_data %}
+
+<div class="w3-container w3-twothird w3-left">
+    <div class="w3-container w3-card">
+        <h4>{{current_user["name"]}}</h4>
+        <hr>
+        <p><span class="glyphicon glyphicon-envelope"></span> <a href="mailto:{{current_user['net_id']}}@princeton.edu" target="_blank">{{current_user['net_id']}}@princeton.edu</a></p>
+        <p><span class="glyphicon glyphicon-earphone"></span> <a href="tel:+1-{{current_user['phone_num']}}">+1-{{current_user['phone_num']}}</a></p>
+        <p><span class="glyphicon glyphicon-map-marker"></span> {{current_user['room']}}</p>
+    </div>
+    <br />
+    <br />
+    <div class="w3-container w3-card">
+        <table class="w3-table" style="text-align:center;">
+            <tr>
+                <td class="w3-large">Rank</td>
+                {% if current_user_stats["rank"] < current_user_stats["lowest_rank"] / 2 %}
+                    <td class="large-text bold-text win-text">
+                {% else %}
+                    <td class="large-text bold-text loss-text">
+                {% endif %}
+                {{current_user_stats["rank"]}} / {{current_user_stats["lowest_rank"]}}</td>
+            </tr>
+
+            <tr>
+                <td class="w3-large">Points</td>
+                <td class="large-text bold-text win-text">{{current_user_stats["points"]}}</td>
+            </tr>
+
+            <tr>
+                <td class="w3-large">Form</td>
+                <td class="">
+                {% for abbrev_score in current_user_stats["player_form"] %}
+                    {% if abbrev_score[0] == "W" %}
+                        <span class="box bold-text win-box">
+                    {% elif abbrev_score[0] == "L" %}
+                        <span class="box bold-text loss-box">
+                    {% elif abbrev_score[0] == "D" %}
+                        <span class="box bold-text draw-box">
+                    {% endif %}
+                    {{abbrev_score[1]}} - {{abbrev_score[2]}}</span>
+                {% endfor %}
+                </td>
+            </tr>
+
+        </table>
+    </div>
+</div>
+
+{% endblock %}
