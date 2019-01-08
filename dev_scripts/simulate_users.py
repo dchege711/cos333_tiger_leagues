@@ -24,7 +24,7 @@ def register_fake_users(num_users=40):
         """
         @yields `dict`: Represents enough information to sign up a new user.
         """
-        for i in range(n):
+        for i in range(2, n + 2):
             yield {
                 "name": "u{}".format(i), "email": "{}@not.princeton.edu".format(i),
                 "phone_num": "555-555-5555", "room": "Blair A{}".format(i), 

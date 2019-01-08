@@ -1,3 +1,8 @@
+USER PAGES: failing for everyone except the top 1 or 2 ranked players in each division;
+corner cases for mutual opponents w/ self; comparing rank with player in different division
+STANDINGS: players are in league database yet don't show up in the standings table
+
+
 REGULAR MEMBER:
 report scores
 report empty scores
