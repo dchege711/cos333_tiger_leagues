@@ -13,6 +13,8 @@ from functools import cmp_to_key
 
 from . import db_model
 
+from .exception import TigerLeaguesException
+
 generic_500_msg = {
     "success": False, "status": 500, "message": "Internal Server Error"
 }
@@ -184,6 +186,10 @@ def get_league_standings(league_id):
         ),
         values=[league_id] 
     )
+    if cursor is None:
+        raise TigerLeaguesException('League does not exist; it may have been deleted. \
+        If you entered the URL manually, double-check the league ID.')
+
     for row in cursor:
         all_standings[row["division_id"]].append(row)
 
@@ -225,7 +231,13 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
         "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s;", 
         values=[league_id]
     )
-    time_window_days = ceil(cursor.fetchone()["match_frequency_in_days"])
+
+    row = cursor.fetchone()
+    if row is None:
+        raise TigerLeaguesException('League does not exist; it may have been deleted. \
+        If you entered the URL manually, double-check the league ID.')
+    
+    time_window_days = ceil(row["match_frequency_in_days"])
 
     date_limits = db.execute(
         "SELECT min(deadline), max(deadline) FROM match_info WHERE league_id = %s;",
@@ -516,9 +528,12 @@ def get_league_info(league_id):
     )
     league_info = cursor.fetchone()
     
-    if league_info is not None:
-        if league_info["additional_questions"]:
-            league_info["additional_questions"] = json.loads(league_info["additional_questions"])
+    if league_info is None:
+        raise TigerLeaguesException('League does not exist; it may have been deleted. \
+        If you entered the URL manually, double-check the league ID.')
+
+    if league_info["additional_questions"]:
+        league_info["additional_questions"] = json.loads(league_info["additional_questions"])
 
     return league_info
 
