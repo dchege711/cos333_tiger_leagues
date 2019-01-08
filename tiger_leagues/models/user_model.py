@@ -9,6 +9,9 @@ from . import db_model
 
 db = db_model.Database()
 
+MESSAGE_STATUS_SEEN = "seen"
+MESSAGE_STATUS_DELIVERED = "delivered"
+
 def get_user(net_id, user_id=None):
     """
     :param net_id: str
@@ -144,3 +147,57 @@ def __get_user_leagues_info(user_id, league_ids):
             user_leagues_info[int(league_id)] = dict(**info)
         
     return user_leagues_info
+
+def send_message(user_id, message):
+    """
+    Post a message to this user
+
+    :param user_id: int
+
+    The ID of the associated user
+
+    :param message: dict
+
+    Expected keys include: ``league_id, message_text``
+
+    :return: ``int``
+
+    The message ID if the message is successfully delivered to the user's 
+    mailbox.
+
+    :return: ``NoneType``
+
+    If the method failed
+
+    """
+
+    if "league_id" not in message or "message_text" not in message:
+        return None
+    
+    return db.execute(
+        (
+            "INSERT INTO messages ("
+            "user_id, league_id, message_status, message_text)"
+            "VALUES (%s, %s, %s, %s) RETURNING message_id;"
+        ), 
+        values=[user_id, message["league_id"], MESSAGE_STATUS_DELIVERED, message["text"]]
+    ).fetchone()["message_id"]
+
+def read_messages(user_id, message_status=MESSAGE_STATUS_DELIVERED):
+    """
+    :param user_id: int
+
+    The ID of the associated user
+
+    :kwarg message_status: str
+
+    The status of the messages that are to be read
+    """
+    return db.execute(
+        (
+            "SELECT messages.* league_info.league_name FROM messages, league_info "
+            "WHERE user_id = %s AND message_status = %s "
+            "ORDER BY created_at DSC;"
+        ),
+        values=[user_id, message_status]
+    ).fetchall()

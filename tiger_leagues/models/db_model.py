@@ -66,6 +66,13 @@ class Database:
             "rank INT, rank_delta INT);"
         ))
 
+        self.execute((
+            "CREATE TABLE IF NOT EXISTS messages ("
+            "message_id SERIAL PRIMARY KEY, user_id INT, league_id INT, "
+            "message_status VARCHAR, message_text TEXT, "
+            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"
+        ))
+
     def execute(self, statement, values=None, dynamic_table_or_column_names=None, 
                 cursor_factory=extras.DictCursor):
         """
