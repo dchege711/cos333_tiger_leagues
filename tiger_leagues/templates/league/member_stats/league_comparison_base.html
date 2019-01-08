@@ -49,6 +49,17 @@
             color: white;
         }
 
+        .flex-box {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .flex-box div {
+            align-self: center;
+            margin: 3%;
+        }
+
     </style>
 
     <div class="w3-container">
@@ -57,7 +68,9 @@
 
         <hr />
 
-        {% block comparison_data %}{% endblock %}
+        <div class="flex-box">
+            {% block comparison_data %}{% endblock %}
+        </div>
         
     </div>
 
