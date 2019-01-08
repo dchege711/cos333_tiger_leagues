@@ -32,7 +32,6 @@ pylint==2.2.2
 pyOpenSSL==18.0.0
 pyparsing==2.3.0
 pytest==4.0.2
-pytest-cov==2.6.0
 pytz==2018.7
 requests==2.20.1
 selenium==3.141.0

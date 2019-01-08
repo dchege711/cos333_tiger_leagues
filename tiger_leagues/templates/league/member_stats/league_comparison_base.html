@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}League Member Profile{% endblock %}
+
+{% block content %}
+
+    <style>
+        th, td {
+            text-align: center!important;
+        }
+
+        .large-text {
+            font-size: x-large;
+        }
+
+        .bold-text {
+            font-weight: bolder;
+        }
+
+        .win-text {
+            color: green;
+        }
+
+        .loss-text {
+            color: red;
+        }
+
+        .draw-text {
+            color: rgb(126, 126, 126);;
+        }
+
+        .box {
+            border-radius: 2px;
+            padding: 1%;
+        }
+
+        .win-box {
+            background-color: green;
+            color: white;
+        }
+
+        .loss-box {
+            background-color: red;
+            color: white;
+        }
+
+        .draw-box {
+            background-color: rgb(126, 126, 126);
+            color: white;
+        }
+
+        .flex-box {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .flex-box div {
+            align-self: center;
+            margin: 3%;
+        }
+
+    </style>
+
+    <div class="w3-container">
+
+        <h3>{{league_name}}</h3>
+
+        <hr />
+
+        <div class="flex-box">
+            {% block comparison_data %}{% endblock %}
+        </div>
+        
+    </div>
+
+{% endblock %}

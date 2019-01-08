@@ -11,8 +11,7 @@ from math import ceil, inf
 from collections import defaultdict
 from functools import cmp_to_key
 
-from . import db_model, user_model
-
+from . import db_model
 from .exception import TigerLeaguesException
 
 generic_500_msg = {
@@ -306,7 +305,9 @@ def get_players_current_matches(user_id, league_id, num_periods_before=1,
 
     :return: ``List[dict]``
     
-    The player's current matches ordered by the deadline.
+    The player's current matches ordered by the deadline. Each dict is keyed by 
+    ``match_id, league_id, division_id, status, deadline, my_score,  
+    opponent_id, opponent_score, opponent_name``
     """
 
     relevant_matches = get_matches_in_current_window(
@@ -665,12 +666,29 @@ def get_players_league_stats(league_id, user_id, matches=None, k=5):
     ).fetchone()
 
     if player_standing is None:
-        return {
-            "success": False, 
-            "message": "The player is not participating in this league"
-        }
+        player_details = db.execute(
+            (
+                "SELECT name, league_name FROM users, league_info "
+                "WHERE user_id = %s AND league_id = %s;"
+            ),
+            values=[user_id, league_id]
+        ).fetchone()
+        if player_details is None:
+            raise TigerLeaguesException("The player was not found.", status_code=400)
+        else:
+            raise TigerLeaguesException(
+                "{} is not a member of {}".format(
+                    player_details["name"], player_details["league_name"]
+                ), status_code=400
+            )
+
+    lowest_rank = db.execute(
+        "SELECT MAX(rank) FROM league_standings WHERE league_id = %s AND division_id = %s;",
+        values=[league_id, player_standing["division_id"]]
+    ).fetchone()["max"]
 
     player_stats = dict(**player_standing)
+    player_stats["lowest_rank"] = lowest_rank
     if matches is None:
         matches = get_players_current_matches(
             user_id, league_id, num_periods_before=5, num_periods_after=0
@@ -735,6 +753,18 @@ def get_player_comparison(league_id, user_1_id, user_2_id):
     user_1_stats = get_players_league_stats(league_id, user_1_id, matches=user_1_matches)["message"]
     user_2_stats = get_players_league_stats(league_id, user_2_id, matches=user_2_matches)["message"]
 
+    # Case: The users are in different divisions so comparing them doesn't make sense
+    if user_1_matches and user_2_matches and \
+        user_1_matches[0]["division_id"] != user_2_matches[0]["division_id"]:
+        return {
+            "success": True, 
+            "message": {
+                "different_divisions": True,
+                "user_1": user_1_stats,
+                "user_2": user_2_stats,
+            }
+        }
+
     user_1_opponents = set(x["opponent_id"] for x in user_1_matches)
     user_2_opponents = set(x["opponent_id"] for x in user_2_matches)
 
@@ -761,6 +791,7 @@ def get_player_comparison(league_id, user_1_id, user_2_id):
     return {
         "success": True,
         "message": {
+            "different_divisions": False,
             "user_1": user_1_stats,
             "user_2": user_2_stats,
             "head_to_head": head_to_head_matches

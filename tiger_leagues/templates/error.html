@@ -1,9 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Error: {{e.status_code}}{% endblock %}
 {% block content %}
-  <div class="w3-container">
-    <h1>{{e.status_code}}</h1>
-    <p>{{e.message}}</p>
-  <p><a href="{{ url_for('auth.index') }}">Back to home page</a></p>
+  <style>
+    .box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+  
+  <div class="box">
+
+    <div class="w3-container">
+        <h1>Status: {{e.status_code}}</h1>
+        <p>{{e.message}}</p>
+        <p><a href="{{ url_for('auth.index') }}">Back to home page</a></p>
+    </div>
+
   </div>
+  
 {% endblock %}
