@@ -13,7 +13,6 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="prev" title="Models" href="models/readme.html" /> 
@@ -645,7 +644,7 @@ template includes information such as <code class="docutils literal notranslate"
 
 <dl class="function">
 <dt id="tiger_leagues.league.league_member">
-<code class="descclassname">tiger_leagues.league.</code><code class="descname">league_member</code><span class="sig-paren">(</span><em>league_id</em>, <em>user_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/league.html#league_member"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.league.league_member" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tiger_leagues.league.</code><code class="descname">league_member</code><span class="sig-paren">(</span><em>league_id</em>, <em>other_user_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/league.html#league_member"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.league.league_member" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -659,7 +658,7 @@ template includes information such as <code class="docutils literal notranslate"
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>user_id</strong> – <code class="docutils literal notranslate"><span class="pre">int</span></code></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>other_user_id</strong> – <code class="docutils literal notranslate"><span class="pre">int</span></code></td>
 </tr>
 </tbody>
 </table>
@@ -807,6 +806,33 @@ viewing/using certain URLs.</p>
 that was passed as a parameter</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="tiger_leagues.decorators.refresh_user_profile">
+<code class="descclassname">tiger_leagues.decorators.</code><code class="descname">refresh_user_profile</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/decorators.html#refresh_user_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.decorators.refresh_user_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator function that is updates the user object stored in the session 
+object. This is helpful when keeping the user up to date.</p>
+<p><a class="reference external" href="http://flask.pocoo.org/docs/1.0/patterns/viewdecorators/#login-required-decorator">http://flask.pocoo.org/docs/1.0/patterns/viewdecorators/#login-required-decorator</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>f</strong> – <code class="docutils literal notranslate"><span class="pre">function</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>A function that would benefit from an updated user object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">function</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The incoming function is always returned as updating the user object is a 
+side effect.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-tiger_leagues.wsgi">
 <span id="tiger-leagues-wsgi"></span><h2>tiger_leagues.wsgi<a class="headerlink" href="#module-tiger_leagues.wsgi" title="Permalink to this headline">¶</a></h2>
@@ -844,7 +870,7 @@ that is exposed in the <code class="docutils literal notranslate"><span class="p
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

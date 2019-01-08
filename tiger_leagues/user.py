@@ -22,8 +22,6 @@ def display_user_profile():
     associated_leagues``
 
     """
-    # Refresh the user object
-    session["user"] = user_model.get_user(session.get("user")["net_id"])
     return render_template("/user/user_profile.html", user=session.get("user"))
 
 @bp.route("/profile/", methods=["POST"])

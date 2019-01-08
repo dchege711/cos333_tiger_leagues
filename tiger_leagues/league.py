@@ -15,6 +15,7 @@ bp = Blueprint("league", __name__, url_prefix="/league")
 
 @bp.route("/", methods=["GET"])
 @decorators.login_required
+@decorators.refresh_user_profile
 def index():
     """
     A user that already has an account will be redirected here. The user details 
@@ -30,8 +31,6 @@ def index():
     them to browse available leagues.
 
     """
-    # Refresh the user object
-    session["user"] = user_model.get_user(session.get("user")["net_id"])
     user = session.get("user")
 
     if user["associated_leagues"]:
@@ -41,6 +40,7 @@ def index():
 
 @bp.route("/<int:league_id>/", methods=["GET"])
 @decorators.login_required
+@decorators.refresh_user_profile
 def league_homepage(league_id):
     """
     :param league_id: ``int``
@@ -54,8 +54,6 @@ def league_homepage(league_id):
     upcoming_matches``, etc.
 
     """
-    # Refresh the user object
-    session["user"] = user_model.get_user(session.get("user")["net_id"])
     user = session.get("user")
 
     associated_leagues = user["associated_leagues"]
@@ -95,15 +93,16 @@ def process_score_submit(league_id):
         league_model.process_player_score_report(user_id, request.json)
     )
 
-@bp.route("/<int:league_id>/user/<int:user_id>/", methods=["GET"])
+@bp.route("/<int:league_id>/user/<int:other_user_id>/", methods=["GET"])
 @decorators.login_required
-def league_member(league_id, user_id):
+@decorators.refresh_user_profile
+def league_member(league_id, other_user_id):
     """
     :param league_id: ``int``
 
     The ID of the league associated with this request
 
-    :param user_id: ``int``
+    :param other_user_id: ``int``
 
     The ID of the user whose data should be fetched.
 
@@ -113,15 +112,19 @@ def league_member(league_id, user_id):
     user whose ID was passed in the URL.
 
     """
-    # Refresh the user object
-    session["user"] = user_model.get_user(session.get("user")["net_id"])
-    associated_leagues = session.get("user")["associated_leagues"]
-    standings = league_model.get_league_standings(league_id)
-
+    current_user = session.get("user")
+    other_user = user_model.get_user(None, other_user_id)
+    comparison_obj = league_model.get_player_comparison(
+        league_id, current_user["user_id"], other_user_id
+    )
+    
     return render_template(
-        "/league/league_member.html", 
-        user=session.get("user"), standings=standings, 
-        league_name=associated_leagues[league_id]["league_name"]
+        "/league/league_member.html", comparison=comparison_obj["message"],
+        current_user=current_user, other_user=other_user,
+        current_user_stats=comparison_obj["message"]["user_1"],
+        other_user_stats=comparison_obj["message"]["user_2"],
+        head_to_head=comparison_obj["message"]["head_to_head"],
+        league_name=current_user["associated_leagues"][league_id]["league_name"]
     )
 
 @bp.route("/create/", methods=["GET", "POST"])
@@ -159,6 +162,7 @@ def create_league():
 
 @bp.route("/browse/", methods=["GET"])
 @decorators.login_required
+@decorators.refresh_user_profile
 def browse_leagues():
     """
     :return: ``flask.Response(mimetype='text/html')``
@@ -166,8 +170,6 @@ def browse_leagues():
     Render a page with a list of leagues that the user can request to join.
 
     """
-    # Refresh the user object
-    session["user"] = user_model.get_user(session.get("user")["net_id"])
     return render_template(
         "/league/browse.html", 
         leagues=league_model.get_leagues_not_yet_joined(session.get("user"))
@@ -175,6 +177,7 @@ def browse_leagues():
 
 @bp.route("/<int:league_id>/join/", methods=["GET", "POST"])
 @decorators.login_required
+@decorators.refresh_user_profile
 def join_league(league_id):
     """
     :param league_id: ``int``
@@ -200,8 +203,6 @@ def join_league(league_id):
         )
 
     league_info = results["message"]
-    # Refresh the user object
-    session["user"] = user_model.get_user(session.get("user")["net_id"])
     user_profile = session.get("user")
 
     if request.method == "GET":
@@ -228,6 +229,7 @@ def join_league(league_id):
 
 @bp.route("/<int:league_id>/leave-league/", methods=["POST"])
 @decorators.login_required
+@decorators.refresh_user_profile
 def leave_league(league_id):
     """
     :param league_id: ``int``

@@ -13,6 +13,7 @@ from flask import (
 )
 
 from .models import admin_model, league_model
+from .models.exception import TigerLeaguesException
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -50,7 +51,7 @@ def admin_status_required():
     league_id = parts[1].split("/")[0]
     associated_leagues = session.get("user")["associated_leagues"]
     if league_id not in associated_leagues or associated_leagues[league_id]["status"] != "admin":
-        return redirect(url_for("league.index"))
+        raise TigerLeaguesException('You do not have admin privileges for {}'.format(associated_leagues[league_id]["league_name"]))
     # If nothing has been returned, the request will be passed to its handler
     return None
 

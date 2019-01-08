@@ -39,7 +39,7 @@
                             {% for standing in standings[division_id] %}
                                 <tr>
                                     <td>{{ loop.index }}</td>
-                                    <td><a href="{{url_for('league.league_member', league_id=league_id, user_id=standing['user_id'])}}">{{ standing["name"] }}</a></td>
+                                    <td><a href="{{url_for('league.league_member', league_id=league_id, other_user_id=standing['user_id'])}}">{{ standing["name"] }}</a></td>
                                     <td>{{ standing["wins"] }}</td>
                                     <td>{{ standing["losses"] }}</td>
                                     <td>{{ standing["draws"] }}</td>
@@ -85,11 +85,11 @@
                         <tr id="match_data_{{match['match_id']}}">
                             <td>{{ match["deadline"].strftime("%a, %b %d") }}</td>
                             {% if match["status"] == "approved" %}
-                                <td class="w3-center">{{match['your_score']}}</td>
+                                <td class="w3-center">{{match['my_score']}}</td>
                                 <td class="w3-center"><strong> - </strong></td>
                                 <td class="w3-center">{{match['opponent_score']}}</td>
                             {% else %}
-                                <td contenteditable="true" class="w3-center" value="{{match['your_score']}}"></td>
+                                <td contenteditable="true" class="w3-center" value="{{match['my_score']}}"></td>
                                 <td class="w3-center"><strong> - </strong></td>
                                 <td class="w3-center" contenteditable="true" value="{{match['opponent_score']}}"></td>
                             {% endif %} 

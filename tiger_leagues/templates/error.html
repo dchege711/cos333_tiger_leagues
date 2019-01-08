@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Error: {{e.status_code}}{% endblock %}
+{% block content %}
+  <h1>{{e.status_code}}</h1>
+  <p>{{e.message}}</p>
+  <p><a href="{{ url_for('auth.index') }}">Back to home page</a></p>
+{% endblock %}

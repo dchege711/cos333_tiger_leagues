@@ -30,3 +30,8 @@ tiger_leagues.models.user_model
 -------------------------------
 .. automodule:: tiger_leagues.models.user_model
    :members:
+
+tiger_leagues.models.exception
+------------------------------
+.. automodule:: tiger_leagues.models.exception
+   :members:

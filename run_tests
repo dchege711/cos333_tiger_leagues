@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# To view the code coverage of the tests, open htmlcov/index.html
+
+coverage run --branch --source=tiger_leagues -m py.test tests/ --disable-pytest-warnings --showlocals -vvl
+coverage html

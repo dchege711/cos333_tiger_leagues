@@ -12,7 +12,6 @@ from random import randint, sample
 from datetime import date, timedelta
 from math import ceil
 
-from clean_database import clean_database
 from tiger_leagues.models import user_model, league_model, admin_model, db_model
 
 db = db_model.Database()
@@ -21,8 +20,6 @@ def register_fake_users(num_users=40):
     """
     @returns List[dict]: the user profiles of the fake users
     """
-    print("Registering", num_users, "fake users...")
-
     def generate_fake_users(n):
         """
         @yields `dict`: Represents enough information to sign up a new user.
@@ -45,8 +42,6 @@ def create_leagues(admin_user_profile, num_leagues=4):
     """
     @returns List[dict]: The league information of the created leagues
     """
-    print("Creating", num_leagues, "dummy leagues...")
-
     def __generate_league_info():
         for i in range(1, num_leagues + 1):
             points_per_win = randint(3, 10)
@@ -75,6 +70,8 @@ def create_leagues(admin_user_profile, num_leagues=4):
 
 def populate_leagues(league_info_list, player_profiles):
     """
+    Randomly choose players to enroll into each provided league.
+
     @return List[dict]: a list of updated user profiles
     """
     player_indexes = range(len(player_profiles))
@@ -82,7 +79,6 @@ def populate_leagues(league_info_list, player_profiles):
         k = min(
             len(player_profiles), randint(1, league_info["max_num_players"])
         )
-        print("Enrolling", k, "players into", league_info["league_name"], "...")
         enrollment_data = {}
         for idx in sample(player_indexes, k):
             player_profiles[idx] = league_model.process_join_league_request(
@@ -102,7 +98,6 @@ def generate_matches(league_info_list):
     """
     today = date.today()
     for league_info in league_info_list:
-        print("Generating fixtures for", league_info["league_name"], "...")
         start_date = today + timedelta(days=randint(1, 5))
         completion_deadline = start_date + timedelta(
             days=randint(0, int(league_info["max_num_players"] / 2))
@@ -119,29 +114,23 @@ def generate_matches(league_info_list):
             league_info["league_id"], league_divisions
         )
         if results["message"] != "Fixtures successfully created!":
-            print(league_info)
-            print(allocation_config)
             raise RuntimeError(results["message"])
+
+    return True
 
 def play_matches():
     """
     Generate scores and approve the matches for the provided league.
     """
-    try:
-        cursor = db.execute("SELECT match_id FROM match_info")
-        row = cursor.fetchone()
-        while (row is not None):
-            db.execute(
-                    "UPDATE match_info SET score_user_1 = %s, score_user_2 = %s, "
-                    "status = %s WHERE match_id =  %s",
-                    values=[randint(0, 10), randint(0, 10), 'approved', row[0]]
-                )
-            row = cursor.fetchone()
-        print("Matches successfully played!")
-    except: 
-        raise RuntimeError("Something went wrong")
-    
+    cursor = db.execute("SELECT match_id FROM match_info;")
+    for row in cursor:
+        admin_model.approve_match({
+            "score_user_1": randint(0, 5), "score_user_2": randint(0, 5),
+            "match_id": row["match_id"]
+        })
+
 if __name__ == "__main__":
+    from clean_database import clean_database
     try:
         net_id = sys.argv[1]
     except IndexError:
@@ -163,12 +152,22 @@ if __name__ == "__main__":
             }
         )
 
+        print("Registering 40 fake users...")
         fake_users = register_fake_users()
+        
+        print("Creating", num_leagues, "dummy leagues...")
         league_info_list = create_leagues(admin_user_profile, num_leagues=num_leagues)
 
+        print("Enrolling players into leagues...")
         fake_users = populate_leagues(league_info_list, fake_users)
+
+        print("Generating matches...")
         generate_matches(league_info_list[:ceil(num_leagues / 2.0)])
+
+        print("Simulating all the matches...")
         play_matches()
+
+        print("Generating more matches...")
         generate_matches([league_info_list[ceil(num_leagues / 2.0)]])
     except:
         clean_database()

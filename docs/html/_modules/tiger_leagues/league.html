@@ -13,7 +13,6 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
@@ -78,6 +77,7 @@
 
 <div class="viewcode-block" id="index"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.league.index">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="nd">@decorators</span><span class="o">.</span><span class="n">login_required</span>
+<span class="nd">@decorators</span><span class="o">.</span><span class="n">refresh_user_profile</span>
 <span class="k">def</span> <span class="nf">index</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A user that already has an account will be redirected here. The user details </span>
@@ -93,8 +93,6 @@
 <span class="sd">    them to browse available leagues.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Refresh the user object</span>
-    <span class="n">session</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;net_id&quot;</span><span class="p">])</span>
     <span class="n">user</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]:</span>
@@ -104,6 +102,7 @@
 
 <div class="viewcode-block" id="league_homepage"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.league.league_homepage">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="nd">@decorators</span><span class="o">.</span><span class="n">login_required</span>
+<span class="nd">@decorators</span><span class="o">.</span><span class="n">refresh_user_profile</span>
 <span class="k">def</span> <span class="nf">league_homepage</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :param league_id: ``int``</span>
@@ -117,8 +116,6 @@
 <span class="sd">    upcoming_matches``, etc.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Refresh the user object</span>
-    <span class="n">session</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;net_id&quot;</span><span class="p">])</span>
     <span class="n">user</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span>
 
     <span class="n">associated_leagues</span> <span class="o">=</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span>
@@ -158,15 +155,16 @@
         <span class="n">league_model</span><span class="o">.</span><span class="n">process_player_score_report</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
     <span class="p">)</span></div>
 
-<div class="viewcode-block" id="league_member"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.league.league_member">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/user/&lt;int:user_id&gt;/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<div class="viewcode-block" id="league_member"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.league.league_member">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/user/&lt;int:other_user_id&gt;/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="nd">@decorators</span><span class="o">.</span><span class="n">login_required</span>
-<span class="k">def</span> <span class="nf">league_member</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">):</span>
+<span class="nd">@decorators</span><span class="o">.</span><span class="n">refresh_user_profile</span>
+<span class="k">def</span> <span class="nf">league_member</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">other_user_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :param league_id: ``int``</span>
 
 <span class="sd">    The ID of the league associated with this request</span>
 
-<span class="sd">    :param user_id: ``int``</span>
+<span class="sd">    :param other_user_id: ``int``</span>
 
 <span class="sd">    The ID of the user whose data should be fetched.</span>
 
@@ -176,15 +174,19 @@
 <span class="sd">    user whose ID was passed in the URL.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Refresh the user object</span>
-    <span class="n">session</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;net_id&quot;</span><span class="p">])</span>
-    <span class="n">associated_leagues</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span>
-    <span class="n">standings</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_standings</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
-
+    <span class="n">current_user</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span>
+    <span class="n">other_user</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">other_user_id</span><span class="p">)</span>
+    <span class="n">comparison_obj</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_player_comparison</span><span class="p">(</span>
+        <span class="n">league_id</span><span class="p">,</span> <span class="n">current_user</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">],</span> <span class="n">other_user_id</span>
+    <span class="p">)</span>
+    
     <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
-        <span class="s2">&quot;/league/league_member.html&quot;</span><span class="p">,</span> 
-        <span class="n">user</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">),</span> <span class="n">standings</span><span class="o">=</span><span class="n">standings</span><span class="p">,</span> 
-        <span class="n">league_name</span><span class="o">=</span><span class="n">associated_leagues</span><span class="p">[</span><span class="n">league_id</span><span class="p">][</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
+        <span class="s2">&quot;/league/league_member.html&quot;</span><span class="p">,</span> <span class="n">comparison</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">],</span>
+        <span class="n">current_user</span><span class="o">=</span><span class="n">current_user</span><span class="p">,</span> <span class="n">other_user</span><span class="o">=</span><span class="n">other_user</span><span class="p">,</span>
+        <span class="n">current_user_stats</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;user_1&quot;</span><span class="p">],</span>
+        <span class="n">other_user_stats</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;user_2&quot;</span><span class="p">],</span>
+        <span class="n">head_to_head</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;head_to_head&quot;</span><span class="p">],</span>
+        <span class="n">league_name</span><span class="o">=</span><span class="n">current_user</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">][</span><span class="n">league_id</span><span class="p">][</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
     <span class="p">)</span></div>
 
 <div class="viewcode-block" id="create_league"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.league.create_league">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/create/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
@@ -222,6 +224,7 @@
 
 <div class="viewcode-block" id="browse_leagues"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.league.browse_leagues">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/browse/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="nd">@decorators</span><span class="o">.</span><span class="n">login_required</span>
+<span class="nd">@decorators</span><span class="o">.</span><span class="n">refresh_user_profile</span>
 <span class="k">def</span> <span class="nf">browse_leagues</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :return: ``flask.Response(mimetype=&#39;text/html&#39;)``</span>
@@ -229,8 +232,6 @@
 <span class="sd">    Render a page with a list of leagues that the user can request to join.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Refresh the user object</span>
-    <span class="n">session</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;net_id&quot;</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
         <span class="s2">&quot;/league/browse.html&quot;</span><span class="p">,</span> 
         <span class="n">leagues</span><span class="o">=</span><span class="n">league_model</span><span class="o">.</span><span class="n">get_leagues_not_yet_joined</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">))</span>
@@ -238,6 +239,7 @@
 
 <div class="viewcode-block" id="join_league"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.league.join_league">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/join/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="nd">@decorators</span><span class="o">.</span><span class="n">login_required</span>
+<span class="nd">@decorators</span><span class="o">.</span><span class="n">refresh_user_profile</span>
 <span class="k">def</span> <span class="nf">join_league</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :param league_id: ``int``</span>
@@ -263,8 +265,6 @@
         <span class="p">)</span>
 
     <span class="n">league_info</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span>
-    <span class="c1"># Refresh the user object</span>
-    <span class="n">session</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;net_id&quot;</span><span class="p">])</span>
     <span class="n">user_profile</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GET&quot;</span><span class="p">:</span>
@@ -291,6 +291,7 @@
 
 <div class="viewcode-block" id="leave_league"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.league.leave_league">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/leave-league/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="nd">@decorators</span><span class="o">.</span><span class="n">login_required</span>
+<span class="nd">@decorators</span><span class="o">.</span><span class="n">refresh_user_profile</span>
 <span class="k">def</span> <span class="nf">leave_league</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :param league_id: ``int``</span>
@@ -331,7 +332,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
     </div>
   </body>
 </html>

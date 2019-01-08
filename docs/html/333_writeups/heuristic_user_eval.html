@@ -6,13 +6,14 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Overview: module code &#8212; Tiger Leagues 1.0 documentation</title>
+    <title>&lt;no title&gt; &#8212; Tiger Leagues 1.0 documentation</title>
     <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
   </head><body>
@@ -38,6 +39,13 @@
 
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/333_writeups/heuristic_user_eval.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <div class="searchformwrapper">
@@ -58,19 +66,28 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <h1>All modules for which code is available</h1>
-<ul><li><a href="tiger_leagues/admin.html">tiger_leagues.admin</a></li>
-<li><a href="tiger_leagues/auth.html">tiger_leagues.auth</a></li>
-<li><a href="tiger_leagues/cas_client.html">tiger_leagues.cas_client</a></li>
-<li><a href="tiger_leagues/decorators.html">tiger_leagues.decorators</a></li>
-<li><a href="tiger_leagues/league.html">tiger_leagues.league</a></li>
-<li><a href="tiger_leagues/models/admin_model.html">tiger_leagues.models.admin_model</a></li>
-<li><a href="tiger_leagues/models/db_model.html">tiger_leagues.models.db_model</a></li>
-<li><a href="tiger_leagues/models/exception.html">tiger_leagues.models.exception</a></li>
-<li><a href="tiger_leagues/models/league_model.html">tiger_leagues.models.league_model</a></li>
-<li><a href="tiger_leagues/models/user_model.html">tiger_leagues.models.user_model</a></li>
-<li><a href="tiger_leagues/user.html">tiger_leagues.user</a></li>
-</ul>
+  <p># Heuristic Evaluation</p>
+<p>## Visibility of system status</p>
+<p>The system should always keep users informed about what is going on, through appropriate feedback within reasonable time.</p>
+<p>## Match between system and the real world</p>
+<p>The system should speak the user’s language, with words, phrases and concepts familiar to the user, rather than system-oriented terms. Follow real-world conventions, making information appear in a natural and logical order.</p>
+<p>## User control and freedom</p>
+<p>Users often choose system functions by mistake and will need a clearly marked “emergency exit” to leave the unwanted state without having to go through an extended dialogue. Support undo and redo.</p>
+<p>## Consistency and standards</p>
+<p>Users should not have to wonder whether different words, situations, or actions mean the same thing. Follow platform conventions.</p>
+<p>## Error prevention</p>
+<p>Even better than good error messages is a careful design which prevents a problem from occurring in the first place. Either eliminate error-prone conditions or check for them and present users with a confirmation option before they commit to the action.</p>
+<p>## Recognition rather than recall</p>
+<p>Minimize the user’s memory load by making objects, actions, and options visible. The user should not have to remember information from one part of the dialogue to another. Instructions for use of the system should be visible or easily retrievable whenever appropriate.</p>
+<p>## Flexibility and efficiency of use</p>
+<p>Accelerators—unseen by the novice user—may often speed up the interaction for the expert user such that the system can cater to both inexperienced and experienced users. Allow users to tailor frequent actions.</p>
+<p>## Aesthetic and minimalist design</p>
+<p>Dialogues should not contain information which is irrelevant or rarely needed. Every extra unit of information in a dialogue competes with the relevant units of information and diminishes their relative visibility.</p>
+<p>## Help users recognize, diagnose, and recover from errors</p>
+<p>Error messages should be expressed in plain language (no codes), precisely indicate the problem, and constructively suggest a solution.</p>
+<p>## Help and documentation</p>
+<p>Even though it is better if the system can be used without documentation, it may be necessary to provide help and documentation. Any such information should be easy to search, focused on the user’s task, list concrete steps to be carried out, and not be too large.</p>
+
 
           </div>
         </div>
@@ -93,7 +110,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

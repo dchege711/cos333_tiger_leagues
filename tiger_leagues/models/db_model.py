@@ -37,14 +37,14 @@ class Database:
         """
         self.execute((
             "CREATE TABLE IF NOT EXISTS users ("
-            "user_id SERIAL PRIMARY KEY, name VARCHAR(255), net_id VARCHAR(255), "
+            "user_id SERIAL PRIMARY KEY, name VARCHAR(255), net_id VARCHAR(255) UNIQUE, "
             "email VARCHAR(255), phone_num VARCHAR(255), room VARCHAR(255), "
             "league_ids TEXT);"
         ))
 
         self.execute((
             "CREATE TABLE IF NOT EXISTS match_info ("
-            "match_id SERIAL PRIMARY KEY, user_id_1 INT, user_id_2 INT, league_id INT, "
+            "match_id SERIAL PRIMARY KEY, user_1_id INT, user_2_id INT, league_id INT, "
             "division_id INT, score_user_1 INT, score_user_2 INT, "
             "status VARCHAR(255), deadline DATE, recent_updater_id INT);"
         ))
@@ -56,6 +56,14 @@ class Database:
             "points_per_loss INT, registration_deadline DATE, max_num_players INT, "
             "creator_user_id INT NOT NULL, match_frequency_in_days NUMERIC DEFAULT 7.0, "
             "additional_questions TEXT, league_status VARCHAR(255));"
+        ))
+
+        self.execute((
+            "CREATE TABLE IF NOT EXISTS league_standings ("
+            "standing_id SERIAL PRIMARY KEY, league_id INT, division_id INT, "
+            "user_id INT, wins INT, losses INT, draws INT, games_played INT, "
+            "goals_for INT, goals_allowed INT, goal_diff INT, points INT, "
+            "rank INT, rank_delta INT);"
         ))
 
     def execute(self, statement, values=None, dynamic_table_or_column_names=None, 
@@ -116,7 +124,7 @@ class Database:
 
         The SQL query to run. It must contain a single `%s` placeholder
 
-        :kwarg values: list[list]
+        :kwarg values: iterable
 
         Each item should be a value that can be substituted when composing a 
         SQL query
@@ -145,9 +153,15 @@ class Database:
             sql_query = sql.SQL(sql_query).format(*[
                 sql.Identifier(s) for s in dynamic_table_or_column_names
             ])
+
         cursor = self.__connection.cursor(cursor_factory=cursor_factory)
+        if values and isinstance(values[0], dict):
+            template = "({})".format(", ".join(["%({})s".format(x) for x in values[0].keys()]))
+        else:
+            template = None
+
         try:
-            extras.execute_values(cursor, sql_query, values)
+            extras.execute_values(cursor, sql_query, values, template=template)
             self.__connection.commit()
             return cursor
         except:
