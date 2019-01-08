@@ -108,18 +108,44 @@ def league_member(league_id, other_user_id):
 
     :return: ``flask.Response(mimetype='text/html')``
 
-    Render a side-by-side comparison of the currently logged in user and the 
-    user whose ID was passed in the URL.
+    If ``other_user_id == current_user_id``, the page shows the currently 
+    logged in user's stats.
+
+    If ``other_user_id`` does not belong to the same division as the currently 
+    logged in user, the stats of this other player are shown.
+
+    If the two users are in the same division, then the page shows both player's 
+    stats in the league in a side-by-side fashion.
 
     """
     current_user = session.get("user")
-    other_user = user_model.get_user(None, other_user_id)
+    other_user = user_model.get_user(None, user_id=other_user_id)
     comparison_obj = league_model.get_player_comparison(
         league_id, current_user["user_id"], other_user_id
     )
+
+    # If the user clicked on their own name...
+    if current_user["user_id"] == other_user_id:
+        return render_template(
+            "/league/member_stats/league_single_player_stats.html",
+            current_user=current_user, 
+            current_user_stats=comparison_obj["message"]["user_1"],
+            league_name=current_user["associated_leagues"][league_id]["league_name"]
+        )
+
+    # If the user clicked on a player in another division
+    if comparison_obj["message"]["different_divisions"]:
+        return render_template(
+            "/league/member_stats/league_single_player_stats.html",
+            current_user=other_user,
+            current_user_stats=comparison_obj["message"]["user_2"],
+            league_name=current_user["associated_leagues"][league_id]["league_name"]
+        )
     
+    # Otherwise the two players are in the same division...
     return render_template(
-        "/league/league_member.html", comparison=comparison_obj["message"],
+        "/league/member_stats/league_side_by_side_stats.html", 
+        comparison=comparison_obj["message"],
         current_user=current_user, other_user=other_user,
         current_user_stats=comparison_obj["message"]["user_1"],
         other_user_stats=comparison_obj["message"]["user_2"],
