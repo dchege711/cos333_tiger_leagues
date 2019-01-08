@@ -31,7 +31,7 @@ def admin_status_required():
 
     :returns: ``flask.Response(code=302)``
 
-    A redirect to the home page if the user doesn't have admin privileges in 
+    A redirect to an exception page if the user doesn't have admin privileges in 
     the league associated with this request.
 
     :returns: ``None``
@@ -56,6 +56,70 @@ def admin_status_required():
         raise TigerLeaguesException('You are not a member of this league.')
     if associated_leagues[league_id]["status"] != "admin":
         raise TigerLeaguesException('You do not have admin privileges for {}.'.format(associated_leagues[league_id]["league_name"]))
+    # If nothing has been returned, the request will be passed to its handler
+    return None
+
+def league_not_started():
+
+
+    """
+    A decorator function that asserts that a league has not yet started. This function is automatically called before any of the 
+    functions in the ``admin`` module are executed. See 
+    http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request
+
+    :returns: ``flask.Response(code=302)``
+
+    A redirect to an exception page if the league has already started.
+
+    :returns: ``None``
+    
+    If the league has not yet started, the request will 
+    then be passed on to the next function on the chain, typically the handler 
+    function for the request.
+    
+    """
+
+    parts = request.path.split("/admin/")
+    if len(parts) < 2:
+        return redirect(url_for("league.index"))
+
+    league_id = parts[1].split("/")[0]
+    league_info = league_model.get_league_info(league_id)
+
+    if league_info["league_status"] == "league_in_progress" or \
+    league_info["league_status"] == "league_completed" or \
+    league_info["league_status"] == "in_playoffs":
+        raise TigerLeaguesException('This league is already in progress or completed; the action cannot be performed.')
+    # If nothing has been returned, the request will be passed to its handler
+    return None
+
+def league_has_started():
+    """
+    A decorator function that asserts that a league has already started. 
+    Called before approve_scores and any other functions that should only take place with a started league.
+
+    :returns: ``flask.Response(code=302)``
+
+    A redirect to an exception page if the league has already started.
+
+    :returns: ``None``
+    
+    If the league has not yet started, the request will 
+    then be passed on to the next function on the chain, typically the handler 
+    function for the request.
+    
+    """
+
+    parts = request.path.split("/admin/")
+    if len(parts) < 2:
+        return redirect(url_for("league.index"))
+
+    league_id = parts[1].split("/")[0]
+    league_info = league_model.get_league_info(league_id)
+
+    if league_info["league_status"] == "accepting_users" or \
+    league_info["league_status"] == "awaiting_admin_greenlight":
+        raise TigerLeaguesException('This league has not yet started; the action cannot be performed.')
     # If nothing has been returned, the request will be passed to its handler
     return None
 
@@ -131,6 +195,8 @@ def start_league(league_id):
     JSON response contains the keys ``success`` and ``message``
     
     """
+    league_not_started()
+
     league_info = league_model.get_league_info(league_id)
 
     if request.method == "GET":
@@ -185,6 +251,9 @@ def approve_scores(league_id):
     updated on the server.
 
     """
+
+    league_has_started()
+
     if request.method == "GET":
         return render_template(
             "/admin/admin_league_homepage.html",
