@@ -11,7 +11,7 @@ from math import ceil, inf
 from collections import defaultdict
 from functools import cmp_to_key
 
-from . import db_model
+from . import db_model, user_model
 from .exception import TigerLeaguesException
 
 generic_500_msg = {
