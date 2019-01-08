@@ -36,6 +36,7 @@ sort table based on other stats?
 generate fixtures for odd number of league members
 generate divisions of uneven sizes
 delete nonexistent league
+check that all players have been assigned divisions
 
 NEW USER:
 join closed league
