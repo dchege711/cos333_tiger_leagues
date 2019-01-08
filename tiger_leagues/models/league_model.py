@@ -11,7 +11,7 @@ from math import ceil, inf
 from collections import defaultdict
 from functools import cmp_to_key
 
-from . import db_model
+from . import db_model, user_model
 
 from .exception import TigerLeaguesException
 
@@ -710,6 +710,21 @@ def get_player_comparison(league_id, user_1_id, user_2_id):
     points, mutual_opponents, head_to_head, player_form``
 
     """
+    user_1_info = user_model.get_user(None, int(user_1_id))
+    user_2_info = user_model.get_user(None, int(user_2_id))
+
+    if user_1_info is None or user_2_info is None:
+        raise TigerLeaguesException('User does not exist. \
+        If you entered the URL manually, double-check their user ID.')
+
+    if league_id not in user_1_info["associated_leagues"]:
+        raise TigerLeaguesException('You are not a member of this league. \
+        If you entered the URL manually, double-check the league ID.')
+    if league_id not in user_2_info["associated_leagues"]:
+        raise TigerLeaguesException('User is not a member of this league. \
+        If you entered the URL manually, double-check the league ID.')
+
+
     user_1_matches = get_players_current_matches(
         user_1_id, league_id, num_periods_before=inf, num_periods_after=inf
     )

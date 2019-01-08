@@ -55,7 +55,7 @@ def admin_status_required():
     if league_id not in associated_leagues:
         raise TigerLeaguesException('You are not a member of this league.')
     if associated_leagues[league_id]["status"] != "admin":
-        raise TigerLeaguesException('You do not have admin privileges for {}'.format(associated_leagues[league_id]["league_name"]))
+        raise TigerLeaguesException('You do not have admin privileges for {}.'.format(associated_leagues[league_id]["league_name"]))
     # If nothing has been returned, the request will be passed to its handler
     return None
 
