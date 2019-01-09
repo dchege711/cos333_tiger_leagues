@@ -26,10 +26,10 @@ class Database:
         """
         Initialize the database instance.
         """
-        if connection_uri is not None:
-            self.__connection = connect(connection_uri)
-        else:
+        if connection_uri is None:
             self.__connection = connect(config.DATABASE_URL)
+        else:
+            self.__connection = connect(connection_uri)
         self.launch()
         atexit.register(self.disconnect)
 
