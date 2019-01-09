@@ -18,29 +18,29 @@
     
         <table class="w3-table">
     
-            {% for message in messages %}
+            {% for notification in notifications %}
     
-                {% if message["message_status"] == "delivered" %}
-                    <tr style="font-weight:bold;" id="notif_{{message['message_id']}}">
+                {% if notification["notification_status"] == "delivered" %}
+                    <tr style="font-weight:bold;" id="notif_{{notification['notification_id']}}">
                 {% else %}
-                    <tr id="notif_{{message['message_id']}}">
+                    <tr id="notif_{{notification['notification_id']}}">
                 {% endif %}
                     
-                    <td>{{message["league_name"]}}</td>
-                    <td>{{message["message_text"]}}</td>
-                    <td>{{message["created_at"].strftime("%a, %b %d %I:%M %p")}}</td>
+                    <td>{{notification["league_name"]}}</td>
+                    <td>{{notification["notification_text"]}}</td>
+                    <td>{{notification["created_at"].strftime("%a, %b %d %I:%M %p")}}</td>
                     <td>
-                        <button class="w3-button w3-circle w3-green" onclick="updateMessageStatus('{{message.message_id}}', 'read')">
+                        <button class="w3-button w3-circle w3-green" onclick="updateNotificationStatus({{notification['notification_id']}}, 'seen')">
                             <span class="glyphicon glyphicon-check"></span>
                         </button>
                     </td>
                     <td>
-                        <button class="w3-button w3-circle w3-gray" onclick="updateMessageStatus('{{message.message_id}}', 'archive')">
+                        <button class="w3-button w3-circle w3-gray" onclick="updateNotificationStatus({{notification['notification_id']}}, 'archived')">
                             <span class="glyphicon glyphicon-folder-close"></span>
                         </button>
                     </td>
                     <td>
-                        <button class="w3-button w3-circle w3-red" onclick="updateMessageStatus('{{message.message_id}}', 'delete')">
+                        <button class="w3-button w3-circle w3-red" onclick="updateNotificationStatus({{notification['notification_id']}}, 'deleted')">
                             <span class="glyphicon glyphicon-trash"></span>
                         </button>
                     </td>
@@ -54,8 +54,21 @@
     </div>
 
     <script>
-        function updateMessageStatus(messageID, messageStatus) {
-
+        function updateNotificationStatus(notificationID, notificationStatus) {
+            sendHTTPRequest("POST", document.URL, {notification_id: notificationID, notification_status: notificationStatus})
+                .then((response) => {
+                    response = JSON.parse(response);
+                    if (!response.success) {
+                        alert(response.message);
+                    } else {
+                        if (notificationStatus === "seen") {
+                            document.getElementById(`notif_${notificationID}`).style.fontWeight = "normal";
+                        } else {
+                            document.getElementById(`notif_${notificationID}`).innerHTML = "";
+                        }
+                    }
+                })
+                .catch((err) => { alert(err.message); })
         }
     </script>
 

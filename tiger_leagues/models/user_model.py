@@ -59,7 +59,9 @@ def get_user(net_id, user_id=None):
             user_profile["user_id"], mutable_user_data["league_ids"]
         )
     
-    mutable_user_data["unread_notifications"] = read_notifications(user_profile["user_id"])
+    mutable_user_data["unread_notifications"] = read_notifications(
+        user_profile["user_id"], notification_status=NOTIFICATION_STATUS_DELIVERED
+    )
     return mutable_user_data
 
 def update_user_profile(user_profile, net_id, submitted_data):
@@ -221,3 +223,64 @@ def read_notifications(user_id, notification_status=None):
         ),
         values=[user_id, notification_status]
     ).fetchall()
+
+def update_notification_status(user_id, notification_obj):
+    """
+    :param user_id: int
+
+    The ID of the user making this request
+
+    :param notification_obj: dict
+
+    Expected keys: ``notification_id``, ``notification_status``
+
+    :return: ``dict``
+
+    Keyed by ``success`` and ``message``. 
+    If ``success`` is ``False``, ``message`` contains a description of why the 
+    request failed.
+    If ``success`` is ``True``, ``message`` contains the new status of the 
+    notification.
+
+    """
+    allowed_statuses = set([
+        NOTIFICATION_STATUS_ARCHIVED, NOTIFICATION_STATUS_DELIVERED, 
+        NOTIFICATION_STATUS_SEEN, "deleted"
+    ])
+
+    if "notification_id" not in notification_obj or "notification_status" not in notification_obj:
+        return {
+            "success": False, "message": "Missing parameters: notification_id, notification_status"
+        }
+    
+    submitted_status = notification_obj["notification_status"] 
+    if submitted_status not in allowed_statuses:
+        return {
+            "success": False, "message": "Invalid value for 'notification_status'"
+        }
+
+    if submitted_status == "delete":
+        deleted_notification_id = db.execute(
+            "DELETE FROM notifications WHERE notification_id = %s AND user_id = %s RETURNING notification_id;",
+            values=[notification_obj["notification_id"], user_id]
+        ).fetchone()["notification_id"]
+
+        if deleted_notification_id == notification_obj["notification_id"]:
+            return {"success": True, "message": "deleted"}
+        return {"success": True, "message": "Notification not found"}
+        
+
+    new_status = db.execute(
+        (
+            "UPDATE notifications SET notification_status = %s "
+            "WHERE notification_id = %s AND user_id = %s RETURNING notification_status;"
+        ),
+        values=[
+            submitted_status, notification_obj["notification_id"], user_id
+        ]
+    ).fetchone()["notification_status"]
+
+    return {
+        "success": True if new_status == submitted_status else False,
+        "message": new_status
+    }

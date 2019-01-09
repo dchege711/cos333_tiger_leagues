@@ -220,6 +220,9 @@ def generate_league_fixtures(league_id, div_allocations):
         "UPDATE league_info SET league_status = %s WHERE league_id = %s",
         values=[league_model.LEAGUE_STAGE_IN_PROGRESS, league_id]
     )
+
+    for division_id in div_allocations:
+        league_model.update_league_standings(league_id, division_id)
     
     return {
         "success": True, "message": "Fixtures successfully created!"
