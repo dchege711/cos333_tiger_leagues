@@ -67,10 +67,10 @@ class Database:
         ))
 
         self.execute((
-            "CREATE TABLE IF NOT EXISTS messages ("
-            "message_id SERIAL PRIMARY KEY, user_id INT, league_id INT, "
-            "message_status VARCHAR, message_text TEXT, "
-            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);"
+            "CREATE TABLE IF NOT EXISTS notifications ("
+            "notification_id SERIAL PRIMARY KEY, user_id INT, league_id INT, "
+            "notification_status VARCHAR DEFAULT 'delivered', notification_text TEXT, "
+            "created_at TIMESTAMPTZ DEFAULT NOW());"
         ))
 
     def execute(self, statement, values=None, dynamic_table_or_column_names=None, 
