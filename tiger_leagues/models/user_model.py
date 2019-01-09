@@ -59,7 +59,9 @@ def get_user(net_id, user_id=None):
             user_profile["user_id"], mutable_user_data["league_ids"]
         )
     
-    mutable_user_data["unread_notifications"] = read_notifications(user_profile["user_id"])
+    mutable_user_data["unread_notifications"] = read_notifications(
+        user_profile["user_id"], notification_status=NOTIFICATION_STATUS_DELIVERED
+    )
     return mutable_user_data
 
 def update_user_profile(user_profile, net_id, submitted_data):
