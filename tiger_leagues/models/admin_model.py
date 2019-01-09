@@ -463,7 +463,7 @@ def approve_match(score_info):
 
     row = db.execute(
         "UPDATE match_info SET status = %s, score_user_1 = %s , score_user_2 = %s \
-        WHERE match_id = %s RETURNING league_id, division_id;",
+        WHERE match_id = %s RETURNING league_id, division_id, user_1_id, user_2_id;",
         values=[
             league_model.MATCH_STATUS_APPROVED, 
             score_info["score_user_1"], 
@@ -472,6 +472,22 @@ def approve_match(score_info):
         ]
     ).fetchone()
     league_model.update_league_standings(row["league_id"], row["division_id"])
+
+    user_1 = user_model.get_user(None, user_id=row["user_1_id"])
+    user_2 = user_model.get_user(None, user_id=row["user_2_id"])
+
+    score_text = "{} {} - {} {}".format(
+        user_1["name"], score_info["score_user_1"], 
+        score_info["score_user_2"], user_2["name"]
+    )
+
+    for user_obj in (user_1, user_2):
+        user_model.send_notification(
+            user_obj["user_id"], {
+                "league_id": row["league_id"],
+                "notification_text": "Score updated: {}".format(score_text)
+            }
+        )
 
     return {
         "success": True, "message": league_model.MATCH_STATUS_APPROVED
