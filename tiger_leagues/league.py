@@ -133,7 +133,6 @@ def league_member(league_id, other_user_id):
             current_user=current_user, 
             current_user_stats=comparison_obj["message"]["user_1"],
             current_user_responses=league_model.get_previous_responses(league_id, current_user),
-            league_name=current_user["associated_leagues"][league_id]["league_name"],
             league_info=league_model.get_league_info(league_id)
         )
 
@@ -143,7 +142,6 @@ def league_member(league_id, other_user_id):
             "/league/member_stats/league_single_player_stats.html",
             current_user=other_user,
             current_user_stats=comparison_obj["message"]["user_2"],
-            league_name=current_user["associated_leagues"][league_id]["league_name"],
             league_info=league_model.get_league_info(league_id)
         )
     
@@ -155,7 +153,6 @@ def league_member(league_id, other_user_id):
         current_user_stats=comparison_obj["message"]["user_1"],
         other_user_stats=comparison_obj["message"]["user_2"],
         head_to_head=comparison_obj["message"]["head_to_head"],
-        league_name=current_user["associated_leagues"][league_id]["league_name"],
         league_info=league_model.get_league_info(league_id)
     )
 
