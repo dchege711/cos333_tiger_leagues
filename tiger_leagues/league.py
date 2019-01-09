@@ -10,6 +10,7 @@ from flask import (
 )
 from . import decorators
 from .models import league_model, user_model
+from .models.exception import TigerLeaguesException
 
 bp = Blueprint("league", __name__, url_prefix="/league")
 
@@ -59,6 +60,11 @@ def league_homepage(league_id):
     user = session.get("user")
 
     associated_leagues = user["associated_leagues"]
+    if league_id not in associated_leagues:
+        raise TigerLeaguesException(
+            "You're not a member of this league", status_code=403
+        )
+
     standings = league_model.get_league_standings(league_id)
     current_matches = league_model.get_players_current_matches(
         user["user_id"], league_id
