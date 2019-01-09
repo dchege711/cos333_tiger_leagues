@@ -54,18 +54,19 @@
     </ul>
     <ul class="nav navbar-nav w3-right">
 
-      <li class="dropdown">
-        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Notifications 
+      <li>
+        <a href="{{url_for('user.view_notifications')}}">Notifications 
           {% if session.get("user")["unread_notifications"] %}
             <span class="badge badge-light">{{session.get("user")["unread_notifications"] | length}}</span>
-            <span class="caret"></span>
           {% endif %}
         </a>
-        <ol class="dropdown-menu">
+      </li>
+        <!-- <ol class="dropdown-menu">
+          <li><a href="{{url_for('user.view_notifications')}}" class="w3-green">See All Notifications</a></li>
           {% for notification in session.get("user")["unread_notifications"] %}
             <li><a style="white-space: normal;" href="{{url_for('user.view_notifications')}}#notif_{{notification['notification_id']}}"><strong>{{notification["league_name"]}}: </strong>{{notification["notification_text"]}}</a></li>
           {% endfor %}
-        </ol>
+        </ol> -->
       </li>
 
       <li class="dropdown">
