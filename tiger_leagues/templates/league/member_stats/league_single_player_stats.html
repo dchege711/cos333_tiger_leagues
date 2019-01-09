@@ -8,16 +8,14 @@
     <p><span class="glyphicon glyphicon-envelope"></span> <a href="mailto:{{current_user['net_id']}}@princeton.edu" target="_blank">{{current_user['net_id']}}@princeton.edu</a></p>
     <p><span class="glyphicon glyphicon-earphone"></span> <a href="tel:+1-{{current_user['phone_num']}}">+1-{{current_user['phone_num']}}</a></p>
     <p><span class="glyphicon glyphicon-map-marker"></span> {{current_user['room']}}</p>
-    <hr>
     {% for question_id, question_object in league_info["additional_questions"].items() %}
-                    
+            <hr>    
             <p><strong>{{question_object["question"]}}</strong></p>
             <br>
-            {{current_user_responses["question_id"]}}
+            {{current_user_responses[question_id]}}
             <br>
-            <hr>
             
-        {% endfor %}]
+        {% endfor %}
 </div>
 
 <div class="w3-container w3-card" style="flex: 2 1 0;">
