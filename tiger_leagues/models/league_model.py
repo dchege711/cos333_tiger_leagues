@@ -243,14 +243,22 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
         values=[league_id]
     ).fetchone()
 
+    
+
     today = date.today()
     if num_periods_before == inf:
-        earliest_date = min(today, date_limits["min"])
+        try:
+            earliest_date = min(today, date_limits["min"])
+        except TypeError:
+            earliest_date = today
     else:
         earliest_date = date.today() - timedelta(days=time_window_days * num_periods_before)
 
     if num_periods_after == inf:
-        latest_date = max(today, date_limits["max"])
+        try: 
+            latest_date = max(today, date_limits["max"])
+        except TypeError:
+            latest_date = today
     else:
         latest_date = date.today() + timedelta(days=time_window_days * num_periods_after)
     
