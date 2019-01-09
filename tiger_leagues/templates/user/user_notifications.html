@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+
+    <style>
+        td {
+            border-bottom: gray solid thick;
+            border-top: gray solid thick;
+            border-left: gray solid thin;
+            border-right: gray solid thin;
+        }
+    </style>
+
+    <div class="w3-container large_portrait_margins">
+        <h4>Notifications</h4>
+
+        <hr />
+    
+        <table class="w3-table">
+    
+            {% for message in messages %}
+    
+                {% if message["message_status"] == "delivered" %}
+                    <tr style="font-weight:bold;" id="notif_{{message['message_id']}}">
+                {% else %}
+                    <tr id="notif_{{message['message_id']}}">
+                {% endif %}
+                    
+                    <td>{{message["league_name"]}}</td>
+                    <td>{{message["message_text"]}}</td>
+                    <td>{{message["created_at"].strftime("%a, %b %d %I:%M %p")}}</td>
+                    <td>
+                        <button class="w3-button w3-circle w3-green" onclick="updateMessageStatus('{{message.message_id}}', 'read')">
+                            <span class="glyphicon glyphicon-check"></span>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="w3-button w3-circle w3-gray" onclick="updateMessageStatus('{{message.message_id}}', 'archive')">
+                            <span class="glyphicon glyphicon-folder-close"></span>
+                        </button>
+                    </td>
+                    <td>
+                        <button class="w3-button w3-circle w3-red" onclick="updateMessageStatus('{{message.message_id}}', 'delete')">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </button>
+                    </td>
+    
+                </tr>
+    
+            {% endfor %}
+    
+        </table>
+
+    </div>
+
+    <script>
+        function updateMessageStatus(messageID, messageStatus) {
+
+        }
+    </script>
+
+{% endblock %}
