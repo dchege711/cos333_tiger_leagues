@@ -125,12 +125,15 @@ def league_member(league_id, other_user_id):
     )
 
     # If the user clicked on their own name...
+
     if current_user["user_id"] == other_user_id:
         return render_template(
             "/league/member_stats/league_single_player_stats.html",
             current_user=current_user, 
             current_user_stats=comparison_obj["message"]["user_1"],
-            league_name=current_user["associated_leagues"][league_id]["league_name"]
+            current_user_responses=league_model.get_previous_responses(league_id, current_user),
+            league_name=current_user["associated_leagues"][league_id]["league_name"],
+            league_info=league_model.get_league_info(league_id)
         )
 
     # If the user clicked on a player in another division
@@ -321,6 +324,6 @@ def update_responses(league_id):
             flash("Responses Saved!")
         else:
             flash(results["message"])
-        return redirect(url_for("league.browse_leagues"))
+        return redirect(url_for("league.league_homepage", league_id=league_id))
 
     return NotImplementedError()
