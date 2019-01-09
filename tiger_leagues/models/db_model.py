@@ -66,6 +66,13 @@ class Database:
             "rank INT, rank_delta INT);"
         ))
 
+        self.execute((
+            "CREATE TABLE IF NOT EXISTS notifications ("
+            "notification_id SERIAL PRIMARY KEY, user_id INT, league_id INT, "
+            "notification_status VARCHAR DEFAULT 'delivered', notification_text TEXT, "
+            "created_at TIMESTAMPTZ DEFAULT NOW());"
+        ))
+
     def execute(self, statement, values=None, dynamic_table_or_column_names=None, 
                 cursor_factory=extras.DictCursor):
         """

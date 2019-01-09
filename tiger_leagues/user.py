@@ -41,3 +41,15 @@ def update_user_profile():
     flash("User profile updated!")
     return render_template("/user/user_profile.html", user=session.get("user"))
     
+@bp.route("/notifications/", methods=["GET"])
+@decorators.login_required
+def view_notifications():
+    """
+    :return: ``flask.Response(mimetype-'text/html')``
+
+    Render the user's pending messages
+    """
+    user_id = session.get("user")["user_id"]
+    return render_template(
+        "/user/user_notifications.html", messages=user_model.read_notifications(user_id)
+    )
