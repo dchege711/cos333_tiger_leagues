@@ -143,7 +143,8 @@ def league_member(league_id, other_user_id):
             "/league/member_stats/league_single_player_stats.html",
             current_user=other_user,
             current_user_stats=comparison_obj["message"]["user_2"],
-            league_name=current_user["associated_leagues"][league_id]["league_name"]
+            league_name=current_user["associated_leagues"][league_id]["league_name"],
+            league_info=league_model.get_league_info(league_id)
         )
     
     # Otherwise the two players are in the same division...
