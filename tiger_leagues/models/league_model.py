@@ -894,3 +894,75 @@ def process_leave_league_request(league_id, user_profile):
         ]
     )
     return True
+
+def process_update_league_responses(league_id, user_profile, submitted_data):
+    """
+    :param league_id: int
+    
+    The ID of this league
+
+    :param user_profile: dict
+    
+    Expected keys: ``user_id, league_ids``
+
+    :return: ``dict``
+    
+    If ``succcess`` is ``False``, ``message`` will contain a descriptive error 
+    message. If ``success`` is ``True``, ``message`` will contain a 
+    dict containing the updated user profile.
+    """
+    results = get_league_info_if_joinable(league_id)
+    if not results["success"]: return results
+
+    league_info = results["message"]
+    expected_info = {}
+    for key in league_info["additional_questions"]:
+        expected_info[key] = ""
+
+    for key in expected_info:
+        if key not in submitted_data: 
+            return {
+                "success": False,
+                "message": "Missing {} in the submitted form".format(key)
+            }
+        expected_info[key] = submitted_data[key]
+
+    table_name = "league_responses_{}".format(league_id)
+
+    row = db.execute(
+        "SELECT * from {} WHERE user_id = %s", values=[user_profile["user_id"]], 
+        dynamic_table_or_column_names=[table_name]
+    ).fetchone()
+    if row is not None:
+        db.execute(
+            "DELETE FROM {} WHERE user_id = %s", values=[user_profile["user_id"]], 
+            dynamic_table_or_column_names=[table_name]
+
+        )
+
+    expected_info["user_id"] = user_profile["user_id"]
+    expected_info["status"] = row["status"]
+
+    db.execute(
+        (
+            "INSERT INTO {} ({}) VALUES ({});".format(
+                "{}", ", ".join(key for key in expected_info), 
+                ", ".join("%({})s".format(key) for key in expected_info)
+            )
+        ),
+        values=expected_info,
+        dynamic_table_or_column_names=[table_name]
+    )
+
+    # Indicate on the user object that the responses were saved
+    if league_id not in user_profile["league_ids"]:
+        # user_profile["league_ids"].append(league_id)
+        db.execute(
+            "UPDATE users SET league_ids = %s WHERE user_id = %s",
+            values=[
+                ", ".join(str(x) for x in user_profile["league_ids"]), 
+                user_profile["user_id"]
+            ]
+        )
+    
+    return {"success": True, "message": user_profile}

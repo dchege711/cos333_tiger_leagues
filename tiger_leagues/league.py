@@ -272,3 +272,55 @@ def leave_league(league_id):
     success = league_model.process_leave_league_request(league_id, user_profile)
     session["user"] = user_model.get_user(user_profile["net_id"])
     return jsonify({"success": success})
+
+@bp.route("/<int:league_id>/update-responses/", methods=["GET", "POST"])
+@decorators.login_required
+@decorators.refresh_user_profile
+def update_responses(league_id):
+    """
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype='text/html')``
+    
+    Render the form that needs to be filled by users that wish to update their responses 
+    to league-specific questions.
+
+    :return: ``flask.Response(mimetype='text/html')``
+
+    Process the form submitted by the user. Return 
+    a JSON object that confirms the status of the submission.
+
+    """
+
+    results = league_model.get_league_info_if_joinable(league_id)
+    if not results["success"]: 
+        return render_template(
+            "/league/update_responses.html", error=results["message"]
+        )
+
+    league_info = results["message"]
+    user_profile = session.get("user")
+
+    if request.method == "GET":
+        previous_responses = league_model.get_previous_responses(
+            league_id, user_profile
+        )
+        return render_template(
+            "/league/update_responses.html", 
+            league_info=league_info, previous_responses=previous_responses
+        )
+
+    if request.method == "POST":
+        results = league_model.process_update_league_responses(
+            league_id, user_profile, request.form
+        )
+        if results["success"]: 
+            session["user"] = results["message"]
+            flash("Responses Saved!")
+        else:
+            flash(results["message"])
+        return redirect(url_for("league.browse_leagues"))
+
+    return NotImplementedError()

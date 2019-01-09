@@ -3,8 +3,8 @@
     <div class="w3-container large_portrait_margins w3-center">
 
         <p class="w3-container">
-            <strong>Join {{league_info["league_name"]}}</strong>
-            <hr>
+            <h3><strong>{{league_info["league_name"]}}</strong></h3>
+            <br />
             <strong>Description: </strong><em>{{league_info["description"]}}</em>
             <br />
             <br />
@@ -18,7 +18,6 @@
             <br />
             <p>Registration Deadline: {{ league_info["registration_deadline"].strftime("%A, %B %d, %Y") }}</p>
             <p>Frequency: 1 game every {{league_info["match_frequency_in_days"]}} days.</p>
-            <hr>
         </p>
 
         <form class="w3-container" method="POST">
@@ -27,7 +26,7 @@
 
             {% if league_info["additional_questions"] %}
 
-            <p>Please answer the following questions:</p>
+            <p><strong>League-specific information:</strong></p>
 
             <hr />
 
@@ -46,10 +45,8 @@
 
             {% endif %}
 
-            <button class="w3-button w3-btn w3-green">Request to Join League</button>
+            <button class="w3-button w3-btn w3-green">Update Responses</button>
             <hr>
-
-            <p>Once the admin approves, you'll be added to the league.</p>
 
         </form>
         
