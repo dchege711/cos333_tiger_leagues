@@ -190,7 +190,7 @@
                     let responseObject = JSON.parse(response);
                     if (responseObject.success) {
                         alert(`League created. Invite Link: ${responseObject.message.invite_url}`);
-                        window.location = `/league/${responseObject.message.league_id}/join/`;
+                        window.location = `/league/${responseObject.message.league_id}/update-responses/`;
                     } else {
                         alert(`Error: ${responseObject.message}`);
                     }

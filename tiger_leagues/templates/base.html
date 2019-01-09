@@ -52,6 +52,21 @@
         </li>
     </ul>
     <ul class="nav navbar-nav w3-right">
+
+      <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Notifications 
+          {% if session.get("user")["unread_notifications"] %}
+            <span class="badge badge-light">{{session.get("user")["unread_notifications"] | length}}</span>
+            <span class="caret"></span>
+          {% endif %}
+        </a>
+        <ol class="dropdown-menu">
+          {% for notification in session.get("user")["unread_notifications"] %}
+            <li><a style="white-space: normal;" href="{{url_for('user.view_notifications')}}#notif_{{notification['notification_id']}}"><strong>{{notification["league_name"]}}: </strong>{{notification["notification_text"]}}</a></li>
+          {% endfor %}
+        </ol>
+      </li>
+
       <li class="dropdown">
         <a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-user"></span> {{session.get("user")["name"]}} <span class="caret"></span></a>
         <ol class="dropdown-menu">
@@ -59,12 +74,13 @@
           <li><a href="{{url_for('auth.cas_logout')}}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
         </ol>
       </li>
+
     </ul>
     {% endif %}
   </div>
 </nav>
 
-<nav class="navbar navbar-inverse navbar-fixed-bottom" style="display: none">
+<!-- <nav class="navbar navbar-inverse navbar-fixed-bottom" style="display: none">
     <div class="container-fluid">
       <ul class="nav navbar-nav">
         <li class="active"><a href="#">Home</a></li>
@@ -73,7 +89,7 @@
         <li><a href="#">Playoffs</a></li>
       </ul>
     </div>
-  </nav>
+  </nav> -->
 
 <section class="content">
   <!-- <header>
