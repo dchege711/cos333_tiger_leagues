@@ -20,11 +20,11 @@
             <tr>
                 <td class="w3-large">Rank</td>
                 {% if current_user_stats["rank"] < other_user_stats["rank"] %}
-                    <td class="large-text bold-text win-text">{{current_user_stats["rank"]}}</td>
-                    <td class="large-text bold-text loss-text">{{other_user_stats["rank"]}}</td>
+                    <td class="large-text bold-text win-text">{{current_user_stats["rank"]}} / {{current_user_stats["lowest_rank"]}}</td>
+                    <td class="large-text bold-text loss-text">{{other_user_stats["rank"]}} / {{other_user_stats["lowest_rank"]}}</td>
                 {% else %}
-                    <td class="large-text bold-text loss-text">{{current_user_stats["rank"]}}</td>
-                    <td class="large-text bold-text win-text">{{other_user_stats["rank"]}}</td>
+                    <td class="large-text bold-text loss-text">{{current_user_stats["rank"]}} / {{current_user_stats["lowest_rank"]}}</td>
+                    <td class="large-text bold-text win-text">{{other_user_stats["rank"]}} / {{other_user_stats["lowest_rank"]}}</td>
                 {% endif %}
             </tr>
 

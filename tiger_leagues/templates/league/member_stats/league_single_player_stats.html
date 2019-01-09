@@ -14,7 +14,7 @@
     <table class="w3-table" style="text-align:center;">
         <tr>
             <td class="w3-large">Rank</td>
-            {% if current_user_stats["rank"] < current_user_stats["lowest_rank"] / 2 %}
+            {% if current_user_stats["rank"] <= current_user_stats["lowest_rank"] / 2 %}
                 <td class="large-text bold-text win-text">
             {% else %}
                 <td class="large-text bold-text loss-text">
