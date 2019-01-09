@@ -167,8 +167,8 @@ if __name__ == "__main__":
         print("Simulating all the matches...")
         play_matches()
 
-        print("Generating more matches...")
-        generate_matches([league_info_list[ceil(num_leagues / 2.0)]])
+        # print("Generating more matches...")
+        # generate_matches([league_info_list[ceil(num_leagues / 2.0)]])
     except:
         clean_database()
         raise
