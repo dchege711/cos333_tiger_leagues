@@ -194,8 +194,8 @@ def get_league_standings(league_id):
 
     return all_standings
 
-def get_matches_in_current_window(league_id, num_periods_before=1, 
-                                  num_periods_after=2, user_id=None):
+def get_matches_in_current_window(league_id, num_periods_before=3, 
+                                  num_periods_after=3, user_id=None):
     """
     :param league_id: int
     
@@ -236,7 +236,7 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
         raise TigerLeaguesException('League does not exist; it may have been deleted. \
         If you entered the URL manually, double-check the league ID.')
     
-    time_window_days = ceil(row["num_games_per_period"] / row["length_period_in_days"])
+    time_window_days = ceil(row["length_period_in_days"] / row["num_games_per_period"])
 
     date_limits = db.execute(
         "SELECT min(deadline), max(deadline) FROM match_info WHERE league_id = %s;",

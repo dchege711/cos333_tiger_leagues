@@ -424,12 +424,13 @@ def get_current_matches(league_id):
 
     """
     relevant_matches = league_model.get_matches_in_current_window(
-        league_id, num_periods_before=1, num_periods_after=2
+        league_id, num_periods_before=4, num_periods_after=4
     )
     current_matches = defaultdict(list)
     mapping = {"user_1_id": "user_1_name", "user_2_id": "user_2_name"}
     for match in relevant_matches:
         match_dict = dict(**match)
+        print(match["match_id"])
         for key, val in mapping.items():
             if match[key] is not None:
                 match_dict[val] = db.execute(

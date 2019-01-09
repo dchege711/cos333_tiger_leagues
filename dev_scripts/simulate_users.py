@@ -102,7 +102,7 @@ def generate_matches(league_info_list):
     """
     today = date.today()
     for league_info in league_info_list:
-        start_date = today + timedelta(days=randint(0, 2))
+        start_date = today + timedelta(days=randint(1, 5))
         completion_deadline = start_date + timedelta(
             days=randint(1, ceil(league_info["max_num_players"] / 2))
         )
