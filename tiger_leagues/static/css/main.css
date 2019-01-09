@@ -31,3 +31,9 @@ input[type="email"] {
     border: rgb(46, 192, 192) thin solid;
     border-radius: 4px;
 }
+
+.flexbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

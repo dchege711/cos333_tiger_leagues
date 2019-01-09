@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}{{league_info["league_name"]}}{% block sub_title %}{% endblock %}{% endblock %}
+
+{% block content %}
+    <div class="w3-container w3-center">
+        <div>
+            <h3>{{league_info["league_name"]}}</h3>
+            <hr />
+            <em>{{league_info["description"]}}</em>
+            <br />
+            <br />
+            <strong>Scoring (pts): </strong>
+            <em>
+                win = {{ league_info["points_per_win"] }}, 
+                draw = {{ league_info["points_per_draw"] }}, 
+                loss = {{ league_info["points_per_loss"] }}, 
+            </em>
+            <br />
+            <br />
+            <p>Frequency: {{league_info["num_games_per_period"]}} game(s) every {{league_info["length_period_in_days"]}} day(s).</p>
+            <br />
+            <hr />
+
+        </div>
+        
+        {% block league_content %}{% endblock %}
+           
+    </div>
+
+{% endblock %}

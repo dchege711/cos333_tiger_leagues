@@ -13,14 +13,23 @@ from . import config
 
 class Database:
     """
-    A wrapper around the database used by the 'Tiger Leagues' app
+    A wrapper around the database used by the 'Tiger Leagues' app.
+
+    :kwarg connection_uri: str
+
+    Optional connection string for the database. If ``None``, this defaults to 
+    the connection string set in ``config.DATABASE_URL``.
+
     """
 
-    def __init__(self):
+    def __init__(self, connection_uri=None):
         """
         Initialize the database instance.
         """
-        self.__connection = connect(config.DATABASE_URL)
+        if connection_uri is None:
+            self.__connection = connect(config.DATABASE_URL)
+        else:
+            self.__connection = connect(connection_uri)
         self.launch()
         atexit.register(self.disconnect)
 
@@ -52,9 +61,9 @@ class Database:
         self.execute((
             "CREATE TABLE IF NOT EXISTS league_info ("
             "league_id SERIAL PRIMARY KEY, league_name VARCHAR(255), "
-            "description TEXT, points_per_win INT, points_per_draw INT, "
+            "description TEXT, points_per_win INT NOT NULL, points_per_draw INT NOT NULL, "
             "points_per_loss INT, registration_deadline DATE, max_num_players INT, "
-            "creator_user_id INT NOT NULL, match_frequency_in_days NUMERIC DEFAULT 7.0, "
+            "creator_user_id INT NOT NULL, num_games_per_period INT NOT NULL, length_period_in_days INT NOT NULL, "
             "additional_questions TEXT, league_status VARCHAR(255));"
         ))
 

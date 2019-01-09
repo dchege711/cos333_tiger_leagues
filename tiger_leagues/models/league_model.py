@@ -227,7 +227,7 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
     ```score_user_1```, ```score_user_2```, ```status```, ```deadline```
     """
     cursor = db.execute(
-        "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s;", 
+        "SELECT num_games_per_period, length_period_in_days FROM league_info WHERE league_id = %s;", 
         values=[league_id]
     )
 
@@ -236,7 +236,7 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
         raise TigerLeaguesException('League does not exist; it may have been deleted. \
         If you entered the URL manually, double-check the league ID.')
     
-    time_window_days = ceil(row["match_frequency_in_days"])
+    time_window_days = ceil(row["num_games_per_period"] / row["length_period_in_days"])
 
     date_limits = db.execute(
         "SELECT min(deadline), max(deadline) FROM match_info WHERE league_id = %s;",
@@ -244,7 +244,6 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
     ).fetchone()
 
     
-
     today = date.today()
     if num_periods_before == inf:
         try:
@@ -454,8 +453,9 @@ def create_league(league_info, creator_user_profile):
         "description": league_info["description"], 
         "points_per_win": league_info["points_per_win"], 
         "points_per_draw": league_info["points_per_draw"], 
-        "max_num_players": league_info["max_num_players"], 
-        "match_frequency_in_days": league_info["match_frequency_in_days"],
+        "max_num_players": league_info["max_num_players"],
+        "num_games_per_period": league_info["num_games_per_period"],
+        "length_period_in_days": league_info["length_period_in_days"],
         "points_per_loss": league_info["points_per_loss"], 
         "registration_deadline": league_info["registration_deadline"],
         "additional_questions": json.dumps(sanitized_additional_questions)
@@ -518,8 +518,8 @@ def get_league_info(league_id):
     
     Keys: ``league_id``, ``league_id``, ``league_name``, ``description``, 
     ``points_per_win``, ``points_per_draw``, ``points_per_loss``, ``league_status``, 
-    ``additional_questions``, ``registration_deadline``, ``match_frequency_in_days``, 
-    ``max_num_players``
+    ``additional_questions``, ``registration_deadline``, ``num_games_per_period``, 
+    ``length_period_in_days``, ``max_num_players``
 
     :return: ``NoneType``
     
@@ -528,10 +528,8 @@ def get_league_info(league_id):
     """
     cursor = db.execute(
         (
-            "SELECT league_id, league_name, description, points_per_win, "
-            "points_per_draw, points_per_loss, additional_questions, league_status, "
-            "registration_deadline, match_frequency_in_days, max_num_players "
-            "FROM league_info WHERE league_id = %s"
+            "SELECT league_info.*, users.name, users.net_id "
+            "FROM league_info, users WHERE league_id = %s AND league_info.creator_user_id = users.user_id;"
         ), 
         values=[league_id]
     )
@@ -560,14 +558,14 @@ def get_leagues_not_yet_joined(user_profile):
     """
     ids_associated_leagues = set(user_profile["associated_leagues"].keys())
     cursor = db.execute((
-        "SELECT league_id, league_name, registration_deadline, description"
-        " FROM league_info;"
+        "SELECT league_id, league_name, registration_deadline, description, league_info.league_status, users.name, "
+        "users.net_id FROM league_info, users WHERE league_info.creator_user_id = users.user_id;"
     ))
 
     unjoined_leagues, today = [], date.today()
-    for row in db.iterator(cursor):
+    for row in cursor:
         if row["league_id"] not in ids_associated_leagues:
-            if today <= row["registration_deadline"]:
+            if today <= row["registration_deadline"] and row["league_status"] == LEAGUE_STAGE_ACCEPTING_USERS:
                 unjoined_leagues.append(row)
 
     unjoined_leagues.sort(
@@ -593,19 +591,25 @@ def get_league_info_if_joinable(league_id):
 
     # If the league doesn't exist, let the user know
     if league_info is None: 
-        return {
-            "success": False, "message": "League not found"
-        }
+        raise TigerLeaguesException(
+            "The league does not exist", status_code=400
+        )
 
     # If the league's deadline is already passed, communicate that to the user
     today = date.today()
     if today > league_info["registration_deadline"]:
-        return {
-            "success": False,
-            "message": "The League's registration deadline ({}) has passed".format(
+        raise TigerLeaguesException(
+            "The registration deadline for '{}' has passed ({})".format(
+                league_info["league_name"],
                 league_info["registration_deadline"].strftime("%A, %B %d, %Y")
-            )
-        }
+            ), status_code=400
+        )
+
+    if league_info["league_status"] != LEAGUE_STAGE_ACCEPTING_USERS:
+        raise TigerLeaguesException(
+            "'{}' is no longer accepting new players".format(league_info["league_name"]), 
+            status_code=400
+        )
 
     return {"success": True, "message": league_info}
 
@@ -789,7 +793,7 @@ def get_player_comparison(league_id, user_1_id, user_2_id):
     head_to_head_matches = []
     if user_2_id in user_1_opponents:
         for match in user_1_matches:
-            if match["opponent_id"] == user_2_id:
+            if match["opponent_id"] == user_2_id and match["status"] == MATCH_STATUS_APPROVED:
                 head_to_head_matches.append(match)
 
     mutual_opponent_ids.discard(user_1_id)
@@ -798,7 +802,7 @@ def get_player_comparison(league_id, user_1_id, user_2_id):
     def collect_mutual_opponents(stats_obj, matches_obj):
         stats_obj["mutual_opponents"] = defaultdict(list)
         for match in matches_obj:
-            if match["opponent_id"] in mutual_opponent_ids:
+            if match["opponent_id"] in mutual_opponent_ids and match["status"] == MATCH_STATUS_APPROVED:
                 stats_obj["mutual_opponents"][match["opponent_id"]].append(match)
 
     collect_mutual_opponents(user_1_stats, user_1_matches)

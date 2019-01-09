@@ -10,6 +10,7 @@ from flask import (
 )
 from . import decorators
 from .models import league_model, user_model
+from .models.exception import TigerLeaguesException
 
 bp = Blueprint("league", __name__, url_prefix="/league")
 
@@ -32,6 +33,7 @@ def index():
 
     """
     user = session.get("user")
+
     if user["league_ids"]:
         return redirect(
             url_for(".league_homepage", league_id=user["league_ids"][0])
@@ -58,6 +60,12 @@ def league_homepage(league_id):
     user = session.get("user")
 
     associated_leagues = user["associated_leagues"]
+    if league_id not in associated_leagues:
+        raise TigerLeaguesException(
+            "You're not a member of this league", status_code=403
+        )
+
+    league_info = league_model.get_league_info(league_id)
     standings = league_model.get_league_standings(league_id)
     current_matches = league_model.get_players_current_matches(
         user["user_id"], league_id
@@ -65,6 +73,7 @@ def league_homepage(league_id):
 
     return render_template(
         "/league/league_homepage.html", 
+        league_info=league_info,
         standings=standings, league_id=league_id,
         user_division_id=associated_leagues[league_id]["division_id"],
         current_matches=current_matches, 
@@ -124,6 +133,7 @@ def league_member(league_id, other_user_id):
     comparison_obj = league_model.get_player_comparison(
         league_id, current_user["user_id"], other_user_id
     )
+    league_info = league_model.get_league_info(league_id)
 
     # If the user clicked on their own name...
 
@@ -133,14 +143,15 @@ def league_member(league_id, other_user_id):
             current_user=current_user, 
             current_user_stats=comparison_obj["message"]["user_1"],
             current_user_responses=league_model.get_previous_responses(league_id, current_user),
-            league_info=league_model.get_league_info(league_id)
+            league_name=current_user["associated_leagues"][league_id]["league_name"],
+            league_info=league_info
         )
 
     # If the user clicked on a player in another division
     if comparison_obj["message"]["different_divisions"]:
         return render_template(
             "/league/member_stats/league_single_player_stats.html",
-            current_user=other_user,
+            current_user=other_user, league_info=league_info, 
             current_user_stats=comparison_obj["message"]["user_2"],
             current_user_responses=league_model.get_previous_responses(league_id, other_user),
             league_info=league_model.get_league_info(league_id)
@@ -149,7 +160,7 @@ def league_member(league_id, other_user_id):
     # Otherwise the two players are in the same division...
     return render_template(
         "/league/member_stats/league_side_by_side_stats.html", 
-        comparison=comparison_obj["message"],
+        comparison=comparison_obj["message"], league_info=league_info,
         current_user=current_user, other_user=other_user,
         current_user_stats=comparison_obj["message"]["user_1"],
         other_user_stats=comparison_obj["message"]["user_2"],

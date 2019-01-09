@@ -13,6 +13,7 @@
             <table class="w3-table-all">
                 <tr>
                     <th>League Name</th>
+                    <th>Creator</th>
                     <th>Description</th>
                     <th>Registration Deadline</th>
                     <th></th>
@@ -20,13 +21,13 @@
                 {% for league in leagues %}
                     <tr>
                         <td>{{ league["league_name"] }}</td>
-                        <td>{{ league["description"] }}</td>
+                        <td>@{{ league["net_id"] }}</td>
+                        <td><em>{{ league["description"] }}</em></td>
                         <td>{{ league["registration_deadline"] }}</td>
                         <td><button class="w3-button w3-btn w3-green"
                             onclick="document.location = `{{ url_for('league.join_league', league_id=league['league_id'], _external=True) }}`">
-                            Join</button></td>
-                            
-
+                            Join</button>
+                        </td> 
                     </tr>
                 {% endfor %}
             </table>

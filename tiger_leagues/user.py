@@ -22,7 +22,9 @@ def display_user_profile():
     associated_leagues``
 
     """
-    return render_template("/user/user_profile.html", user=session.get("user"))
+    return render_template(
+        "/user/user_profile.html", user=session.get("user"), net_id=session.get("net_id")
+    )
 
 @bp.route("/profile/", methods=["POST"])
 @decorators.login_required
@@ -39,7 +41,9 @@ def update_user_profile():
         session.get("user"), session.get("net_id"), request.form
     )
     flash("User profile updated!")
-    return render_template("/user/user_profile.html", user=session.get("user"))
+    return render_template(
+        "/user/user_profile.html", user=session.get("user"), net_id=session.get("net_id")
+    )
     
 @bp.route("/notifications/", methods=["GET"])
 @decorators.login_required

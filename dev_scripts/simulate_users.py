@@ -14,7 +14,10 @@ from math import ceil
 
 from tiger_leagues.models import user_model, league_model, admin_model, db_model
 
-db = db_model.Database()
+try:
+    db = db_model.Database(connection_uri=sys.argv[2])
+except IndexError:
+    db = db_model.Database()
 
 def register_fake_users(num_users=40):
     """
@@ -54,7 +57,8 @@ def create_leagues(admin_user_profile, num_leagues=4):
                 "points_per_draw": points_per_draw,
                 "points_per_loss": points_per_loss,
                 "max_num_players": randint(10, 100),
-                "match_frequency_in_days": randint(0, 10) / 3.0,
+                "num_games_per_period": randint(1, 5),
+                "length_period_in_days": randint(1, 10),
                 "registration_deadline": date.today() + timedelta(weeks=randint(1, 3)),
                 "additional_questions": {}
             }
@@ -139,7 +143,7 @@ if __name__ == "__main__":
     clean_database()
 
     try:
-        num_leagues = int(sys.argv[2])
+        num_leagues = int(sys.argv[3])
     except IndexError:
         num_leagues = 5
     
@@ -167,8 +171,8 @@ if __name__ == "__main__":
         print("Simulating all the matches...")
         play_matches()
 
-        print("Generating more matches...")
-        generate_matches([league_info_list[ceil(num_leagues / 2.0)]])
+        # print("Generating more matches...")
+        # generate_matches([league_info_list[ceil(num_leagues / 2.0)]])
     except:
         clean_database()
         raise
