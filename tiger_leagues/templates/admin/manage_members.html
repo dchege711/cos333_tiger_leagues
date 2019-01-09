@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Approve Members{% endblock %}
+{% block title %}Manage Members{% endblock %}
 {% block content %}
     <div class="w3-container large_portrait_margins w3-center">
 
         <p class="w3-container">
-            <strong>Join Requests for {{league_info["league_name"]}}</strong>
+            <strong>{{league_info["league_name"]}} Members</strong>
             <hr>
         </p>
 
@@ -25,39 +25,30 @@
                 {% set ns = namespace(num_approved_players = 0) %}
                 <tbody>
                     {% for join_request in join_requests %}
-                    <tr>
-                        <td>{{join_request["name"]}}</td>
-                        {% for question_id in question_ids %}
-                        <td>{{join_request[question_id]}}</td>
-                        {% endfor %}
-                        <td>
-                            <select name="{{join_request['user_id']}}" required>
-                                {% if join_request["status"] == "pending" %}
-                                    <option value="pending" selected>Pending</option>
-                                {% else %}
-                                    <option value="pending">Pending</option>
-                                {% endif %}
-                                {% if join_request["status"] == "member" %}
-                                    {% set ns.num_approved_players = ns.num_approved_players + 1 %}
-                                    <option value="member" selected>Member</option>
-                                {% else %}
-                                    <option value="member">Member</option>
-                                {% endif %}
-                                {% if join_request["status"] == "denied" %}
-                                    <option value="denied" selected>Denied</option>
-                                {% else %}
-                                    <option value="denied">Denied</option>
-                                {% endif %}
-                                {% if join_request["status"] == "admin" %}
-                                    {% set ns.num_approved_players = ns.num_approved_players + 1 %}
-                                    <option value="admin" selected>Admin</option>
-                                {% else %}
-                                    <option value="admin">Admin</option>
-                                {% endif %}
-                            </select>
-                        </td>
-                    </tr>
-
+                    {% if join_request["status"] != "pending" and join_request["status"] != "denied" %}
+                        <tr>
+                            <td>{{join_request["name"]}}</td>
+                            {% for question_id in question_ids %}
+                            <td>{{join_request[question_id]}}</td>
+                            {% endfor %}
+                            <td>
+                                <select name="{{join_request['user_id']}}" required>
+                                    {% if join_request["status"] == "member" %}
+                                        {% set ns.num_approved_players = ns.num_approved_players + 1 %}
+                                        <option value="member" selected>Member</option>
+                                    {% else %}
+                                        <option value="member">Member</option>
+                                    {% endif %}
+                                    {% if join_request["status"] == "admin" %}
+                                        {% set ns.num_approved_players = ns.num_approved_players + 1 %}
+                                        <option value="admin" selected>Admin</option>
+                                    {% else %}
+                                        <option value="admin">Admin</option>
+                                    {% endif %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endif %}
                     {% endfor %}
                 </tbody>
                 

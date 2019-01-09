@@ -8,6 +8,13 @@
         <p><span class="glyphicon glyphicon-envelope"></span> <a href="mailto:{{other_user['net_id']}}@princeton.edu" target="_blank">{{other_user['net_id']}}@princeton.edu</a></p>
         <p><span class="glyphicon glyphicon-earphone"></span> <a href="tel:+1-{{other_user['phone_num']}}">+1-{{other_user['phone_num']}}</a></p>
         <p><span class="glyphicon glyphicon-map-marker"></span> {{other_user['room']}}</p>
+        {% for question_id, question_object in league_info["additional_questions"].items() %}
+            <hr>    
+            <strong>{{question_object["question"]}}: </strong>
+            {{current_user_responses[question_id]}}
+            <br>
+        {% endfor %}
+        <hr>
     </div>
 
     <div class="w3-container w3-card" style="flex: 2 1 0;">
