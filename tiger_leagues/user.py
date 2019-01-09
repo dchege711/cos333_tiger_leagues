@@ -5,7 +5,7 @@ Exposes a blueprint that handles requests made to `/user/*` endpoint
 
 """
 
-from flask import Blueprint, render_template, session, request, flash
+from flask import Blueprint, render_template, session, request, flash, jsonify
 from . import decorators
 from .models import user_model
 
@@ -51,5 +51,20 @@ def view_notifications():
     """
     user_id = session.get("user")["user_id"]
     return render_template(
-        "/user/user_notifications.html", messages=user_model.read_notifications(user_id)
+        "/user/user_notifications.html", 
+        notifications=user_model.read_notifications(user_id)
+    )
+
+@bp.route("/notifications/", methods=["POST"])
+@decorators.login_required
+def modify_notification_status():
+    """
+    :return: ``flask.Response(mimetype-'application/json')``
+
+    The JSON object is keyed by ``success`` and ``message``
+    """
+    return jsonify(
+        user_model.update_notification_status(
+            session.get("user")["user_id"], request.json
+        )
     )
