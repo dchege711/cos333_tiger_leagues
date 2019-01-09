@@ -160,7 +160,7 @@ def generate_league_fixtures(league_id, div_allocations):
     
     # Generate the fixtures for each division
     league_info = league_model.get_league_info(league_id)
-    timeslot_length = timedelta(days=ceil(league_info["match_frequency_in_days"]))
+    timeslot_length = timedelta(days=ceil(league_info["length_period_in_days"]))
     match_deadline = date.today() + timedelta(days=1) + timeslot_length
 
     player_ids_to_div_ids = {}
@@ -257,7 +257,7 @@ def allocate_league_divisions(league_id, desired_allocation_config):
     :param desired_allocation_config: dict 
     
     Options to use when allocating the divisions. Keys may include 
-    ``match_frequency_in_days`` and ``completion_deadline``
+    ``num_games_per_period``, ``length_period_in_days``, ``completion_deadline``
 
     :return: ``dict``
     
@@ -268,7 +268,8 @@ def allocate_league_divisions(league_id, desired_allocation_config):
     """
     allocation_config = {}
     allowed_params = {
-        "match_frequency_in_days": float, 
+        "num_games_per_period": int,
+        "length_period_in_days": int, 
         "completion_deadline": date.fromisoformat,
         "start_date": date.fromisoformat
     }
@@ -290,16 +291,23 @@ def allocate_league_divisions(league_id, desired_allocation_config):
     active_league_players = __fetch_active_league_players(league_id)
     num_players = len(active_league_players)
 
-    if "match_frequency_in_days" in allocation_config:
+    if "num_games_per_period" in allocation_config and "length_period_in_days" in allocation_config:
         db.execute(
-            "UPDATE league_info SET match_frequency_in_days = %s WHERE league_id = %s",
-            values=[allocation_config["match_frequency_in_days"], league_id]
+            "UPDATE league_info SET num_games_per_period = %s, length_period_in_days = %s WHERE league_id = %s",
+            values=[
+                allocation_config["num_games_per_period"], 
+                allocation_config["length_period_in_days"], 
+                league_id
+            ]
         )
+        allocation_config["match_frequency_in_days"] = allocation_config["num_games_per_period"] / allocation_config["length_period_in_days"]
+
     else:
-        allocation_config["match_frequency_in_days"] = db.execute(
-            "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s",
+        results = db.execute(
+            "SELECT num_games_per_period, length_period_in_days FROM league_info WHERE league_id = %s",
             values=[league_id]
-        ).fetchone()["match_frequency_in_days"]
+        ).fetchone()
+        allocation_config["match_frequency_in_days"] = results["num_games_per_period"] / results["length_period_in_days"]
 
     start_date = allocation_config.get(
         "start_date", date.today() + timedelta(days=1)

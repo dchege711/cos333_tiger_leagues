@@ -26,9 +26,8 @@
                         <td>{{ league["registration_deadline"] }}</td>
                         <td><button class="w3-button w3-btn w3-green"
                             onclick="document.location = `{{ url_for('league.join_league', league_id=league['league_id'], _external=True) }}`">
-                            Join</button></td>
-                            
-
+                            Join</button>
+                        </td> 
                     </tr>
                 {% endfor %}
             </table>

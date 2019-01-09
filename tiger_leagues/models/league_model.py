@@ -227,7 +227,7 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
     ```score_user_1```, ```score_user_2```, ```status```, ```deadline```
     """
     cursor = db.execute(
-        "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s;", 
+        "SELECT num_games_per_period, length_period_in_days FROM league_info WHERE league_id = %s;", 
         values=[league_id]
     )
 
@@ -236,7 +236,7 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
         raise TigerLeaguesException('League does not exist; it may have been deleted. \
         If you entered the URL manually, double-check the league ID.')
     
-    time_window_days = ceil(row["match_frequency_in_days"])
+    time_window_days = ceil(row["num_games_per_period"] / row["length_period_in_days"])
 
     date_limits = db.execute(
         "SELECT min(deadline), max(deadline) FROM match_info WHERE league_id = %s;",
@@ -244,7 +244,6 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
     ).fetchone()
 
     
-
     today = date.today()
     if num_periods_before == inf:
         try:
@@ -454,8 +453,9 @@ def create_league(league_info, creator_user_profile):
         "description": league_info["description"], 
         "points_per_win": league_info["points_per_win"], 
         "points_per_draw": league_info["points_per_draw"], 
-        "max_num_players": league_info["max_num_players"], 
-        "match_frequency_in_days": league_info["match_frequency_in_days"],
+        "max_num_players": league_info["max_num_players"],
+        "num_games_per_period": league_info["num_games_per_period"],
+        "length_period_in_days": league_info["length_period_in_days"],
         "points_per_loss": league_info["points_per_loss"], 
         "registration_deadline": league_info["registration_deadline"],
         "additional_questions": json.dumps(sanitized_additional_questions)
@@ -518,8 +518,8 @@ def get_league_info(league_id):
     
     Keys: ``league_id``, ``league_id``, ``league_name``, ``description``, 
     ``points_per_win``, ``points_per_draw``, ``points_per_loss``, ``league_status``, 
-    ``additional_questions``, ``registration_deadline``, ``match_frequency_in_days``, 
-    ``max_num_players``
+    ``additional_questions``, ``registration_deadline``, ``num_games_per_period``, 
+    ``length_period_in_days``, ``max_num_players``
 
     :return: ``NoneType``
     
@@ -528,9 +528,7 @@ def get_league_info(league_id):
     """
     cursor = db.execute(
         (
-            "SELECT league_id, league_name, description, points_per_win, "
-            "points_per_draw, points_per_loss, additional_questions, league_status, "
-            "registration_deadline, match_frequency_in_days, max_num_players, users.name, users.net_id "
+            "SELECT league_info.*, users.name, users.net_id "
             "FROM league_info, users WHERE league_id = %s AND league_info.creator_user_id = users.user_id;"
         ), 
         values=[league_id]

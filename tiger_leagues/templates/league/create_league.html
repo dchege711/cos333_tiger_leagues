@@ -40,10 +40,13 @@
                     type="number" name="points_per_loss" id="points_per_loss" placeholder="0" required>
                 <br />
                 <br />
-
-                <label for="match_frequency_in_days">How frequent are the games (in days)? e.g. if the games are weekly, enter 7</label>
-                <input 
-                    type="number" name="match_frequency_in_days" id="match_frequency_in_days" placeholder="7" required>
+                
+                <p><span style="font-weight: 700;">Players will have </span> 
+                    <input type="number" name="num_games_per_period" id="num_games_per_period" placeholder="1" required>
+                    <span style="font-weight: 700;">game(s) every </span>
+                    <input type="number" name="length_period_in_days" id="length_period_in_days" placeholder="7" required>
+                    <span style="font-weight: 700;"> days.</span>
+                </p>
                 <br />
                 <br />
 
@@ -110,7 +113,8 @@
                 document.getElementById("points_per_loss"),
                 document.getElementById("registration_deadline"),
                 document.getElementById("max_num_players"),
-                document.getElementById("match_frequency_in_days")
+                document.getElementById("num_games_per_period"),
+                document.getElementById("length_period_in_days")
             ],
             additionalQuestionsContainer: document.getElementById("additional_questions_container"),
             additionalQuestionElement: document.getElementById("additional_question"),

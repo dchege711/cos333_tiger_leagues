@@ -54,7 +54,8 @@ def create_leagues(admin_user_profile, num_leagues=4):
                 "points_per_draw": points_per_draw,
                 "points_per_loss": points_per_loss,
                 "max_num_players": randint(10, 100),
-                "match_frequency_in_days": randint(0, 10) / 3.0,
+                "num_games_per_period": randint(1, 5),
+                "length_period_in_days": randint(1, 10),
                 "registration_deadline": date.today() + timedelta(weeks=randint(1, 3)),
                 "additional_questions": {}
             }

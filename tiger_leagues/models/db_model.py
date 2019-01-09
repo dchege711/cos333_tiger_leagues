@@ -52,9 +52,9 @@ class Database:
         self.execute((
             "CREATE TABLE IF NOT EXISTS league_info ("
             "league_id SERIAL PRIMARY KEY, league_name VARCHAR(255), "
-            "description TEXT, points_per_win INT, points_per_draw INT, "
+            "description TEXT, points_per_win INT NOT NULL, points_per_draw INT NOT NULL, "
             "points_per_loss INT, registration_deadline DATE, max_num_players INT, "
-            "creator_user_id INT NOT NULL, match_frequency_in_days NUMERIC DEFAULT 7.0, "
+            "creator_user_id INT NOT NULL, num_games_per_period INT NOT NULL, length_period_in_days INT NOT NULL, "
             "additional_questions TEXT, league_status VARCHAR(255));"
         ))
 

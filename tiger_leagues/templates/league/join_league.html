@@ -18,15 +18,15 @@
             <br />
             <br />
             <p>Registration Deadline: {{ league_info["registration_deadline"].strftime("%A, %B %d, %Y") }}</p>
-            <p>Frequency: 1 game every {{league_info["match_frequency_in_days"]}} days.</p>
+            <p>Frequency: {{league_info["num_games_per_period"]}} game(s) every {{league_info["length_period_in_days"]}} day(s).</p>
             <hr>
         </p>
 
         <form class="w3-container" method="POST">
 
-            <hr />
-
             {% if league_info["additional_questions"] %}
+
+            <hr />
 
             <p>Please answer the following questions:</p>
 

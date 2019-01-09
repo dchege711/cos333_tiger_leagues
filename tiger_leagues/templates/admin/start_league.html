@@ -68,11 +68,11 @@
 
                 <label for="num_matches">Players have </label>
                 <input 
-                    value="{{league_info['match_frequency_in_days']}}" type="number"
-                    name="num_matches" id="num_matches" min="0">
+                    value="{{league_info['num_games_per_period']}}" type="number"
+                    name="num_games_per_period" id="num_games_per_period" min="1">
                 <label for="num_days"> games every </label>
                 <input 
-                    value="1" type="number" name="num_days" id="num_days" min="0">
+                    value="{{league_info['length_period_in_days']}}" type="number" name="length_period_in_days" id="length_period_in_days" min="1">
                 <span> day(s)</span>
                 <br />
                 <br />
@@ -115,8 +115,8 @@
     <script type="text/javascript">
 
         let state = {
-            numDaysElement: document.getElementById("num_days"),
-            numMatchesElement: document.getElementById("num_matches"),
+            numDaysElement: document.getElementById("length_period_in_days"),
+            numMatchesElement: document.getElementById("num_games_per_period"),
             competitionDeadlineElement: document.getElementById("completion_deadline"),
             leagueDivisionsElement: document.getElementById("league_divisions"),
             generateFixturesContainer: document.getElementById("generate_fixtures_container")
@@ -126,7 +126,8 @@
             let numSelections = 0;
             let payload = {};
             if (state.numDaysElement.value !== "" && state.numMatchesElement.value !== "") {
-                payload.match_frequency_in_days = state.numMatchesElement.value / state.numDaysElement.value;
+                payload.num_games_per_period = state.numMatchesElement.value;
+                payload.length_period_in_days =  state.numDaysElement.value;
             }
             if (state.competitionDeadlineElement.value !== "") {
                 payload.completion_deadline = state.competitionDeadlineElement.value;
