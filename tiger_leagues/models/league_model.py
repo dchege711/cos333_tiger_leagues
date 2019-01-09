@@ -281,8 +281,8 @@ def get_matches_in_current_window(league_id, num_periods_before=3,
         values=[league_id, earliest_date, latest_date]
     )
 
-def get_players_current_matches(user_id, league_id, num_periods_before=1, 
-                                num_periods_after=2,):
+def get_players_current_matches(user_id, league_id, num_periods_before=4, 
+                                num_periods_after=4):
     """
     Unlike :py:meth:`.get_matches_in_current_window`, this method resolves the 
     opponent names as well as adding convenient fields such as ``my_score, 
