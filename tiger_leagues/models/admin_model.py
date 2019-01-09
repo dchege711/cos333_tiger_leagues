@@ -10,7 +10,7 @@ from random import shuffle
 from math import ceil
 from datetime import date, timedelta
 
-from . import league_model, db_model
+from . import league_model, db_model, user_model
 
 db = db_model.Database()
 
@@ -69,6 +69,10 @@ def update_join_league_requests(league_id, league_statuses):
             dynamic_table_or_column_names=["league_responses_{}".format(league_info["league_id"])],
             values=[user_status, user_id]
         )
+        user_model.send_notification(user_id, {
+            "league_id": league_id,
+            "notification_text": "Your status changed.\n\nNew status: {}".format(user_status)
+        })
 
     join_requests = get_join_league_requests(league_id)
     user_id_to_status = {}
@@ -188,16 +192,19 @@ def generate_league_fixtures(league_id, div_allocations):
                 )
 
     responses_table_name = "league_responses_{}".format(league_id)
-    player_ids_to_div_ids = [
-        (user_id, int(div_id)) for user_id, div_id in player_ids_to_div_ids.items()
-    ]
     db.execute_many(
         (
             "UPDATE {} SET division_id = data.division_id FROM (VALUES %s) "
             "AS data (user_id, division_id) WHERE {}.user_id = data.user_id;"
         ),
-        player_ids_to_div_ids, 
+        [(user_id, int(div_id)) for user_id, div_id in player_ids_to_div_ids.items()], 
         dynamic_table_or_column_names=[responses_table_name, responses_table_name]
+    )
+
+    # Notify all members that the league has started
+    db.execute_many(
+        "INSERT INTO notifications (user_id, league_id, notification_text) VALUES %s",
+        [(user_id, league_id, "The league has started!") for user_id in player_ids_to_div_ids]
     )
 
     cursor = db.execute(
