@@ -5,6 +5,8 @@
 {% block content %}
     <div class="w3-container">
 
+        {% if league_info["league_status"] == "league_in_progress" %}
+
         <div class="w3-container w3-half">
 
             <div class="w3-container">
@@ -112,6 +114,20 @@
             </div>
 
         </div>
+
+        {% else %}
+
+        <div class="w3-container flexbox">
+            {% if league_info["league_status"] == "awaiting_admin_greenlight" %}
+                <p>{{league_info["league_name"]}} has not yet started</p>
+            {% elif league_info["league_status"] == "accepting_users" %}
+                <p>{{league_info["league_name"]}} has not yet started</p>
+            {% elif league_info["league_status"] == "league_matches_completed" %}
+                <p>{{league_info["league_name"]}} has ended</p>
+            {% endif %}
+        </div>
+
+        {% endif %}
            
     </div>
 

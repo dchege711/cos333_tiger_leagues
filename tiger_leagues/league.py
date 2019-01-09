@@ -65,6 +65,7 @@ def league_homepage(league_id):
             "You're not a member of this league", status_code=403
         )
 
+    league_info = league_model.get_league_info(league_id)
     standings = league_model.get_league_standings(league_id)
     current_matches = league_model.get_players_current_matches(
         user["user_id"], league_id
@@ -72,6 +73,7 @@ def league_homepage(league_id):
 
     return render_template(
         "/league/league_homepage.html", 
+        league_info=league_info,
         standings=standings, league_id=league_id,
         user_division_id=associated_leagues[league_id]["division_id"],
         current_matches=current_matches, 
