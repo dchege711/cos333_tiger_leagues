@@ -11,7 +11,7 @@ from math import ceil, inf
 from collections import defaultdict
 from functools import cmp_to_key
 
-from . import db_model
+from . import db_model, user_model
 from .exception import TigerLeaguesException
 
 generic_500_msg = {
@@ -185,6 +185,10 @@ def get_league_standings(league_id):
         ),
         values=[league_id] 
     )
+    if cursor is None:
+        raise TigerLeaguesException('League does not exist; it may have been deleted. \
+        If you entered the URL manually, double-check the league ID.')
+
     for row in cursor:
         all_standings[row["division_id"]].append(row)
 
@@ -226,21 +230,35 @@ def get_matches_in_current_window(league_id, num_periods_before=1,
         "SELECT match_frequency_in_days FROM league_info WHERE league_id = %s;", 
         values=[league_id]
     )
-    time_window_days = ceil(cursor.fetchone()["match_frequency_in_days"])
+
+    row = cursor.fetchone()
+    if row is None:
+        raise TigerLeaguesException('League does not exist; it may have been deleted. \
+        If you entered the URL manually, double-check the league ID.')
+    
+    time_window_days = ceil(row["match_frequency_in_days"])
 
     date_limits = db.execute(
         "SELECT min(deadline), max(deadline) FROM match_info WHERE league_id = %s;",
         values=[league_id]
     ).fetchone()
 
+    
+
     today = date.today()
     if num_periods_before == inf:
-        earliest_date = min(today, date_limits["min"])
+        try:
+            earliest_date = min(today, date_limits["min"])
+        except TypeError:
+            earliest_date = today
     else:
         earliest_date = date.today() - timedelta(days=time_window_days * num_periods_before)
 
     if num_periods_after == inf:
-        latest_date = max(today, date_limits["max"])
+        try: 
+            latest_date = max(today, date_limits["max"])
+        except TypeError:
+            latest_date = today
     else:
         latest_date = date.today() + timedelta(days=time_window_days * num_periods_after)
     
@@ -519,9 +537,12 @@ def get_league_info(league_id):
     )
     league_info = cursor.fetchone()
     
-    if league_info is not None:
-        if league_info["additional_questions"]:
-            league_info["additional_questions"] = json.loads(league_info["additional_questions"])
+    if league_info is None:
+        raise TigerLeaguesException('League does not exist; it may have been deleted. \
+        If you entered the URL manually, double-check the league ID.')
+
+    if league_info["additional_questions"]:
+        league_info["additional_questions"] = json.loads(league_info["additional_questions"])
 
     return league_info
 
@@ -715,6 +736,21 @@ def get_player_comparison(league_id, user_1_id, user_2_id):
     points, mutual_opponents, head_to_head, player_form``
 
     """
+    user_1_info = user_model.get_user(None, int(user_1_id))
+    user_2_info = user_model.get_user(None, int(user_2_id))
+
+    if user_1_info is None or user_2_info is None:
+        raise TigerLeaguesException('User does not exist. \
+        If you entered the URL manually, double-check their user ID.')
+
+    if league_id not in user_1_info["associated_leagues"]:
+        raise TigerLeaguesException('You are not a member of this league. \
+        If you entered the URL manually, double-check the league ID.')
+    if league_id not in user_2_info["associated_leagues"]:
+        raise TigerLeaguesException('User is not a member of this league. \
+        If you entered the URL manually, double-check the league ID.')
+
+
     user_1_matches = get_players_current_matches(
         user_1_id, league_id, num_periods_before=inf, num_periods_after=inf
     )
@@ -866,3 +902,75 @@ def process_leave_league_request(league_id, user_profile):
         ]
     )
     return True
+
+def process_update_league_responses(league_id, user_profile, submitted_data):
+    """
+    :param league_id: int
+    
+    The ID of this league
+
+    :param user_profile: dict
+    
+    Expected keys: ``user_id, league_ids``
+
+    :return: ``dict``
+    
+    If ``succcess`` is ``False``, ``message`` will contain a descriptive error 
+    message. If ``success`` is ``True``, ``message`` will contain a 
+    dict containing the updated user profile.
+    """
+    results = get_league_info_if_joinable(league_id)
+    if not results["success"]: return results
+
+    league_info = results["message"]
+    expected_info = {}
+    for key in league_info["additional_questions"]:
+        expected_info[key] = ""
+
+    for key in expected_info:
+        if key not in submitted_data: 
+            return {
+                "success": False,
+                "message": "Missing {} in the submitted form".format(key)
+            }
+        expected_info[key] = submitted_data[key]
+
+    table_name = "league_responses_{}".format(league_id)
+
+    row = db.execute(
+        "SELECT * from {} WHERE user_id = %s", values=[user_profile["user_id"]], 
+        dynamic_table_or_column_names=[table_name]
+    ).fetchone()
+    if row is not None:
+        db.execute(
+            "DELETE FROM {} WHERE user_id = %s", values=[user_profile["user_id"]], 
+            dynamic_table_or_column_names=[table_name]
+
+        )
+
+    expected_info["user_id"] = user_profile["user_id"]
+    expected_info["status"] = row["status"]
+
+    db.execute(
+        (
+            "INSERT INTO {} ({}) VALUES ({});".format(
+                "{}", ", ".join(key for key in expected_info), 
+                ", ".join("%({})s".format(key) for key in expected_info)
+            )
+        ),
+        values=expected_info,
+        dynamic_table_or_column_names=[table_name]
+    )
+
+    # Indicate on the user object that the responses were saved
+    if league_id not in user_profile["league_ids"]:
+        # user_profile["league_ids"].append(league_id)
+        db.execute(
+            "UPDATE users SET league_ids = %s WHERE user_id = %s",
+            values=[
+                ", ".join(str(x) for x in user_profile["league_ids"]), 
+                user_profile["user_id"]
+            ]
+        )
+    
+    return {"success": True, "message": user_profile}

@@ -1,3 +1,6 @@
+USER PAGES: corner cases for mutual opponents w/ self; comparing rank with player in different division
+STANDINGS: players are in league database yet don't show up in the standings table
+
 Why do the notifications disapppear outside league/*?
 
 REGULAR MEMBER:
