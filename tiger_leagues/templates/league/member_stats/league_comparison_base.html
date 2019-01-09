@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "league/league_base.html" %}
 
-{% block title %}League Member Profile{% endblock %}
+{% block sub_title %} Member Profile{% endblock %}
 
-{% block content %}
+{% block league_content %}
 
     <style>
         th, td {
@@ -63,10 +63,6 @@
     </style>
 
     <div class="w3-container">
-
-        <h3>{{league_name}}</h3>
-
-        <hr />
 
         <div class="flex-box">
             {% block comparison_data %}{% endblock %}

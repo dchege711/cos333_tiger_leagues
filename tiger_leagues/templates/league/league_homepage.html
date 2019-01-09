@@ -1,8 +1,8 @@
-{% extends "base.html" %}
+{% extends "league/league_base.html" %}
 
-{% block title %}{{league_name}} Standings{% endblock %}
+{% block sub_title %} Standings{% endblock %}
 
-{% block content %}
+{% block league_content %}
     <div class="w3-container">
 
         {% if league_info["league_status"] == "league_in_progress" %}
@@ -70,7 +70,7 @@
 
             <!-- Display reported scores-->
             <div class="w3-container">
-                <h4>Your Matches</h4>
+                <h4>Your Upcoming Matches</h4>
                 <hr>
 
                 <table class="w3-table-all">
