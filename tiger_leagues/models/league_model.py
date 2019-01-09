@@ -681,14 +681,22 @@ def get_players_league_stats(league_id, user_id, matches=None, k=5):
             ),
             values=[user_id, league_id]
         ).fetchone()
+        associated_leagues = user_model.get_user(None, user_id)["associated_leagues"]
         if player_details is None:
             raise TigerLeaguesException("The player was not found.", status_code=400)
         else:
-            raise TigerLeaguesException(
-                "{} is not a member of {}".format(
-                    player_details["name"], player_details["league_name"]
-                ), status_code=400
-            )
+            if league_id not in associated_leagues:
+                raise TigerLeaguesException(
+                    "{} is not a member of {}".format(
+                        player_details["name"], player_details["league_name"]
+                    ), status_code=400
+                )
+            else:
+                raise TigerLeaguesException(
+                    "{} has not started yet.".format(
+                        player_details["league_name"]
+                    ), status_code=400
+                )
 
     lowest_rank = db.execute(
         "SELECT MAX(rank) FROM league_standings WHERE league_id = %s AND division_id = %s;",
