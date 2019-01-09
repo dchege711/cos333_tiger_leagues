@@ -259,7 +259,7 @@ def update_notification_status(user_id, notification_obj):
             "success": False, "message": "Invalid value for 'notification_status'"
         }
 
-    if submitted_status == "delete":
+    if submitted_status == "deleted":
         deleted_notification_id = db.execute(
             "DELETE FROM notifications WHERE notification_id = %s AND user_id = %s RETURNING notification_id;",
             values=[notification_obj["notification_id"], user_id]
