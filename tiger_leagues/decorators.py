@@ -35,7 +35,7 @@ def login_required(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get("net_id") is None:
+        if session.get("net_id") is None or session.get("user") is None:
             return redirect(url_for("auth.index"))
         return f(*args, **kwargs)
     return decorated_function

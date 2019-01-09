@@ -32,6 +32,7 @@ def index():
 
     """
     user = session.get("user")
+
     if user["league_ids"]:
         return redirect(
             url_for(".league_homepage", league_id=user["league_ids"][0])
