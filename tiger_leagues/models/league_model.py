@@ -530,8 +530,8 @@ def get_league_info(league_id):
         (
             "SELECT league_id, league_name, description, points_per_win, "
             "points_per_draw, points_per_loss, additional_questions, league_status, "
-            "registration_deadline, match_frequency_in_days, max_num_players "
-            "FROM league_info WHERE league_id = %s"
+            "registration_deadline, match_frequency_in_days, max_num_players, users.name "
+            "FROM league_info, users WHERE league_id = %s AND league_info.creator_user_id = users.user_id;"
         ), 
         values=[league_id]
     )
@@ -560,14 +560,14 @@ def get_leagues_not_yet_joined(user_profile):
     """
     ids_associated_leagues = set(user_profile["associated_leagues"].keys())
     cursor = db.execute((
-        "SELECT league_id, league_name, registration_deadline, description"
-        " FROM league_info;"
+        "SELECT league_id, league_name, registration_deadline, description, league_info.league_status, users.name"
+        " FROM league_info, users WHERE league_info.creator_user_id = users.user_id;"
     ))
 
     unjoined_leagues, today = [], date.today()
-    for row in db.iterator(cursor):
+    for row in cursor:
         if row["league_id"] not in ids_associated_leagues:
-            if today <= row["registration_deadline"]:
+            if today <= row["registration_deadline"] and row["league_status"] == LEAGUE_STAGE_ACCEPTING_USERS:
                 unjoined_leagues.append(row)
 
     unjoined_leagues.sort(
@@ -593,19 +593,25 @@ def get_league_info_if_joinable(league_id):
 
     # If the league doesn't exist, let the user know
     if league_info is None: 
-        return {
-            "success": False, "message": "League not found"
-        }
+        raise TigerLeaguesException(
+            "The league does not exist", status_code=400
+        )
 
     # If the league's deadline is already passed, communicate that to the user
     today = date.today()
     if today > league_info["registration_deadline"]:
-        return {
-            "success": False,
-            "message": "The League's registration deadline ({}) has passed".format(
+        raise TigerLeaguesException(
+            "The registration deadline for '{}' has passed ({})".format(
+                league_info["league_name"],
                 league_info["registration_deadline"].strftime("%A, %B %d, %Y")
-            )
-        }
+            ), status_code=400
+        )
+
+    if league_info["league_status"] != LEAGUE_STAGE_ACCEPTING_USERS:
+        raise TigerLeaguesException(
+            "'{}' is no longer accepting new players".format(league_info["league_name"]), 
+            status_code=400
+        )
 
     return {"success": True, "message": league_info}
 
