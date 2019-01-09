@@ -793,7 +793,7 @@ def get_player_comparison(league_id, user_1_id, user_2_id):
     head_to_head_matches = []
     if user_2_id in user_1_opponents:
         for match in user_1_matches:
-            if match["opponent_id"] == user_2_id:
+            if match["opponent_id"] == user_2_id and match["status"] == MATCH_STATUS_APPROVED:
                 head_to_head_matches.append(match)
 
     mutual_opponent_ids.discard(user_1_id)
@@ -802,7 +802,7 @@ def get_player_comparison(league_id, user_1_id, user_2_id):
     def collect_mutual_opponents(stats_obj, matches_obj):
         stats_obj["mutual_opponents"] = defaultdict(list)
         for match in matches_obj:
-            if match["opponent_id"] in mutual_opponent_ids:
+            if match["opponent_id"] in mutual_opponent_ids and match["status"] == MATCH_STATUS_APPROVED:
                 stats_obj["mutual_opponents"][match["opponent_id"]].append(match)
 
     collect_mutual_opponents(user_1_stats, user_1_matches)

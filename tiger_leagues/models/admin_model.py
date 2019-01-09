@@ -207,15 +207,6 @@ def generate_league_fixtures(league_id, div_allocations):
         [(user_id, league_id, "The league has started!") for user_id in player_ids_to_div_ids]
     )
 
-    cursor = db.execute(
-        "SELECT * FROM {} WHERE division_id IS NULL;",
-        dynamic_table_or_column_names=[responses_table_name]
-    )
-    players = cursor.fetchall()
-    assert not players, "Num unallocated players: {}, {}".format(
-        cursor.rowcount, str([x["user_id"] for x in players])
-    )
-
     db.execute(
         "UPDATE league_info SET league_status = %s WHERE league_id = %s",
         values=[league_model.LEAGUE_STAGE_IN_PROGRESS, league_id]
