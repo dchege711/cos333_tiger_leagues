@@ -140,11 +140,9 @@ def league_member(league_id, other_user_id):
     if current_user["user_id"] == other_user_id:
         return render_template(
             "/league/member_stats/league_single_player_stats.html",
-            current_user=current_user, 
+            current_user=current_user, league_info=league_info,
             current_user_stats=comparison_obj["message"]["user_1"],
-            current_user_responses=league_model.get_previous_responses(league_id, current_user),
-            league_name=current_user["associated_leagues"][league_id]["league_name"],
-            league_info=league_info
+            current_user_responses=league_model.get_previous_responses(league_id, current_user)
         )
 
     # If the user clicked on a player in another division
@@ -154,7 +152,6 @@ def league_member(league_id, other_user_id):
             current_user=other_user, league_info=league_info, 
             current_user_stats=comparison_obj["message"]["user_2"],
             current_user_responses=league_model.get_previous_responses(league_id, other_user),
-            league_info=league_model.get_league_info(league_id)
         )
     
     # Otherwise the two players are in the same division...
@@ -165,7 +162,6 @@ def league_member(league_id, other_user_id):
         current_user_stats=comparison_obj["message"]["user_1"],
         other_user_stats=comparison_obj["message"]["user_2"],
         head_to_head=comparison_obj["message"]["head_to_head"],
-        league_info=league_model.get_league_info(league_id),
         current_user_responses=league_model.get_previous_responses(league_id, other_user)
     )
 

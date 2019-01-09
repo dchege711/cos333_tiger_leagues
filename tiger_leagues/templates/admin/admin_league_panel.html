@@ -21,9 +21,9 @@
             <!-- <button class="w3-button w3-large w3-round w3-gray inactive">Change League Info</button> -->
             <br />
             {% if league_info["league_status"] == "accepting_users" %}
-            <button class="w3-button w3-large w3-round w3-green" onclick="document.location = 'approve-members/'">View & Approve Join Requests</button>
+            <button class="w3-button w3-large w3-round w3-green" onclick="document.location = 'approve-members/'">View & Approve Members</button>
             {% else %}
-            <button class="w3-button w3-large w3-round w3-gray inactive">View & Approve Join Requests</button>
+            <button class="w3-button w3-large w3-round w3-green" onclick="document.location = 'manage-members/'">Manage League Members</button>
             {% endif %}
             <br />
 

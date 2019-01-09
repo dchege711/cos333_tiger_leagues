@@ -9,7 +9,7 @@ to the rest of the Flask application
 """
 
 from flask import (
-    Blueprint, render_template, session, request, url_for, redirect, jsonify
+    Blueprint, render_template, session, request, url_for, redirect, jsonify, flash
 )
 
 from .models import admin_model, league_model
@@ -159,12 +159,54 @@ def league_requests(league_id):
     ``success``
 
     """
+    league_not_started()
+
     league_info = league_model.get_league_info(league_id)
 
     if request.method == "GET":
         join_requests = admin_model.get_join_league_requests(league_id)
         return render_template(
             "/admin/approve_members.html", league_info=league_info, 
+            join_requests=join_requests
+        )
+    
+    if request.method == "POST":
+        return jsonify(
+            admin_model.update_join_league_requests(
+                league_id, request.json
+            )
+        )
+
+    return NotImplementedError()
+
+@bp.route("/<int:league_id>/manage-members/", methods=["GET", "POST"])
+def manage_members(league_id):
+    """
+    :param league_id: ``int``
+
+    The ID of the league associated with this request
+
+    :return: ``flask.Response(mimetype='text/HTML')``
+
+    If responding to a GET request, render a template such that an admin can 
+    view the requests to join the league and can choose to accept or reject the 
+    join requests
+
+    :return: ``flask.Response(mimetype=application/json)``
+
+    If responding to a POST request, update the join status of the users as 
+    instructed in the POST body. The JSON contains the keys ``message`` and 
+    ``success``
+
+    """
+    league_has_started()
+
+    league_info = league_model.get_league_info(league_id)
+
+    if request.method == "GET":
+        join_requests = admin_model.get_join_league_requests(league_id)
+        return render_template(
+            "/admin/manage_members.html", league_info=league_info, 
             join_requests=join_requests
         )
     
