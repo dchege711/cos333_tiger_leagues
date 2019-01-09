@@ -155,7 +155,8 @@ def league_member(league_id, other_user_id):
         current_user_stats=comparison_obj["message"]["user_1"],
         other_user_stats=comparison_obj["message"]["user_2"],
         head_to_head=comparison_obj["message"]["head_to_head"],
-        league_name=current_user["associated_leagues"][league_id]["league_name"]
+        league_name=current_user["associated_leagues"][league_id]["league_name"],
+        league_info=league_model.get_league_info(league_id)
     )
 
 @bp.route("/create/", methods=["GET", "POST"])
