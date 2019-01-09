@@ -530,7 +530,7 @@ def get_league_info(league_id):
         (
             "SELECT league_id, league_name, description, points_per_win, "
             "points_per_draw, points_per_loss, additional_questions, league_status, "
-            "registration_deadline, match_frequency_in_days, max_num_players, users.name "
+            "registration_deadline, match_frequency_in_days, max_num_players, users.name, users.net_id "
             "FROM league_info, users WHERE league_id = %s AND league_info.creator_user_id = users.user_id;"
         ), 
         values=[league_id]
@@ -560,8 +560,8 @@ def get_leagues_not_yet_joined(user_profile):
     """
     ids_associated_leagues = set(user_profile["associated_leagues"].keys())
     cursor = db.execute((
-        "SELECT league_id, league_name, registration_deadline, description, league_info.league_status, users.name"
-        " FROM league_info, users WHERE league_info.creator_user_id = users.user_id;"
+        "SELECT league_id, league_name, registration_deadline, description, league_info.league_status, users.name, "
+        "users.net_id FROM league_info, users WHERE league_info.creator_user_id = users.user_id;"
     ))
 
     unjoined_leagues, today = [], date.today()
