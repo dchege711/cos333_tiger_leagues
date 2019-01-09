@@ -13,14 +13,23 @@ from . import config
 
 class Database:
     """
-    A wrapper around the database used by the 'Tiger Leagues' app
+    A wrapper around the database used by the 'Tiger Leagues' app.
+
+    :kwarg connection_uri: str
+
+    Optional connection string for the database. If ``None``, this defaults to 
+    the connection string set in ``config.DATABASE_URL``.
+
     """
 
-    def __init__(self):
+    def __init__(self, connection_uri=None):
         """
         Initialize the database instance.
         """
-        self.__connection = connect(config.DATABASE_URL)
+        if connection_uri is not None:
+            self.__connection = connect(connection_uri)
+        else:
+            self.__connection = connect(config.DATABASE_URL)
         self.launch()
         atexit.register(self.disconnect)
 
