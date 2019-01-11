@@ -5,6 +5,7 @@ Exposes functions that are used by the controller for the `/user/*` endpoint
 
 """
 
+from operator import itemgetter
 from . import db_model
 
 db = db_model.Database()
@@ -206,7 +207,7 @@ def read_notifications(user_id, notification_status=None):
 
     """
     if notification_status is None:
-        return db.execute(
+        notifications = db.execute(
             (
                 "SELECT notifications.*, league_info.league_name FROM notifications, league_info "
                 "WHERE user_id = %s AND notification_status != %s AND league_info.league_id = notifications.league_id "
@@ -215,14 +216,27 @@ def read_notifications(user_id, notification_status=None):
             values=[user_id, NOTIFICATION_STATUS_ARCHIVED]
         ).fetchall()
 
-    return db.execute(
-        (
-            "SELECT notifications.*, league_info.league_name FROM notifications, league_info "
-            "WHERE user_id = %s AND notification_status = %s AND league_info.league_id = notifications.league_id "
-            "ORDER BY created_at DESC;"
-        ),
-        values=[user_id, notification_status]
+    else:
+        notifications = db.execute(
+            (
+                "SELECT notifications.*, league_info.league_name FROM notifications, league_info "
+                "WHERE user_id = %s AND notification_status = %s AND league_info.league_id = notifications.league_id "
+                "ORDER BY created_at DESC;"
+            ),
+            values=[user_id, notification_status]
+        ).fetchall()
+
+    system_notifications = db.execute(
+        "SELECT * FROM notifications WHERE league_id IS NULL AND user_id = %s;",
+        values=[user_id]
     ).fetchall()
+
+    # This is not as bad as it looks. 
+    # Python uses timsort that takes advantage of already sorted subsequences
+    # https://stackoverflow.com/questions/10948920/what-algorithm-does-pythons-sorted-use
+    all_notifications = notifications + [dict(league_name="[Tiger Leagues]", **x) for x in system_notifications]
+    all_notifications.sort(key=itemgetter("created_at"), reverse=True)
+    return all_notifications
 
 def update_notification_status(user_id, notification_obj):
     """
