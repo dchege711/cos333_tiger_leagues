@@ -10,7 +10,7 @@
         <p><span class="glyphicon glyphicon-map-marker"></span> {{other_user['room']}}</p>
         {% for question_id, question_object in league_info["additional_questions"].items() %}
             <hr>    
-            <strong>{{question_object["question"]}}: </strong>
+            <strong>{{question_object["question"]}} </strong>
             {{current_user_responses[question_id]}}
             <br>
         {% endfor %}
