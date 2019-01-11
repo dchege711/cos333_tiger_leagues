@@ -105,7 +105,7 @@ def get_registration_stats(league_id):
 
     return registration_stats
 
-def generate_league_fixtures(league_id, div_allocations):
+def generate_league_fixtures(league_id, div_allocations, start_date=None):
     """
     :param league_id: int 
     
@@ -115,6 +115,11 @@ def generate_league_fixtures(league_id, div_allocations):
     
     The keys are the division IDs. Each value is a dict keyed by ``name`` and 
     ``user_id`` representing a player associated with the league.
+
+    :kwarg start_date: ``date``
+
+    The earliest games' time window will start from this date. Defaults to 
+    tomorrow
 
     :return: ``dict`` 
     
@@ -161,7 +166,8 @@ def generate_league_fixtures(league_id, div_allocations):
     # Generate the fixtures for each division
     league_info = league_model.get_league_info(league_id)
     timeslot_length = timedelta(days=ceil(league_info["length_period_in_days"]))
-    match_deadline = date.today() + timedelta(days=1) + timeslot_length
+    if start_date is None: start_date = date.today() + timedelta(days=1)
+    match_deadline = start_date + timeslot_length
 
     player_ids_to_div_ids = {}
     for division_id, division_players in div_allocations.items():
@@ -291,14 +297,14 @@ def allocate_league_divisions(league_id, desired_allocation_config):
                 league_id
             ]
         )
-        allocation_config["match_frequency_in_days"] = allocation_config["num_games_per_period"] / allocation_config["length_period_in_days"]
+        allocation_config["num_days_between_matches"] = allocation_config["length_period_in_days"] / allocation_config["num_games_per_period"] 
 
     else:
         results = db.execute(
             "SELECT num_games_per_period, length_period_in_days FROM league_info WHERE league_id = %s",
             values=[league_id]
         ).fetchone()
-        allocation_config["match_frequency_in_days"] = results["num_games_per_period"] / results["length_period_in_days"]
+        allocation_config["num_days_between_matches"] = results["length_period_in_days"] / results["num_games_per_period"]
 
     start_date = allocation_config.get(
         "start_date", date.today() + timedelta(days=1)
@@ -311,7 +317,7 @@ def allocate_league_divisions(league_id, desired_allocation_config):
             1, 
             (
                 (allocation_config["completion_deadline"] - start_date) / 
-                timedelta(days=ceil(max(1, allocation_config["match_frequency_in_days"])))
+                timedelta(days=ceil(max(1, allocation_config["num_days_between_matches"])))
             )
         )
         num_games_per_timeslot = num_total_games / num_available_timeslots
@@ -349,7 +355,7 @@ def allocate_league_divisions(league_id, desired_allocation_config):
     )
 
     league_end_date = start_date + timedelta(
-        days=ceil((num_players_per_div - 1) * allocation_config["match_frequency_in_days"])
+        days=ceil((num_players_per_div - 1) * allocation_config["num_days_between_matches"])
     )
     return {
         "success": True, "message": {
