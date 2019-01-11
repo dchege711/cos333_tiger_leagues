@@ -8,7 +8,7 @@ Add fake users to help in debugging the application.
 import sys
 sys.path.insert(0, "..")
 
-from random import randint, choice
+from random import randint, choice, sample
 from datetime import date, timedelta
 from math import ceil
 
@@ -157,18 +157,19 @@ def generate_divisions_and_fixtures(league_info, desired_fixtures_config=None):
     if results["message"] != "Fixtures successfully created!":
         raise RuntimeError(results["message"])
 
-def simulate_matches(league_id, deadline):
+def simulate_matches(league_id, deadline=None, matches=None):
     """
     Simulate the matches whose deadline has already passed.
     """
-    cursor = db.execute(
-        "SELECT match_id FROM match_info WHERE league_id = %s AND deadline < %s;",
-        values=[league_id, deadline]
-    )
-    for row in cursor:
+    if matches is None:
+        matches = db.execute(
+            "SELECT match_id FROM match_info WHERE league_id = %s AND deadline < %s;",
+            values=[league_id, deadline]
+        )
+    for match in matches:
         admin_model.approve_match({
             "score_user_1": randint(0, 5), "score_user_2": randint(0, 5),
-            "match_id": row["match_id"]
+            "match_id": match["match_id"]
         })
 
 def main():
@@ -244,7 +245,7 @@ def main():
     enroll_members(league_info, [main_user_profile])
     league_info["num_active_players"] = league_info["max_num_players"] - 2
     generate_divisions_and_fixtures(league_info)
-    simulate_matches(league_info["league_id"], today)
+    simulate_matches(league_info["league_id"], deadline=today)
     print("Sucessfully simulated 'FIFA League S2019'...")
 
     #---------------------------------------------------------------------------
@@ -315,7 +316,15 @@ def main():
     enroll_members(league_info, [main_user_profile], status=league_model.STATUS_ADMIN)
     league_info["num_active_players"] = league_info["max_num_players"] - 2
     generate_divisions_and_fixtures(league_info)
-    simulate_matches(league_info["league_id"], today)
+    simulate_matches(league_info["league_id"], deadline=today)
+
+    # Simulate some of the current set of matches
+    current_matches = [x for x in league_model.get_matches_in_current_window(
+        league_info["league_id"], num_periods_before=0, num_periods_after=0
+    )]
+    matches_to_simulate = sample(current_matches, len(current_matches) // 3)
+    simulate_matches(league_info["league_id"], matches=matches_to_simulate)
+
     print("Sucessfully simulated 'Ping Pong S2019'...")
 
 if __name__ == "__main__":
