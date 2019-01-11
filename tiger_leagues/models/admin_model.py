@@ -430,13 +430,12 @@ def get_current_matches(league_id):
 
     """
     relevant_matches = league_model.get_matches_in_current_window(
-        league_id, num_periods_before=4, num_periods_after=4
+        league_id, num_periods_before=1, num_periods_after=0
     )
     current_matches = defaultdict(list)
     mapping = {"user_1_id": "user_1_name", "user_2_id": "user_2_name"}
     for match in relevant_matches:
         match_dict = dict(**match)
-        print(match["match_id"])
         for key, val in mapping.items():
             if match[key] is not None:
                 match_dict[val] = db.execute(
@@ -514,13 +513,14 @@ def delete_league(league_id):
     """
 
     try:
+        league_info = league_model.get_league_info(league_id)
         league_members = __fetch_active_league_players(league_id)
         member_ids = {member["user_id"] for member in league_members}
 
         for member_id in member_ids:
             id_list = db.execute(("SELECT league_ids FROM users WHERE user_id = %s;"), values=[member_id])
             leagues_string = id_list.fetchone()["league_ids"]
-            leagues_list = set(leagues_string.split(','))
+            leagues_list = set(leagues_string.split(', '))
             leagues_list.discard(str(league_id))
 
             db.execute(
@@ -534,8 +534,14 @@ def delete_league(league_id):
 
         db.execute(("DELETE FROM league_info WHERE league_id = %s;"),values=[league_id])
 
+        # Notify all members that the league has been deleted
+        db.execute_many(
+            "INSERT INTO notifications (user_id, league_id, notification_text) VALUES %s",
+            [(user_id, None, "{} has been deleted! It's been real.".format(league_info["league_name"])) for user_id in member_ids]
+        )
+
         return {
-            "success": True, "message": "League Successfully Deleted"
+            "success": True, "message": "'{}' Successfully Deleted".format(league_info["league_name"])
         }
 
     except Exception as e:
