@@ -1,21 +1,19 @@
 {% extends "base.html" %}
 {% block title %}Delete League{% endblock %}
 {% block content %}
-    <div class="w3-container">
+    <div class="w3-container large_portrait_margins">
         <h2>Delete {{league_name}}</h2>
         <hr>
-        Are you sure you want to delete this league?
+        Caution! Deleting a league is permanent. Please type the name of the league in order to confirm the deletion.
         <br>
         <br>
-        <input type="text" id="target_league" placeholder="Enter League Name" style="width:100%">
+        <input type="text" id="target_league" placeholder="{{league_name}}">
         
-
-        <div class="w3-container w3-center">
+        <div class="w3-container">
             <div class="w3-bar">
                 <br>
-                <button class="w3-button w3-red" onclick="confirmDeletion({{league_id}},'{{league_name}}')">Yes</button>
-                <button onclick="document.location = './../'" class="w3-button w3-blue">No</button>
-
+                <button onclick="document.location = './../'" class="w3-button w3-blue w3-left">No, Changed My Mind</button>
+                <button class="w3-button w3-red w3-right" onclick="confirmDeletion({{league_id}},'{{league_name}}')">Yes, Delete the League</button>
             </div>
         </div>
         
@@ -46,7 +44,7 @@
 
             }
 
-            else alert("Invalid League Name!")
+            else alert(`'${target_league.value}' doesn't match '${league_name}'`);
 
         }
     </script>
