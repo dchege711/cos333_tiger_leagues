@@ -6,7 +6,7 @@ sudo: true
 install:
   - pip install -r requirements.txt
 script:
-  - ./run_tests
+  - python -m pytest tests/ --disable-pytest-warnings --showlocals -vvl
 services:
   - postgresql
 before_script:

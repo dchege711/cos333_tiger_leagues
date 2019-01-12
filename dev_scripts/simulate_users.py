@@ -14,10 +14,7 @@ from math import ceil
 
 from tiger_leagues.models import user_model, league_model, admin_model, db_model
 
-try:
-    db = db_model.Database(connection_uri=sys.argv[2])
-except IndexError:
-    db = db_model.Database()
+db = db_model.Database()
 
 def register_fake_users(num_users=40):
     """

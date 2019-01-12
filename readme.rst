@@ -1,5 +1,8 @@
 .. _tiger_leagues_overview:
 
+.. image:: https://travis-ci.com/dchege711/cos333_tiger_leagues.svg?token=s3ipyzJyrRRfLAX2nLGG&branch=master
+  :target: https://travis-ci.com/dchege711/cos333_tiger_leagues
+
 **********************
 App Overview
 **********************
