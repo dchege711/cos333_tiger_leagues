@@ -13,6 +13,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="prev" title="Models" href="models/readme.html" /> 
@@ -310,7 +311,7 @@ functions in the <code class="docutils literal notranslate"><span class="pre">ad
 </tr>
 </tbody>
 </table>
-<p>A redirect to the home page if the user doesn’t have admin privileges in 
+<p>A redirect to an exception page if the user doesn’t have admin privileges in 
 the league associated with this request.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -419,6 +420,33 @@ indeed deleted from the server.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="tiger_leagues.admin.league_has_started">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">league_has_started</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/admin.html#league_has_started"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.league_has_started" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator function that asserts that a league has already started. 
+Called before approve_scores and any other functions that should only take place with a started league.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(code=302)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>A redirect to an exception page if the league has already started.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If the league has not yet started, the request will 
+then be passed on to the next function on the chain, typically the handler 
+function for the request.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="tiger_leagues.admin.league_homepage">
 <code class="descclassname">tiger_leagues.admin.</code><code class="descname">league_homepage</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/admin.html#league_homepage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.league_homepage" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -442,8 +470,72 @@ indeed deleted from the server.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="tiger_leagues.admin.league_not_started">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">league_not_started</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/admin.html#league_not_started"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.league_not_started" title="Permalink to this definition">¶</a></dt>
+<dd><p>A decorator function that asserts that a league has not yet started. This function is automatically called before any of the 
+functions in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> module are executed. See 
+<a class="reference external" href="http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request">http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(code=302)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>A redirect to an exception page if the league has already started.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If the league has not yet started, the request will 
+then be passed on to the next function on the chain, typically the handler 
+function for the request.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="tiger_leagues.admin.league_requests">
 <code class="descclassname">tiger_leagues.admin.</code><code class="descname">league_requests</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/admin.html#league_requests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.league_requests" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – <code class="docutils literal notranslate"><span class="pre">int</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the league associated with this request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype='text/HTML')</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If responding to a GET request, render a template such that an admin can 
+view the requests to join the league and can choose to accept or reject the 
+join requests</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype=application/json)</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If responding to a POST request, update the join status of the users as 
+instructed in the POST body. The JSON contains the keys <code class="docutils literal notranslate"><span class="pre">message</span></code> and 
+<code class="docutils literal notranslate"><span class="pre">success</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.admin.manage_members">
+<code class="descclassname">tiger_leagues.admin.</code><code class="descname">manage_members</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/admin.html#manage_members"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.manage_members" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -671,8 +763,12 @@ template includes information such as <code class="docutils literal notranslate"
 </tr>
 </tbody>
 </table>
-<p>Render a side-by-side comparison of the currently logged in user and the 
-user whose ID was passed in the URL.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">other_user_id</span> <span class="pre">==</span> <span class="pre">current_user_id</span></code>, the page shows the currently 
+logged in user’s stats.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">other_user_id</span></code> does not belong to the same division as the currently 
+logged in user, the stats of this other player are shown.</p>
+<p>If the two users are in the same division, then the page shows both player’s 
+stats in the league in a side-by-side fashion.</p>
 </dd></dl>
 
 <dl class="function">
@@ -725,6 +821,40 @@ have the following keys: <cite>my_score, opponent_score, match_id</cite></p>
 set appropriately.</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="tiger_leagues.league.update_responses">
+<code class="descclassname">tiger_leagues.league.</code><code class="descname">update_responses</code><span class="sig-paren">(</span><em>league_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/league.html#update_responses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.league.update_responses" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – <code class="docutils literal notranslate"><span class="pre">int</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the league associated with this request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype='text/html')</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>Render the form that needs to be filled by users that wish to update their responses 
+to league-specific questions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype='text/html')</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>Process the form submitted by the user. Return 
+a JSON object that confirms the status of the submission.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-tiger_leagues.user">
 <span id="tiger-leagues-user"></span><h2>tiger_leagues.user<a class="headerlink" href="#module-tiger_leagues.user" title="Permalink to this headline">¶</a></h2>
@@ -747,6 +877,20 @@ set appropriately.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="tiger_leagues.user.modify_notification_status">
+<code class="descclassname">tiger_leagues.user.</code><code class="descname">modify_notification_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/user.html#modify_notification_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.user.modify_notification_status" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype-'application/json')</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The JSON object is keyed by <code class="docutils literal notranslate"><span class="pre">success</span></code> and <code class="docutils literal notranslate"><span class="pre">message</span></code></p>
+</dd></dl>
+
+<dl class="function">
 <dt id="tiger_leagues.user.update_user_profile">
 <code class="descclassname">tiger_leagues.user.</code><code class="descname">update_user_profile</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/user.html#update_user_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.user.update_user_profile" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -760,6 +904,20 @@ set appropriately.</p>
 <p>Update the information stored about a user. Render a template that contains 
 user information such as: <code class="docutils literal notranslate"><span class="pre">net_id,</span> <span class="pre">preferred_name,</span> <span class="pre">preferred_email,</span> 
 <span class="pre">phone_number,</span> <span class="pre">room_number,</span> <span class="pre">associated_leagues</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.user.view_notifications">
+<code class="descclassname">tiger_leagues.user.</code><code class="descname">view_notifications</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/user.html#view_notifications"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.user.view_notifications" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">flask.Response(mimetype-'text/html')</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>Render the user’s pending messages</p>
 </dd></dl>
 
 </div>
@@ -870,7 +1028,7 @@ that is exposed in the <code class="docutils literal notranslate"><span class="p
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

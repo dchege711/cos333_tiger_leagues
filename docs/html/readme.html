@@ -13,6 +13,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Models" href="tiger_leagues/models/readme.html" />
@@ -49,7 +50,10 @@
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">App Overview</a><ul>
+<li><a class="reference internal" href="#components">Components</a></li>
 <li><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li><a class="reference internal" href="#architecture">Architecture</a></li>
+<li><a class="reference internal" href="#testing">Testing</a></li>
 <li><a class="reference internal" href="#generating-the-documentation">Generating the Documentation</a></li>
 <li><a class="reference internal" href="#additional-feature-requests">Additional Feature Requests</a></li>
 </ul>
@@ -89,8 +93,9 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="app-overview">
-<span id="tiger-leagues-overview"></span><h1>App Overview<a class="headerlink" href="#app-overview" title="Permalink to this headline">¶</a></h1>
+  <a class="reference external image-reference" href="https://travis-ci.com/dchege711/cos333_tiger_leagues" id="tiger-leagues-overview"><img alt="https://travis-ci.com/dchege711/cos333_tiger_leagues.svg?token=s3ipyzJyrRRfLAX2nLGG&amp;branch=master" src="https://travis-ci.com/dchege711/cos333_tiger_leagues.svg?token=s3ipyzJyrRRfLAX2nLGG&amp;branch=master" /></a>
+<div class="section" id="app-overview">
+<h1>App Overview<a class="headerlink" href="#app-overview" title="Permalink to this headline">¶</a></h1>
 <p>Tiger Leagues is a web application hosted at <a class="reference external" href="https://tiger-leagues.herokuapp.com/">https://tiger-leagues.herokuapp.com/</a>.
 It is used by Princeton students that wish to run a league amongst themselves.
 The application was created in lieu of managing leagues over Google Docs.
@@ -100,8 +105,12 @@ Features include:</p>
 <li>Scheduling league games</li>
 <li>Keeping track of scores and leaderboards</li>
 </ul>
+<div class="section" id="components">
+<span id="id1"></span><h2>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h2>
+<img alt="_images/tiger_leagues_components.png" src="_images/tiger_leagues_components.png" />
+</div>
 <div class="section" id="getting-started">
-<span id="id1"></span><h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<span id="id2"></span><h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
 <p>Clone the repository with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/dchege711/cos333_tiger_leagues.git
 $ cd cos333_tiger_leagues
@@ -112,15 +121,10 @@ $ cd cos333_tiger_leagues
 </pre></div>
 </div>
 <p>We modelled the application after this <a class="reference external" href="http://flask.pocoo.org/docs/1.0/tutorial/">flask tutorial</a>.
-Installing Flask usually installs <code class="docutils literal notranslate"><span class="pre">ItsDangerous</span></code> v1.0.0 as a prerequisite.
+Installing Flask usually installs <code class="docutils literal notranslate"><span class="pre">ItsDangerous</span> <span class="pre">v1.0.0</span></code> as a prerequisite.
 However, Heroku cannot install v1.0.0. For this reason, <code class="docutils literal notranslate"><span class="pre">./requirements.txt</span></code>
 was manually updated to have <code class="docutils literal notranslate"><span class="pre">ItsDangerous==0.24</span></code>.</p>
-<p>We’re using a POSTGRESQL database that is managed by Heroku. Since Heroku can
-change the connection URI at anytime, we initially ran <code class="docutils literal notranslate"><span class="pre">subprocess.run</span></code> to
-get the most current connection string. However, it seems that the child
-processes do not get terminated appropriately. Restarting the initialization
-script a couple of times leads to a shortage of I/O resources.</p>
-<p>We therefore decided to use a locally hosted database for development purposes.
+<p>We’re using a locally hosted database for development purposes.
 We found this <a class="reference external" href="https://www.codementor.io/engineerapart/getting-started-with-postgresql-on-mac-osx-are8jcopb">tutorial</a>.
 useful when setting up PostgreSQL.</p>
 <p>Set the values of the environment variables defined in <a class="reference external" href="tiger_leagues/readme.html#module-tiger_leagues.config">config.py</a>.</p>
@@ -129,15 +133,40 @@ useful when setting up PostgreSQL.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="architecture">
+<span id="id3"></span><h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h2>
+<p>Tiger Leagues uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller">Model-View-Controller</a>
+architectural pattern.</p>
+<p>For more detailed documentation and design decisions made at each level see:</p>
+<ul class="simple">
+<li><a class="reference external" href="tiger_leagues/models/readme.html">Models</a></li>
+<li><a class="reference external" href="tiger_leagues/models/readme.html">Views</a></li>
+<li><a class="reference external" href="tiger_leagues/readme.html">Controllers</a></li>
+</ul>
+</div>
+<div class="section" id="testing">
+<span id="id4"></span><h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<p>The tests are defined in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> folder at the root of the project. We’re
+using <a class="reference external" href="https://docs.pytest.org/en/latest/">pytest</a> for our testing. We have
+included a helper bash script (<code class="docutils literal notranslate"><span class="pre">run_tests</span></code>) to run the tests and provide
+coverage analysis.</p>
+<p>We have also set up Travis CI to test entire builds. The Travis CI
+configuration is defined in the <code class="docutils literal notranslate"><span class="pre">.travis.yml</span></code> file at the root. We have set
+up <code class="docutils literal notranslate"><span class="pre">origin/master</span></code> as a protected branch, so make sure Travis CI greenlights
+any pull requests.</p>
+</div>
 <div class="section" id="generating-the-documentation">
-<span id="id2"></span><h2>Generating the Documentation<a class="headerlink" href="#generating-the-documentation" title="Permalink to this headline">¶</a></h2>
-<p>The documentation for this project is modelled after <a class="reference external" href="https://matplotlib.org/sampledoc/index.html">Matplotlib’s Tutorial</a></p>
+<span id="id5"></span><h2>Generating the Documentation<a class="headerlink" href="#generating-the-documentation" title="Permalink to this headline">¶</a></h2>
+<p>The documentation for this project is modelled after <a class="reference external" href="https://matplotlib.org/sampledoc/index.html">Matplotlib’s Tutorial</a> which generates documentation
+with <a class="reference external" href="http://www.sphinx-doc.org/en/master/">Sphinx</a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">conf.py</span></code> sets up the settings used by Sphinx. The docs are built from the
+.md and .rst files found within this repository.</p>
 <p>You generally need to run <code class="docutils literal notranslate"><span class="pre">$</span> <span class="pre">make</span> <span class="pre">html</span></code> to build the documentation. The docs
-are built inside the <code class="docutils literal notranslate"><span class="pre">./docs</span></code> folder, so that they may be accessible from
-<a class="reference external" href="https://dchege711.github.io/cos333_tiger_leagues">https://dchege711.github.io/cos333_tiger_leagues</a></p>
+are built inside the <code class="docutils literal notranslate"><span class="pre">docs</span></code> folder, so that GitHub Pages can access them and
+serve them at <a class="reference external" href="https://dchege711.github.io/cos333_tiger_leagues">https://dchege711.github.io/cos333_tiger_leagues</a></p>
 </div>
 <div class="section" id="additional-feature-requests">
-<span id="id3"></span><h2>Additional Feature Requests<a class="headerlink" href="#additional-feature-requests" title="Permalink to this headline">¶</a></h2>
+<span id="id6"></span><h2>Additional Feature Requests<a class="headerlink" href="#additional-feature-requests" title="Permalink to this headline">¶</a></h2>
 <p>The following are remarks made by users. In case you’re looking for features to
 implement, this is it Chief!</p>
 <ul class="simple">
@@ -181,7 +210,7 @@ toward the end would be pretty cool.</li>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

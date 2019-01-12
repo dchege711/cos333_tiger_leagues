@@ -13,6 +13,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Controllers" href="../readme.html" />
@@ -49,6 +50,10 @@
   <h3><a href="../../index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Models</a><ul>
+<li><a class="reference internal" href="#notes">Notes</a><ul>
+<li><a class="reference internal" href="#application-context">Application Context</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-tiger_leagues.models.db_model">tiger_leagues.models.db_model</a></li>
 <li><a class="reference internal" href="#module-tiger_leagues.models.config">tiger_leagues.models.config</a></li>
 <li><a class="reference internal" href="#module-tiger_leagues.models.league_model">tiger_leagues.models.league_model</a></li>
@@ -94,15 +99,52 @@
             
   <div class="section" id="models">
 <span id="tiger-leagues-models"></span><h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
-<p>This application loosely follows the model-controller-view architecture.</p>
+<p>As described on <a class="reference external" href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller#Components">Wikipedia</a>,
+the model is the application’s dynamic data structure, independent of the user
+interface. It directly manages the data, logic and rules of the application.</p>
+<div class="section" id="notes">
+<span id="id1"></span><h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="application-context">
+<span id="id2"></span><h3>Application Context<a class="headerlink" href="#application-context" title="Permalink to this headline">¶</a></h3>
+<p>Tiger Leagues can be ran in 3 different contexts. We used environment
+variables and <a class="reference internal" href="#module-tiger_leagues.models.config" title="tiger_leagues.models.config"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.models.config</span></code></a> to switch between the
+different contexts:</p>
+<ul class="simple">
+<li>Development</li>
+</ul>
+<p>Occurs when Tiger Leagues is being ran locally. We found it convenient to use
+a locally hosted database so that the dev can modify its content as they see
+fit.</p>
+<ul class="simple">
+<li>Travis CI</li>
+</ul>
+<p>Our tests write and read data from the database. We found it convenient to
+use a PostgreSQL database that is provisioned by Travis CI. The database is
+set up by the <code class="docutils literal notranslate"><span class="pre">.travis.yml</span></code> file at the root of the repository.</p>
+<ul class="simple">
+<li>Heroku (Production)</li>
+</ul>
+<p>If Tiger Leagues is running on Heroku, we use the database provided by Heroku.</p>
+</div>
+</div>
 <div class="section" id="module-tiger_leagues.models.db_model">
 <span id="tiger-leagues-models-db-model"></span><h2>tiger_leagues.models.db_model<a class="headerlink" href="#module-tiger_leagues.models.db_model" title="Permalink to this headline">¶</a></h2>
 <p>db.py</p>
 <p>A wrapper around the database used by the ‘Tiger Leagues’ app</p>
 <dl class="class">
 <dt id="tiger_leagues.models.db_model.Database">
-<em class="property">class </em><code class="descclassname">tiger_leagues.models.db_model.</code><code class="descname">Database</code><a class="reference internal" href="../../_modules/tiger_leagues/models/db_model.html#Database"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.db_model.Database" title="Permalink to this definition">¶</a></dt>
-<dd><p>A wrapper around the database used by the ‘Tiger Leagues’ app</p>
+<em class="property">class </em><code class="descclassname">tiger_leagues.models.db_model.</code><code class="descname">Database</code><span class="sig-paren">(</span><em>connection_uri=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/db_model.html#Database"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.db_model.Database" title="Permalink to this definition">¶</a></dt>
+<dd><p>A wrapper around the database used by the ‘Tiger Leagues’ app.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>connection_uri</strong> – str</td>
+</tr>
+</tbody>
+</table>
+<p>Optional connection string for the database. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, this defaults to 
+the connection string set in <code class="docutils literal notranslate"><span class="pre">config.DATABASE_URL</span></code>.</p>
 <dl class="method">
 <dt id="tiger_leagues.models.db_model.Database.disconnect">
 <code class="descname">disconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/db_model.html#Database.disconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.db_model.Database.disconnect" title="Permalink to this definition">¶</a></dt>
@@ -353,8 +395,8 @@ decriptive error message. Otherwise, the <code class="docutils literal notransla
 </table>
 <p>Keys: <code class="docutils literal notranslate"><span class="pre">league_id</span></code>, <code class="docutils literal notranslate"><span class="pre">league_id</span></code>, <code class="docutils literal notranslate"><span class="pre">league_name</span></code>, <code class="docutils literal notranslate"><span class="pre">description</span></code>, 
 <code class="docutils literal notranslate"><span class="pre">points_per_win</span></code>, <code class="docutils literal notranslate"><span class="pre">points_per_draw</span></code>, <code class="docutils literal notranslate"><span class="pre">points_per_loss</span></code>, <code class="docutils literal notranslate"><span class="pre">league_status</span></code>, 
-<code class="docutils literal notranslate"><span class="pre">additional_questions</span></code>, <code class="docutils literal notranslate"><span class="pre">registration_deadline</span></code>, <code class="docutils literal notranslate"><span class="pre">match_frequency_in_days</span></code>, 
-<code class="docutils literal notranslate"><span class="pre">max_num_players</span></code></p>
+<code class="docutils literal notranslate"><span class="pre">additional_questions</span></code>, <code class="docutils literal notranslate"><span class="pre">registration_deadline</span></code>, <code class="docutils literal notranslate"><span class="pre">num_games_per_period</span></code>, 
+<code class="docutils literal notranslate"><span class="pre">length_period_in_days</span></code>, <code class="docutils literal notranslate"><span class="pre">max_num_players</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -443,7 +485,7 @@ and <code class="docutils literal notranslate"><span class="pre">description</sp
 
 <dl class="function">
 <dt id="tiger_leagues.models.league_model.get_matches_in_current_window">
-<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">get_matches_in_current_window</code><span class="sig-paren">(</span><em>league_id</em>, <em>num_periods_before=1</em>, <em>num_periods_after=2</em>, <em>user_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#get_matches_in_current_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.get_matches_in_current_window" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">get_matches_in_current_window</code><span class="sig-paren">(</span><em>league_id</em>, <em>num_periods_before=3</em>, <em>num_periods_after=3</em>, <em>user_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#get_matches_in_current_window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.get_matches_in_current_window" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -546,7 +588,7 @@ If <code class="docutils literal notranslate"><span class="pre">success</span></
 
 <dl class="function">
 <dt id="tiger_leagues.models.league_model.get_players_current_matches">
-<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">get_players_current_matches</code><span class="sig-paren">(</span><em>user_id</em>, <em>league_id</em>, <em>num_periods_before=1</em>, <em>num_periods_after=2</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#get_players_current_matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.get_players_current_matches" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">get_players_current_matches</code><span class="sig-paren">(</span><em>user_id</em>, <em>league_id</em>, <em>num_periods_before=4</em>, <em>num_periods_after=4</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#get_players_current_matches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.get_players_current_matches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unlike <code class="xref py py-meth docutils literal notranslate"><span class="pre">get_matches_in_current_window()</span></code>, this method resolves the 
 opponent names as well as adding convenient fields such as <code class="docutils literal notranslate"><span class="pre">my_score,</span> 
 <span class="pre">opponent_score,</span> <span class="pre">opponent_id,</span> <span class="pre">opponent_name</span></code>.</p>
@@ -600,7 +642,9 @@ today will be included in the results.</p>
 </tr>
 </tbody>
 </table>
-<p>The player’s current matches ordered by the deadline.</p>
+<p>The player’s current matches ordered by the deadline. Each dict is keyed by 
+<code class="docutils literal notranslate"><span class="pre">match_id,</span> <span class="pre">league_id,</span> <span class="pre">division_id,</span> <span class="pre">status,</span> <span class="pre">deadline,</span> <span class="pre">my_score,</span>&#160; 
+<span class="pre">opponent_id,</span> <span class="pre">opponent_score,</span> <span class="pre">opponent_name</span></code></p>
 </dd></dl>
 
 <dl class="function">
@@ -803,6 +847,40 @@ Otherwise, <code class="docutils literal notranslate"><span class="pre">`message
 </dd></dl>
 
 <dl class="function">
+<dt id="tiger_leagues.models.league_model.process_update_league_responses">
+<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">process_update_league_responses</code><span class="sig-paren">(</span><em>league_id</em>, <em>user_profile</em>, <em>submitted_data</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#process_update_league_responses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.process_update_league_responses" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>league_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of this league</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>user_profile</strong> – dict</td>
+</tr>
+</tbody>
+</table>
+<p>Expected keys: <code class="docutils literal notranslate"><span class="pre">user_id,</span> <span class="pre">league_ids</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">dict</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If <code class="docutils literal notranslate"><span class="pre">succcess</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">message</span></code> will contain a descriptive error 
+message. If <code class="docutils literal notranslate"><span class="pre">success</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">message</span></code> will contain a 
+dict containing the updated user profile.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="tiger_leagues.models.league_model.update_league_standings">
 <code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">update_league_standings</code><span class="sig-paren">(</span><em>league_id</em>, <em>division_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#update_league_standings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.update_league_standings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the new league standings and persist them into the database.</p>
@@ -862,7 +940,7 @@ To fetch the standings, call <code class="xref py py-meth docutils literal notra
 </tbody>
 </table>
 <p>Options to use when allocating the divisions. Keys may include 
-<code class="docutils literal notranslate"><span class="pre">match_frequency_in_days</span></code> and <code class="docutils literal notranslate"><span class="pre">completion_deadline</span></code></p>
+<code class="docutils literal notranslate"><span class="pre">num_games_per_period</span></code>, <code class="docutils literal notranslate"><span class="pre">length_period_in_days</span></code>, <code class="docutils literal notranslate"><span class="pre">completion_deadline</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -953,7 +1031,7 @@ be played between all the users.</p>
 
 <dl class="function">
 <dt id="tiger_leagues.models.admin_model.generate_league_fixtures">
-<code class="descclassname">tiger_leagues.models.admin_model.</code><code class="descname">generate_league_fixtures</code><span class="sig-paren">(</span><em>league_id</em>, <em>div_allocations</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/admin_model.html#generate_league_fixtures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.admin_model.generate_league_fixtures" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tiger_leagues.models.admin_model.</code><code class="descname">generate_league_fixtures</code><span class="sig-paren">(</span><em>league_id</em>, <em>div_allocations</em>, <em>start_date=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/admin_model.html#generate_league_fixtures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.admin_model.generate_league_fixtures" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -973,6 +1051,16 @@ be played between all the users.</p>
 </table>
 <p>The keys are the division IDs. Each value is a dict keyed by <code class="docutils literal notranslate"><span class="pre">name</span></code> and 
 <code class="docutils literal notranslate"><span class="pre">user_id</span></code> representing a player associated with the league.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>start_date</strong> – <code class="docutils literal notranslate"><span class="pre">date</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The earliest games’ time window will start from this date. Defaults to 
+tomorrow</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1127,7 +1215,7 @@ Otherwise, <code class="docutils literal notranslate"><span class="pre">message<
 </table>
 <p>A representation of the user as stored in the database. Keys include: 
 <code class="docutils literal notranslate"><span class="pre">user_id,</span> <span class="pre">name,</span> <span class="pre">net_id,</span> <span class="pre">email,</span> <span class="pre">phone_num,</span> <span class="pre">room,</span> <span class="pre">league_ids,</span> 
-<span class="pre">associated_leagues</span></code></p>
+<span class="pre">associated_leagues,</span> <span class="pre">unread_notifications</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1137,6 +1225,119 @@ Otherwise, <code class="docutils literal notranslate"><span class="pre">message<
 </tbody>
 </table>
 <p>If there is no user in the database with the provided net id</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.models.user_model.read_notifications">
+<code class="descclassname">tiger_leagues.models.user_model.</code><code class="descname">read_notifications</code><span class="sig-paren">(</span><em>user_id</em>, <em>notification_status=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/user_model.html#read_notifications"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.user_model.read_notifications" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>user_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the associated user</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>notification_status</strong> – str</td>
+</tr>
+</tbody>
+</table>
+<p>The status of the notifications that are to be read. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, this defaults 
+to notifications that have not been archived.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">cursor</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>An iterable cursor where each item keyed by <code class="docutils literal notranslate"><span class="pre">notification_id</span></code>, 
+<code class="docutils literal notranslate"><span class="pre">notification_status</span></code>, <code class="docutils literal notranslate"><span class="pre">notification_text</span></code>, <code class="docutils literal notranslate"><span class="pre">created_at</span></code>, <code class="docutils literal notranslate"><span class="pre">league_name</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.models.user_model.send_notification">
+<code class="descclassname">tiger_leagues.models.user_model.</code><code class="descname">send_notification</code><span class="sig-paren">(</span><em>user_id</em>, <em>notification</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/user_model.html#send_notification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.user_model.send_notification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a notification to this user</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>user_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the associated user</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>notification</strong> – dict</td>
+</tr>
+</tbody>
+</table>
+<p>Expected keys include: <code class="docutils literal notranslate"><span class="pre">league_id,</span> <span class="pre">notification_text</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">int</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>The notification ID if the notification is successfully delivered to the user’s 
+mailbox.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">NoneType</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If the method failed</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.models.user_model.update_notification_status">
+<code class="descclassname">tiger_leagues.models.user_model.</code><code class="descname">update_notification_status</code><span class="sig-paren">(</span><em>user_id</em>, <em>notification_obj</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/user_model.html#update_notification_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.user_model.update_notification_status" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>user_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the user making this request</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>notification_obj</strong> – dict</td>
+</tr>
+</tbody>
+</table>
+<p>Expected keys: <code class="docutils literal notranslate"><span class="pre">notification_id</span></code>, <code class="docutils literal notranslate"><span class="pre">notification_status</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">dict</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>Keyed by <code class="docutils literal notranslate"><span class="pre">success</span></code> and <code class="docutils literal notranslate"><span class="pre">message</span></code>. 
+If <code class="docutils literal notranslate"><span class="pre">success</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, <code class="docutils literal notranslate"><span class="pre">message</span></code> contains a description of why the 
+request failed.
+If <code class="docutils literal notranslate"><span class="pre">success</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">message</span></code> contains the new status of the 
+notification.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1256,7 +1457,7 @@ Status code and message can be customized wherever it’s raised.</p>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

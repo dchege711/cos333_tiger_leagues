@@ -13,6 +13,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
@@ -72,6 +73,7 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">decorators</span>
 <span class="kn">from</span> <span class="nn">.models</span> <span class="k">import</span> <span class="n">league_model</span><span class="p">,</span> <span class="n">user_model</span>
+<span class="kn">from</span> <span class="nn">.models.exception</span> <span class="k">import</span> <span class="n">TigerLeaguesException</span>
 
 <span class="n">bp</span> <span class="o">=</span> <span class="n">Blueprint</span><span class="p">(</span><span class="s2">&quot;league&quot;</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span> <span class="n">url_prefix</span><span class="o">=</span><span class="s2">&quot;/league&quot;</span><span class="p">)</span>
 
@@ -95,8 +97,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">user</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="n">league_homepage</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span>
+            <span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;.league_homepage&quot;</span><span class="p">,</span> <span class="n">league_id</span><span class="o">=</span><span class="n">user</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">)</span>
     
     <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;.browse_leagues&quot;</span><span class="p">))</span></div>
 
@@ -119,6 +123,12 @@
     <span class="n">user</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span>
 
     <span class="n">associated_leagues</span> <span class="o">=</span> <span class="n">user</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">associated_leagues</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+            <span class="s2">&quot;You&#39;re not a member of this league&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">403</span>
+        <span class="p">)</span>
+
+    <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
     <span class="n">standings</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_standings</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
     <span class="n">current_matches</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_players_current_matches</span><span class="p">(</span>
         <span class="n">user</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">],</span> <span class="n">league_id</span>
@@ -126,6 +136,7 @@
 
     <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
         <span class="s2">&quot;/league/league_homepage.html&quot;</span><span class="p">,</span> 
+        <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span><span class="p">,</span>
         <span class="n">standings</span><span class="o">=</span><span class="n">standings</span><span class="p">,</span> <span class="n">league_id</span><span class="o">=</span><span class="n">league_id</span><span class="p">,</span>
         <span class="n">user_division_id</span><span class="o">=</span><span class="n">associated_leagues</span><span class="p">[</span><span class="n">league_id</span><span class="p">][</span><span class="s2">&quot;division_id&quot;</span><span class="p">],</span>
         <span class="n">current_matches</span><span class="o">=</span><span class="n">current_matches</span><span class="p">,</span> 
@@ -170,23 +181,51 @@
 
 <span class="sd">    :return: ``flask.Response(mimetype=&#39;text/html&#39;)``</span>
 
-<span class="sd">    Render a side-by-side comparison of the currently logged in user and the </span>
-<span class="sd">    user whose ID was passed in the URL.</span>
+<span class="sd">    If ``other_user_id == current_user_id``, the page shows the currently </span>
+<span class="sd">    logged in user&#39;s stats.</span>
+
+<span class="sd">    If ``other_user_id`` does not belong to the same division as the currently </span>
+<span class="sd">    logged in user, the stats of this other player are shown.</span>
+
+<span class="sd">    If the two users are in the same division, then the page shows both player&#39;s </span>
+<span class="sd">    stats in the league in a side-by-side fashion.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">current_user</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span>
-    <span class="n">other_user</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">other_user_id</span><span class="p">)</span>
+    <span class="n">other_user</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">other_user_id</span><span class="p">)</span>
     <span class="n">comparison_obj</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_player_comparison</span><span class="p">(</span>
         <span class="n">league_id</span><span class="p">,</span> <span class="n">current_user</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">],</span> <span class="n">other_user_id</span>
     <span class="p">)</span>
+    <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+
+    <span class="c1"># If the user clicked on their own name...</span>
+
+    <span class="k">if</span> <span class="n">current_user</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">other_user_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+            <span class="s2">&quot;/league/member_stats/league_single_player_stats.html&quot;</span><span class="p">,</span>
+            <span class="n">current_user</span><span class="o">=</span><span class="n">current_user</span><span class="p">,</span> <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span><span class="p">,</span>
+            <span class="n">current_user_stats</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;user_1&quot;</span><span class="p">],</span>
+            <span class="n">current_user_responses</span><span class="o">=</span><span class="n">league_model</span><span class="o">.</span><span class="n">get_previous_responses</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">current_user</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># If the user clicked on a player in another division</span>
+    <span class="k">if</span> <span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;different_divisions&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+            <span class="s2">&quot;/league/member_stats/league_single_player_stats.html&quot;</span><span class="p">,</span>
+            <span class="n">current_user</span><span class="o">=</span><span class="n">other_user</span><span class="p">,</span> <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span><span class="p">,</span> 
+            <span class="n">current_user_stats</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;user_2&quot;</span><span class="p">],</span>
+            <span class="n">current_user_responses</span><span class="o">=</span><span class="n">league_model</span><span class="o">.</span><span class="n">get_previous_responses</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">other_user</span><span class="p">),</span>
+        <span class="p">)</span>
     
+    <span class="c1"># Otherwise the two players are in the same division...</span>
     <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
-        <span class="s2">&quot;/league/league_member.html&quot;</span><span class="p">,</span> <span class="n">comparison</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;/league/member_stats/league_side_by_side_stats.html&quot;</span><span class="p">,</span> 
+        <span class="n">comparison</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">],</span> <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span><span class="p">,</span>
         <span class="n">current_user</span><span class="o">=</span><span class="n">current_user</span><span class="p">,</span> <span class="n">other_user</span><span class="o">=</span><span class="n">other_user</span><span class="p">,</span>
         <span class="n">current_user_stats</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;user_1&quot;</span><span class="p">],</span>
         <span class="n">other_user_stats</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;user_2&quot;</span><span class="p">],</span>
         <span class="n">head_to_head</span><span class="o">=</span><span class="n">comparison_obj</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;head_to_head&quot;</span><span class="p">],</span>
-        <span class="n">league_name</span><span class="o">=</span><span class="n">current_user</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">][</span><span class="n">league_id</span><span class="p">][</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
+        <span class="n">current_user_responses</span><span class="o">=</span><span class="n">league_model</span><span class="o">.</span><span class="n">get_previous_responses</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">other_user</span><span class="p">)</span>
     <span class="p">)</span></div>
 
 <div class="viewcode-block" id="create_league"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.league.create_league">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/create/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
@@ -308,6 +347,58 @@
     <span class="n">success</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">process_leave_league_request</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">user_profile</span><span class="p">)</span>
     <span class="n">session</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;net_id&quot;</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="n">success</span><span class="p">})</span></div>
+
+<div class="viewcode-block" id="update_responses"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.league.update_responses">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/update-responses/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@decorators</span><span class="o">.</span><span class="n">login_required</span>
+<span class="nd">@decorators</span><span class="o">.</span><span class="n">refresh_user_profile</span>
+<span class="k">def</span> <span class="nf">update_responses</span><span class="p">(</span><span class="n">league_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: ``int``</span>
+
+<span class="sd">    The ID of the league associated with this request</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=&#39;text/html&#39;)``</span>
+<span class="sd">    </span>
+<span class="sd">    Render the form that needs to be filled by users that wish to update their responses </span>
+<span class="sd">    to league-specific questions.</span>
+
+<span class="sd">    :return: ``flask.Response(mimetype=&#39;text/html&#39;)``</span>
+
+<span class="sd">    Process the form submitted by the user. Return </span>
+<span class="sd">    a JSON object that confirms the status of the submission.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info_if_joinable</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span> 
+        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+            <span class="s2">&quot;/league/update_responses.html&quot;</span><span class="p">,</span> <span class="n">error</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+    <span class="n">league_info</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span>
+    <span class="n">user_profile</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GET&quot;</span><span class="p">:</span>
+        <span class="n">previous_responses</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_previous_responses</span><span class="p">(</span>
+            <span class="n">league_id</span><span class="p">,</span> <span class="n">user_profile</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+            <span class="s2">&quot;/league/update_responses.html&quot;</span><span class="p">,</span> 
+            <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span><span class="p">,</span> <span class="n">previous_responses</span><span class="o">=</span><span class="n">previous_responses</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">process_update_league_responses</span><span class="p">(</span>
+            <span class="n">league_id</span><span class="p">,</span> <span class="n">user_profile</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span> 
+            <span class="n">session</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span>
+            <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;Responses Saved!&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">flash</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;league.league_homepage&quot;</span><span class="p">,</span> <span class="n">league_id</span><span class="o">=</span><span class="n">league_id</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 </pre></div>
 
           </div>
@@ -332,7 +423,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

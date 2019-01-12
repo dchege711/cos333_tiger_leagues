@@ -13,6 +13,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
@@ -67,7 +68,7 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Blueprint</span><span class="p">,</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">flash</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Blueprint</span><span class="p">,</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">flash</span><span class="p">,</span> <span class="n">jsonify</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">decorators</span>
 <span class="kn">from</span> <span class="nn">.models</span> <span class="k">import</span> <span class="n">user_model</span>
 
@@ -84,9 +85,9 @@
 <span class="sd">    associated_leagues``</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Refresh the user object</span>
-    <span class="n">session</span><span class="p">[</span><span class="s2">&quot;user&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;net_id&quot;</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;/user/user_profile.html&quot;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+        <span class="s2">&quot;/user/user_profile.html&quot;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">),</span> <span class="n">net_id</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;net_id&quot;</span><span class="p">)</span>
+    <span class="p">)</span></div>
 
 <div class="viewcode-block" id="update_user_profile"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.user.update_user_profile">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/profile/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="nd">@decorators</span><span class="o">.</span><span class="n">login_required</span>
@@ -103,8 +104,37 @@
         <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">),</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;net_id&quot;</span><span class="p">),</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span>
     <span class="p">)</span>
     <span class="n">flash</span><span class="p">(</span><span class="s2">&quot;User profile updated!&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span><span class="s2">&quot;/user/user_profile.html&quot;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">))</span></div>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+        <span class="s2">&quot;/user/user_profile.html&quot;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">),</span> <span class="n">net_id</span><span class="o">=</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;net_id&quot;</span><span class="p">)</span>
+    <span class="p">)</span></div>
     
+<div class="viewcode-block" id="view_notifications"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.user.view_notifications">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/notifications/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="nd">@decorators</span><span class="o">.</span><span class="n">login_required</span>
+<span class="k">def</span> <span class="nf">view_notifications</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :return: ``flask.Response(mimetype-&#39;text/html&#39;)``</span>
+
+<span class="sd">    Render the user&#39;s pending messages</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
+        <span class="s2">&quot;/user/user_notifications.html&quot;</span><span class="p">,</span> 
+        <span class="n">notifications</span><span class="o">=</span><span class="n">user_model</span><span class="o">.</span><span class="n">read_notifications</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="p">)</span></div>
+
+<div class="viewcode-block" id="modify_notification_status"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.user.modify_notification_status">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/notifications/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="nd">@decorators</span><span class="o">.</span><span class="n">login_required</span>
+<span class="k">def</span> <span class="nf">modify_notification_status</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :return: ``flask.Response(mimetype-&#39;application/json&#39;)``</span>
+
+<span class="sd">    The JSON object is keyed by ``success`` and ``message``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span>
+        <span class="n">user_model</span><span class="o">.</span><span class="n">update_notification_status</span><span class="p">(</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;user_id&quot;</span><span class="p">],</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span>
+        <span class="p">)</span>
+    <span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -129,7 +159,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>
