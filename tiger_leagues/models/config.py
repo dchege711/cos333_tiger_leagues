@@ -26,6 +26,8 @@ if APP_ENV == "development":
 elif APP_ENV == "production":
     # ... otherwise the app is running on Heroku and the URL is already set
     DATABASE_URL = environ["DATABASE_URL"]
+elif APP_ENV == "travis_ci":
+    DATABASE_URL = "host=localhost dbname=travis_ci_test user=postgres password="
 else:
     raise RuntimeError(
         "Please set the `TIGER_LEAGUES_ENVIRONMENT` to either `development` or `production`"
