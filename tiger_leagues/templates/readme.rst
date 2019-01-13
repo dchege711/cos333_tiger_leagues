@@ -46,9 +46,9 @@ admins, e.g.
 
 * ``admin_league_panel.html`` shows different actions that an admin can take
 * ``approve_members.html`` and ``manage_members.html`` show pages for managing 
-league members depending on whether the league is in progress or not.
+  league members depending on whether the league is in progress or not.
 * ``start_league.html`` allows the admin to allocate league divisions and 
-generate fixtures.
+  generate fixtures.
 * ``admin_league_homepage.html`` allows admins to approve pending scores.
 * ``delete_league.html`` allows admins to delete the league.
 
@@ -72,18 +72,18 @@ member.
 * ``create_league.html`` allows a user to create a new league.
 * ``join_league.html`` allows a user to request to join an existing league.
 * ``update_responses.html`` allows a user to update the responses that they 
-had submitted to the league.
+  had submitted to the league.
 * ``league_base.html`` provides an inheritable template that has league header 
-information at the top.
+  information at the top.
 * ``league_homepage.html`` shows the current standings and upcoming matches of 
-the logged in user.
+  the logged in user.
 * ``member_stats/league_comparison_base.html`` provides an inheritable 
-template for displaying a player(s) stats within a league.
+  template for displaying a player(s) stats within a league.
 * ``member_stats/league_side_by_side_stats.html`` provides a side-by-side 
-comparison of the logged in user and any other comparable player.
+  comparison of the logged in user and any other comparable player.
 * ``member_stats/league_single_player_stats.html`` provides league stats for a 
-single player (usually happens when user tries to view themselves, or a player 
-who is not in the same division)
+  single player (usually happens when user tries to view themselves, or a 
+  player who is not in the same division)
 
 user/*
 ^^^^^^
@@ -91,7 +91,7 @@ user/*
 Contains HTML files related to a user's account.
 
 * ``user_profile.html`` allows a user to view and/or update their site-wide 
-profile.
+  profile.
 * ``user_notifications.html`` allows a user to read the notifications that 
-have been sent to their mailbox.
+  have been sent to their mailbox.
 
