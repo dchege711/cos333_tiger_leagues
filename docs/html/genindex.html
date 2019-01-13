@@ -14,6 +14,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
   </head><body>
@@ -73,6 +74,7 @@
  | <a href="#I"><strong>I</strong></a>
  | <a href="#J"><strong>J</strong></a>
  | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
@@ -236,6 +238,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="tiger_leagues/models/readme.html#tiger_leagues.models.db_model.Database.launch">launch() (tiger_leagues.models.db_model.Database method)</a>
 </li>
+      <li><a href="tiger_leagues/readme.html#tiger_leagues.admin.league_has_started">league_has_started() (in module tiger_leagues.admin)</a>
+</li>
       <li><a href="tiger_leagues/readme.html#tiger_leagues.admin.league_homepage">league_homepage() (in module tiger_leagues.admin)</a>
 
       <ul>
@@ -246,11 +250,25 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="tiger_leagues/readme.html#tiger_leagues.league.league_member">league_member() (in module tiger_leagues.league)</a>
 </li>
+      <li><a href="tiger_leagues/readme.html#tiger_leagues.admin.league_not_started">league_not_started() (in module tiger_leagues.admin)</a>
+</li>
       <li><a href="tiger_leagues/readme.html#tiger_leagues.admin.league_requests">league_requests() (in module tiger_leagues.admin)</a>
 </li>
       <li><a href="tiger_leagues/readme.html#tiger_leagues.league.leave_league">leave_league() (in module tiger_leagues.league)</a>
 </li>
       <li><a href="tiger_leagues/readme.html#tiger_leagues.decorators.login_required">login_required() (in module tiger_leagues.decorators)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="tiger_leagues/readme.html#tiger_leagues.admin.manage_members">manage_members() (in module tiger_leagues.admin)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="tiger_leagues/readme.html#tiger_leagues.user.modify_notification_status">modify_notification_status() (in module tiger_leagues.user)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -268,11 +286,17 @@
 </li>
       <li><a href="tiger_leagues/readme.html#tiger_leagues.league.process_score_submit">process_score_submit() (in module tiger_leagues.league)</a>
 </li>
+      <li><a href="tiger_leagues/models/readme.html#tiger_leagues.models.league_model.process_update_league_responses">process_update_league_responses() (in module tiger_leagues.models.league_model)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="tiger_leagues/models/readme.html#tiger_leagues.models.user_model.read_notifications">read_notifications() (in module tiger_leagues.models.user_model)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="tiger_leagues/readme.html#tiger_leagues.decorators.refresh_user_profile">refresh_user_profile() (in module tiger_leagues.decorators)</a>
 </li>
@@ -282,10 +306,12 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="tiger_leagues/readme.html#tiger_leagues.admin.start_league">start_league() (in module tiger_leagues.admin)</a>
+      <li><a href="tiger_leagues/models/readme.html#tiger_leagues.models.user_model.send_notification">send_notification() (in module tiger_leagues.models.user_model)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="tiger_leagues/readme.html#tiger_leagues.admin.start_league">start_league() (in module tiger_leagues.admin)</a>
+</li>
       <li><a href="tiger_leagues/readme.html#tiger_leagues.cas_client.CASClient.strip_ticket">strip_ticket() (tiger_leagues.cas_client.CASClient method)</a>
 </li>
   </ul></td>
@@ -336,8 +362,12 @@
 </li>
       <li><a href="tiger_leagues/models/readme.html#tiger_leagues.models.league_model.update_league_standings">update_league_standings() (in module tiger_leagues.models.league_model)</a>
 </li>
+      <li><a href="tiger_leagues/models/readme.html#tiger_leagues.models.user_model.update_notification_status">update_notification_status() (in module tiger_leagues.models.user_model)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="tiger_leagues/readme.html#tiger_leagues.league.update_responses">update_responses() (in module tiger_leagues.league)</a>
+</li>
       <li><a href="tiger_leagues/models/readme.html#tiger_leagues.models.user_model.update_user_profile">update_user_profile() (in module tiger_leagues.models.user_model)</a>
 
       <ul>
@@ -351,6 +381,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="tiger_leagues/readme.html#tiger_leagues.cas_client.CASClient.validate">validate() (tiger_leagues.cas_client.CASClient method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="tiger_leagues/readme.html#tiger_leagues.user.view_notifications">view_notifications() (in module tiger_leagues.user)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -378,7 +412,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

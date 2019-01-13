@@ -16,6 +16,13 @@ Features include:
 * Scheduling league games
 * Keeping track of scores and leaderboards
 
+.. _components:
+
+Components
+----------
+
+.. image:: ./img/tiger_leagues_components.png
+
 .. _getting_started:
 
 Getting Started
@@ -32,19 +39,13 @@ Install the python packages (preferably in a new virtual environment)::
 
 We modelled the application after this `flask tutorial
 <http://flask.pocoo.org/docs/1.0/tutorial/>`_.
-Installing Flask usually installs ``ItsDangerous`` v1.0.0 as a prerequisite.
+Installing Flask usually installs ``ItsDangerous v1.0.0`` as a prerequisite.
 However, Heroku cannot install v1.0.0. For this reason, ``./requirements.txt``
 was manually updated to have ``ItsDangerous==0.24``.
 
-We're using a POSTGRESQL database that is managed by Heroku. Since Heroku can
-change the connection URI at anytime, we initially ran ``subprocess.run`` to
-get the most current connection string. However, it seems that the child
-processes do not get terminated appropriately. Restarting the initialization
-script a couple of times leads to a shortage of I/O resources.
-
-We therefore decided to use a locally hosted database for development purposes.
+We're using a locally hosted database for development purposes.
 We found this `tutorial
-<https://www.codementor.io/engineerapart/getting-started-with-postgresql-on-mac-osx-are8jcopb>`_.
+<https://www.codementor.io/engineerapart/getting-started-with-postgresql-on-mac-osx-are8jcopb>`_
 useful when setting up PostgreSQL.
 
 Set the values of the environment variables defined in config.py_.
@@ -55,17 +56,51 @@ Run the application server::
 
   $ ./run_flask_server
 
+.. _architecture:
+
+Architecture
+------------
+
+Tiger Leagues uses the `Model-View-Controller 
+<https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller>`_ 
+architectural pattern.
+
+For more detailed documentation and design decisions made at each level see:
+
+* `Models <tiger_leagues/models/readme.html>`_
+* `Views <tiger_leagues/models/readme.html>`_
+* `Controllers <tiger_leagues/readme.html>`_
+
+.. _testing:
+
+Testing
+-------
+
+The tests are defined in the ``tests`` folder at the root of the project. We're 
+using `pytest <https://docs.pytest.org/en/latest/>`_ for our testing. We have 
+included a helper bash script (``run_tests``) to run the tests and provide 
+coverage analysis.
+
+We have also set up Travis CI to test entire builds. The Travis CI 
+configuration is defined in the ``.travis.yml`` file at the root. We have set 
+up ``origin/master`` as a protected branch, so make sure Travis CI greenlights 
+any pull requests.
+
 .. _generating_the_documentation:
 
 Generating the Documentation
 ----------------------------
 
 The documentation for this project is modelled after `Matplotlib's Tutorial
-<https://matplotlib.org/sampledoc/index.html>`_
+<https://matplotlib.org/sampledoc/index.html>`_ which generates documentation 
+with `Sphinx <http://www.sphinx-doc.org/en/master/>`_.
+
+``conf.py`` sets up the settings used by Sphinx. The docs are built from the 
+.md and .rst files found within this repository.
 
 You generally need to run ``$ make html`` to build the documentation. The docs
-are built inside the ``./docs`` folder, so that they may be accessible from
-https://dchege711.github.io/cos333_tiger_leagues
+are built inside the ``docs`` folder, so that GitHub Pages can access them and 
+serve them at https://dchege711.github.io/cos333_tiger_leagues
 
 .. _additional_feature_requests:
 

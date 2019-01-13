@@ -13,6 +13,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
   </head><body>
@@ -75,14 +76,23 @@
 
 <div class="viewcode-block" id="Database"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.db_model.Database">[docs]</a><span class="k">class</span> <span class="nc">Database</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A wrapper around the database used by the &#39;Tiger Leagues&#39; app</span>
+<span class="sd">    A wrapper around the database used by the &#39;Tiger Leagues&#39; app.</span>
+
+<span class="sd">    :kwarg connection_uri: str</span>
+
+<span class="sd">    Optional connection string for the database. If ``None``, this defaults to </span>
+<span class="sd">    the connection string set in ``config.DATABASE_URL``.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connection_uri</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the database instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__connection</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">DATABASE_URL</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">connection_uri</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__connection</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">DATABASE_URL</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__connection</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">connection_uri</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">launch</span><span class="p">()</span>
         <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">)</span>
 
@@ -114,9 +124,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">((</span>
             <span class="s2">&quot;CREATE TABLE IF NOT EXISTS league_info (&quot;</span>
             <span class="s2">&quot;league_id SERIAL PRIMARY KEY, league_name VARCHAR(255), &quot;</span>
-            <span class="s2">&quot;description TEXT, points_per_win INT, points_per_draw INT, &quot;</span>
+            <span class="s2">&quot;description TEXT, points_per_win INT NOT NULL, points_per_draw INT NOT NULL, &quot;</span>
             <span class="s2">&quot;points_per_loss INT, registration_deadline DATE, max_num_players INT, &quot;</span>
-            <span class="s2">&quot;creator_user_id INT NOT NULL, match_frequency_in_days NUMERIC DEFAULT 7.0, &quot;</span>
+            <span class="s2">&quot;creator_user_id INT NOT NULL, num_games_per_period INT NOT NULL, length_period_in_days INT NOT NULL, &quot;</span>
             <span class="s2">&quot;additional_questions TEXT, league_status VARCHAR(255));&quot;</span>
         <span class="p">))</span>
 
@@ -126,6 +136,13 @@
             <span class="s2">&quot;user_id INT, wins INT, losses INT, draws INT, games_played INT, &quot;</span>
             <span class="s2">&quot;goals_for INT, goals_allowed INT, goal_diff INT, points INT, &quot;</span>
             <span class="s2">&quot;rank INT, rank_delta INT);&quot;</span>
+        <span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">((</span>
+            <span class="s2">&quot;CREATE TABLE IF NOT EXISTS notifications (&quot;</span>
+            <span class="s2">&quot;notification_id SERIAL PRIMARY KEY, user_id INT, league_id INT, &quot;</span>
+            <span class="s2">&quot;notification_status VARCHAR DEFAULT &#39;delivered&#39;, notification_text TEXT, &quot;</span>
+            <span class="s2">&quot;created_at TIMESTAMPTZ DEFAULT NOW());&quot;</span>
         <span class="p">))</span></div>
 
 <div class="viewcode-block" id="Database.execute"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.db_model.Database.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statement</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
@@ -281,7 +298,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

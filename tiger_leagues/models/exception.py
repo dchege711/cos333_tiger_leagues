@@ -1,14 +1,15 @@
 """
 exception.py
 
-Allows for error pages with custom exception messages.
+Allows for error pages/responses with custom exception messages.
 
 """
 
 class TigerLeaguesException(Exception):
     """
-    A catchall exception for all problems.
-    Status code and message can be customized wherever it's raised.
+    A special exception for errors that arise due to constraints that we set on 
+    the application, for instance, a user may not access the league panel for a 
+    league in which they lack an admin status, etc.
 
     :param message: str
 
@@ -20,13 +21,11 @@ class TigerLeaguesException(Exception):
 
     """
 
-    status_code = 400
-
-    def __init__(self, message, status_code=None):
+    def __init__(self, message, status_code=400, jsonify=False):
         Exception.__init__(self)
         self.message = message
-        if status_code is not None:
-            self.status_code = status_code
+        self.jsonify = jsonify
+        self.status_code = status_code
 
     def to_dict(self):
         """
@@ -35,6 +34,7 @@ class TigerLeaguesException(Exception):
         A dict representation of the exception
         
         """
-        rv = {}
-        rv['message'] = self.message
-        return rv
+        return {
+            "success": self.message, "message": self.message, 
+            "status": self.status_code
+        }

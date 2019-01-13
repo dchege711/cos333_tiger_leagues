@@ -13,6 +13,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
   </head><body>
@@ -67,9 +68,14 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">operator</span> <span class="k">import</span> <span class="n">itemgetter</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">db_model</span>
 
 <span class="n">db</span> <span class="o">=</span> <span class="n">db_model</span><span class="o">.</span><span class="n">Database</span><span class="p">()</span>
+
+<span class="n">NOTIFICATION_STATUS_SEEN</span> <span class="o">=</span> <span class="s2">&quot;seen&quot;</span>
+<span class="n">NOTIFICATION_STATUS_DELIVERED</span> <span class="o">=</span> <span class="s2">&quot;delivered&quot;</span>
+<span class="n">NOTIFICATION_STATUS_ARCHIVED</span> <span class="o">=</span> <span class="s2">&quot;archived&quot;</span>
 
 <div class="viewcode-block" id="get_user"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.user_model.get_user">[docs]</a><span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="n">net_id</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -85,7 +91,7 @@
 <span class="sd">    </span>
 <span class="sd">    A representation of the user as stored in the database. Keys include: </span>
 <span class="sd">    ``user_id, name, net_id, email, phone_num, room, league_ids, </span>
-<span class="sd">    associated_leagues``</span>
+<span class="sd">    associated_leagues, unread_notifications``</span>
 <span class="sd">    </span>
 <span class="sd">    :return: ``NoneType``</span>
 
@@ -116,6 +122,10 @@
         <span class="n">mutable_user_data</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">__get_user_leagues_info</span><span class="p">(</span>
             <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">],</span> <span class="n">mutable_user_data</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]</span>
         <span class="p">)</span>
+    
+    <span class="n">mutable_user_data</span><span class="p">[</span><span class="s2">&quot;unread_notifications&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_notifications</span><span class="p">(</span>
+        <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">],</span> <span class="n">notification_status</span><span class="o">=</span><span class="n">NOTIFICATION_STATUS_DELIVERED</span>
+    <span class="p">)</span>
     <span class="k">return</span> <span class="n">mutable_user_data</span></div>
 
 <div class="viewcode-block" id="update_user_profile"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.user_model.update_user_profile">[docs]</a><span class="k">def</span> <span class="nf">update_user_profile</span><span class="p">(</span><span class="n">user_profile</span><span class="p">,</span> <span class="n">net_id</span><span class="p">,</span> <span class="n">submitted_data</span><span class="p">):</span>
@@ -206,6 +216,151 @@
             <span class="n">user_leagues_info</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">league_id</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="n">info</span><span class="p">)</span>
         
     <span class="k">return</span> <span class="n">user_leagues_info</span>
+
+<div class="viewcode-block" id="send_notification"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.user_model.send_notification">[docs]</a><span class="k">def</span> <span class="nf">send_notification</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">notification</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Send a notification to this user</span>
+
+<span class="sd">    :param user_id: int</span>
+
+<span class="sd">    The ID of the associated user</span>
+
+<span class="sd">    :param notification: dict</span>
+
+<span class="sd">    Expected keys include: ``league_id, notification_text``</span>
+
+<span class="sd">    :return: ``int``</span>
+
+<span class="sd">    The notification ID if the notification is successfully delivered to the user&#39;s </span>
+<span class="sd">    mailbox.</span>
+
+<span class="sd">    :return: ``NoneType``</span>
+
+<span class="sd">    If the method failed</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="s2">&quot;league_id&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">notification</span> <span class="ow">or</span> <span class="s2">&quot;notification_text&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">notification</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    
+    <span class="k">return</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;INSERT INTO notifications (&quot;</span>
+            <span class="s2">&quot;user_id, league_id, notification_status, notification_text)&quot;</span>
+            <span class="s2">&quot;VALUES (</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">) RETURNING notification_id;&quot;</span>
+        <span class="p">),</span> 
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">notification</span><span class="p">[</span><span class="s2">&quot;league_id&quot;</span><span class="p">],</span> <span class="n">NOTIFICATION_STATUS_DELIVERED</span><span class="p">,</span> <span class="n">notification</span><span class="p">[</span><span class="s2">&quot;notification_text&quot;</span><span class="p">]]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s2">&quot;notification_id&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="read_notifications"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.user_model.read_notifications">[docs]</a><span class="k">def</span> <span class="nf">read_notifications</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">notification_status</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param user_id: int</span>
+
+<span class="sd">    The ID of the associated user</span>
+
+<span class="sd">    :kwarg notification_status: str</span>
+
+<span class="sd">    The status of the notifications that are to be read. If ``None``, this defaults </span>
+<span class="sd">    to notifications that have not been archived.</span>
+
+<span class="sd">    :return: ``cursor``</span>
+
+<span class="sd">    An iterable cursor where each item keyed by ``notification_id``, </span>
+<span class="sd">    ``notification_status``, ``notification_text``, ``created_at``, ``league_name``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">notification_status</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">notifications</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;SELECT notifications.*, league_info.league_name FROM notifications, league_info &quot;</span>
+                <span class="s2">&quot;WHERE user_id = </span><span class="si">%s</span><span class="s2"> AND notification_status != </span><span class="si">%s</span><span class="s2"> AND league_info.league_id = notifications.league_id &quot;</span>
+                <span class="s2">&quot;ORDER BY created_at DESC;&quot;</span>
+            <span class="p">),</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">NOTIFICATION_STATUS_ARCHIVED</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">notifications</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;SELECT notifications.*, league_info.league_name FROM notifications, league_info &quot;</span>
+                <span class="s2">&quot;WHERE user_id = </span><span class="si">%s</span><span class="s2"> AND notification_status = </span><span class="si">%s</span><span class="s2"> AND league_info.league_id = notifications.league_id &quot;</span>
+                <span class="s2">&quot;ORDER BY created_at DESC;&quot;</span>
+            <span class="p">),</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">notification_status</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+    <span class="n">system_notifications</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;SELECT * FROM notifications WHERE league_id IS NULL AND user_id = </span><span class="si">%s</span><span class="s2">;&quot;</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_id</span><span class="p">]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+    <span class="c1"># This is not as bad as it looks. </span>
+    <span class="c1"># Python uses timsort that takes advantage of already sorted subsequences</span>
+    <span class="c1"># https://stackoverflow.com/questions/10948920/what-algorithm-does-pythons-sorted-use</span>
+    <span class="n">all_notifications</span> <span class="o">=</span> <span class="n">notifications</span> <span class="o">+</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="n">league_name</span><span class="o">=</span><span class="s2">&quot;[Tiger Leagues]&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">system_notifications</span><span class="p">]</span>
+    <span class="n">all_notifications</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="s2">&quot;created_at&quot;</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">all_notifications</span></div>
+
+<div class="viewcode-block" id="update_notification_status"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.user_model.update_notification_status">[docs]</a><span class="k">def</span> <span class="nf">update_notification_status</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">notification_obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param user_id: int</span>
+
+<span class="sd">    The ID of the user making this request</span>
+
+<span class="sd">    :param notification_obj: dict</span>
+
+<span class="sd">    Expected keys: ``notification_id``, ``notification_status``</span>
+
+<span class="sd">    :return: ``dict``</span>
+
+<span class="sd">    Keyed by ``success`` and ``message``. </span>
+<span class="sd">    If ``success`` is ``False``, ``message`` contains a description of why the </span>
+<span class="sd">    request failed.</span>
+<span class="sd">    If ``success`` is ``True``, ``message`` contains the new status of the </span>
+<span class="sd">    notification.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">allowed_statuses</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span>
+        <span class="n">NOTIFICATION_STATUS_ARCHIVED</span><span class="p">,</span> <span class="n">NOTIFICATION_STATUS_DELIVERED</span><span class="p">,</span> 
+        <span class="n">NOTIFICATION_STATUS_SEEN</span><span class="p">,</span> <span class="s2">&quot;deleted&quot;</span>
+    <span class="p">])</span>
+
+    <span class="k">if</span> <span class="s2">&quot;notification_id&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">notification_obj</span> <span class="ow">or</span> <span class="s2">&quot;notification_status&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">notification_obj</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Missing parameters: notification_id, notification_status&quot;</span>
+        <span class="p">}</span>
+    
+    <span class="n">submitted_status</span> <span class="o">=</span> <span class="n">notification_obj</span><span class="p">[</span><span class="s2">&quot;notification_status&quot;</span><span class="p">]</span> 
+    <span class="k">if</span> <span class="n">submitted_status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed_statuses</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Invalid value for &#39;notification_status&#39;&quot;</span>
+        <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">submitted_status</span> <span class="o">==</span> <span class="s2">&quot;deleted&quot;</span><span class="p">:</span>
+        <span class="n">deleted_notification_id</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;DELETE FROM notifications WHERE notification_id = </span><span class="si">%s</span><span class="s2"> AND user_id = </span><span class="si">%s</span><span class="s2"> RETURNING notification_id;&quot;</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">notification_obj</span><span class="p">[</span><span class="s2">&quot;notification_id&quot;</span><span class="p">],</span> <span class="n">user_id</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s2">&quot;notification_id&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">deleted_notification_id</span> <span class="o">==</span> <span class="n">notification_obj</span><span class="p">[</span><span class="s2">&quot;notification_id&quot;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;deleted&quot;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Notification not found&quot;</span><span class="p">}</span>
+        
+
+    <span class="n">new_status</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;UPDATE notifications SET notification_status = </span><span class="si">%s</span><span class="s2"> &quot;</span>
+            <span class="s2">&quot;WHERE notification_id = </span><span class="si">%s</span><span class="s2"> AND user_id = </span><span class="si">%s</span><span class="s2"> RETURNING notification_status;&quot;</span>
+        <span class="p">),</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">submitted_status</span><span class="p">,</span> <span class="n">notification_obj</span><span class="p">[</span><span class="s2">&quot;notification_id&quot;</span><span class="p">],</span> <span class="n">user_id</span>
+        <span class="p">]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s2">&quot;notification_status&quot;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">new_status</span> <span class="o">==</span> <span class="n">submitted_status</span> <span class="k">else</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">new_status</span>
+    <span class="p">}</span></div>
 </pre></div>
 
           </div>
@@ -230,7 +385,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

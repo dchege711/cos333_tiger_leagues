@@ -5,19 +5,13 @@ Exposes a blueprint that handles errors
 
 """
 
-from flask import (
-    Blueprint, render_template, request, url_for, jsonify, session, redirect, flash
-)
-from . import decorators
-from .models import league_model, user_model
+from flask import render_template, jsonify
 
-# bp = Blueprint("league", __name__, url_prefix="/league")
-
-def error_page(e):
+def report_error(tiger_leagues_exception):
     """
     General error page
-    
     """
-    return render_template("error.html", e = e)
-
-
+    if tiger_leagues_exception.jsonify:
+        return jsonify(tiger_leagues_exception.todict())
+    return render_template("error.html", e=tiger_leagues_exception)
+    

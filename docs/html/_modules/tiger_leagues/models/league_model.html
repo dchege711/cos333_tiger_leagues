@@ -13,6 +13,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
   </head><body>
@@ -73,7 +74,8 @@
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">cmp_to_key</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">db_model</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">db_model</span><span class="p">,</span> <span class="n">user_model</span>
+<span class="kn">from</span> <span class="nn">.exception</span> <span class="k">import</span> <span class="n">TigerLeaguesException</span>
 
 <span class="n">generic_500_msg</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Internal Server Error&quot;</span>
@@ -246,13 +248,17 @@
         <span class="p">),</span>
         <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">]</span> 
     <span class="p">)</span>
+    <span class="k">if</span> <span class="n">cursor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;League does not exist; it may have been deleted. </span><span class="se">\</span>
+<span class="s1">        If you entered the URL manually, double-check the league ID.&#39;</span><span class="p">)</span>
+
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">:</span>
         <span class="n">all_standings</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;division_id&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">all_standings</span></div>
 
-<div class="viewcode-block" id="get_matches_in_current_window"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_matches_in_current_window">[docs]</a><span class="k">def</span> <span class="nf">get_matches_in_current_window</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">num_periods_before</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
-                                  <span class="n">num_periods_after</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="get_matches_in_current_window"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_matches_in_current_window">[docs]</a><span class="k">def</span> <span class="nf">get_matches_in_current_window</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">num_periods_before</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> 
+                                  <span class="n">num_periods_after</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :param league_id: int</span>
 <span class="sd">    </span>
@@ -284,24 +290,37 @@
 <span class="sd">    ```score_user_1```, ```score_user_2```, ```status```, ```deadline```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
-        <span class="s2">&quot;SELECT match_frequency_in_days FROM league_info WHERE league_id = </span><span class="si">%s</span><span class="s2">;&quot;</span><span class="p">,</span> 
+        <span class="s2">&quot;SELECT num_games_per_period, length_period_in_days FROM league_info WHERE league_id = </span><span class="si">%s</span><span class="s2">;&quot;</span><span class="p">,</span> 
         <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">]</span>
     <span class="p">)</span>
-    <span class="n">time_window_days</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s2">&quot;match_frequency_in_days&quot;</span><span class="p">])</span>
+
+    <span class="n">row</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">row</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;League does not exist; it may have been deleted. </span><span class="se">\</span>
+<span class="s1">        If you entered the URL manually, double-check the league ID.&#39;</span><span class="p">)</span>
+    
+    <span class="n">time_window_days</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;length_period_in_days&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;num_games_per_period&quot;</span><span class="p">])</span>
 
     <span class="n">date_limits</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
         <span class="s2">&quot;SELECT min(deadline), max(deadline) FROM match_info WHERE league_id = </span><span class="si">%s</span><span class="s2">;&quot;</span><span class="p">,</span>
         <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">]</span>
     <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
 
+    
     <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">num_periods_before</span> <span class="o">==</span> <span class="n">inf</span><span class="p">:</span>
-        <span class="n">earliest_date</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">today</span><span class="p">,</span> <span class="n">date_limits</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">earliest_date</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">today</span><span class="p">,</span> <span class="n">date_limits</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">earliest_date</span> <span class="o">=</span> <span class="n">today</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">earliest_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">time_window_days</span> <span class="o">*</span> <span class="n">num_periods_before</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">num_periods_after</span> <span class="o">==</span> <span class="n">inf</span><span class="p">:</span>
-        <span class="n">latest_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">today</span><span class="p">,</span> <span class="n">date_limits</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span> 
+            <span class="n">latest_date</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">today</span><span class="p">,</span> <span class="n">date_limits</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">latest_date</span> <span class="o">=</span> <span class="n">today</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">latest_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">time_window_days</span> <span class="o">*</span> <span class="n">num_periods_after</span><span class="p">)</span>
     
@@ -325,8 +344,8 @@
         <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">,</span> <span class="n">earliest_date</span><span class="p">,</span> <span class="n">latest_date</span><span class="p">]</span>
     <span class="p">)</span></div>
 
-<div class="viewcode-block" id="get_players_current_matches"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_players_current_matches">[docs]</a><span class="k">def</span> <span class="nf">get_players_current_matches</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">league_id</span><span class="p">,</span> <span class="n">num_periods_before</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
-                                <span class="n">num_periods_after</span><span class="o">=</span><span class="mi">2</span><span class="p">,):</span>
+<div class="viewcode-block" id="get_players_current_matches"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.get_players_current_matches">[docs]</a><span class="k">def</span> <span class="nf">get_players_current_matches</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">league_id</span><span class="p">,</span> <span class="n">num_periods_before</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
+                                <span class="n">num_periods_after</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Unlike :py:meth:`.get_matches_in_current_window`, this method resolves the </span>
 <span class="sd">    opponent names as well as adding convenient fields such as ``my_score, </span>
@@ -356,7 +375,9 @@
 
 <span class="sd">    :return: ``List[dict]``</span>
 <span class="sd">    </span>
-<span class="sd">    The player&#39;s current matches ordered by the deadline.</span>
+<span class="sd">    The player&#39;s current matches ordered by the deadline. Each dict is keyed by </span>
+<span class="sd">    ``match_id, league_id, division_id, status, deadline, my_score,  </span>
+<span class="sd">    opponent_id, opponent_score, opponent_name``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">relevant_matches</span> <span class="o">=</span> <span class="n">get_matches_in_current_window</span><span class="p">(</span>
@@ -495,8 +516,9 @@
         <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;description&quot;</span><span class="p">],</span> 
         <span class="s2">&quot;points_per_win&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;points_per_win&quot;</span><span class="p">],</span> 
         <span class="s2">&quot;points_per_draw&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;points_per_draw&quot;</span><span class="p">],</span> 
-        <span class="s2">&quot;max_num_players&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;max_num_players&quot;</span><span class="p">],</span> 
-        <span class="s2">&quot;match_frequency_in_days&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;match_frequency_in_days&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;max_num_players&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;max_num_players&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;num_games_per_period&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;num_games_per_period&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;length_period_in_days&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;length_period_in_days&quot;</span><span class="p">],</span>
         <span class="s2">&quot;points_per_loss&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;points_per_loss&quot;</span><span class="p">],</span> 
         <span class="s2">&quot;registration_deadline&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;registration_deadline&quot;</span><span class="p">],</span>
         <span class="s2">&quot;additional_questions&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">sanitized_additional_questions</span><span class="p">)</span>
@@ -559,8 +581,8 @@
 <span class="sd">    </span>
 <span class="sd">    Keys: ``league_id``, ``league_id``, ``league_name``, ``description``, </span>
 <span class="sd">    ``points_per_win``, ``points_per_draw``, ``points_per_loss``, ``league_status``, </span>
-<span class="sd">    ``additional_questions``, ``registration_deadline``, ``match_frequency_in_days``, </span>
-<span class="sd">    ``max_num_players``</span>
+<span class="sd">    ``additional_questions``, ``registration_deadline``, ``num_games_per_period``, </span>
+<span class="sd">    ``length_period_in_days``, ``max_num_players``</span>
 
 <span class="sd">    :return: ``NoneType``</span>
 <span class="sd">    </span>
@@ -569,18 +591,19 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
         <span class="p">(</span>
-            <span class="s2">&quot;SELECT league_id, league_name, description, points_per_win, &quot;</span>
-            <span class="s2">&quot;points_per_draw, points_per_loss, additional_questions, league_status, &quot;</span>
-            <span class="s2">&quot;registration_deadline, match_frequency_in_days, max_num_players &quot;</span>
-            <span class="s2">&quot;FROM league_info WHERE league_id = </span><span class="si">%s</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;SELECT league_info.*, users.name, users.net_id &quot;</span>
+            <span class="s2">&quot;FROM league_info, users WHERE league_id = </span><span class="si">%s</span><span class="s2"> AND league_info.creator_user_id = users.user_id;&quot;</span>
         <span class="p">),</span> 
         <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">]</span>
     <span class="p">)</span>
     <span class="n">league_info</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
     
-    <span class="k">if</span> <span class="n">league_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">]:</span>
-            <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">league_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;League does not exist; it may have been deleted. </span><span class="se">\</span>
+<span class="s1">        If you entered the URL manually, double-check the league ID.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">]:</span>
+        <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">league_info</span></div>
 
@@ -598,14 +621,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ids_associated_leagues</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
     <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">((</span>
-        <span class="s2">&quot;SELECT league_id, league_name, registration_deadline, description&quot;</span>
-        <span class="s2">&quot; FROM league_info;&quot;</span>
+        <span class="s2">&quot;SELECT league_id, league_name, registration_deadline, description, league_info.league_status, users.name, &quot;</span>
+        <span class="s2">&quot;users.net_id FROM league_info, users WHERE league_info.creator_user_id = users.user_id;&quot;</span>
     <span class="p">))</span>
 
     <span class="n">unjoined_leagues</span><span class="p">,</span> <span class="n">today</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">iterator</span><span class="p">(</span><span class="n">cursor</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;league_id&quot;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ids_associated_leagues</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">today</span> <span class="o">&lt;=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;registration_deadline&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">today</span> <span class="o">&lt;=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;registration_deadline&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;league_status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">LEAGUE_STAGE_ACCEPTING_USERS</span><span class="p">:</span>
                 <span class="n">unjoined_leagues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
 
     <span class="n">unjoined_leagues</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span>
@@ -631,19 +654,25 @@
 
     <span class="c1"># If the league doesn&#39;t exist, let the user know</span>
     <span class="k">if</span> <span class="n">league_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> 
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;League not found&quot;</span>
-        <span class="p">}</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+            <span class="s2">&quot;The league does not exist&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span>
+        <span class="p">)</span>
 
     <span class="c1"># If the league&#39;s deadline is already passed, communicate that to the user</span>
     <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">today</span> <span class="o">&gt;</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;registration_deadline&quot;</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;The League&#39;s registration deadline (</span><span class="si">{}</span><span class="s2">) has passed&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+            <span class="s2">&quot;The registration deadline for &#39;</span><span class="si">{}</span><span class="s2">&#39; has passed (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">],</span>
                 <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;registration_deadline&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%A, %B </span><span class="si">%d</span><span class="s2">, %Y&quot;</span><span class="p">)</span>
-            <span class="p">)</span>
-        <span class="p">}</span>
+            <span class="p">),</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_status&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">LEAGUE_STAGE_ACCEPTING_USERS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+            <span class="s2">&quot;&#39;</span><span class="si">{}</span><span class="s2">&#39; is no longer accepting new players&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">]),</span> 
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span>
+        <span class="p">)</span>
 
     <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">league_info</span><span class="p">}</span></div>
 
@@ -712,12 +741,36 @@
     <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
 
     <span class="k">if</span> <span class="n">player_standing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> 
-            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;The player is not participating in this league&quot;</span>
-        <span class="p">}</span>
+        <span class="n">player_details</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;SELECT name, league_name FROM users, league_info &quot;</span>
+                <span class="s2">&quot;WHERE user_id = </span><span class="si">%s</span><span class="s2"> AND league_id = </span><span class="si">%s</span><span class="s2">;&quot;</span>
+            <span class="p">),</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">league_id</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">player_details</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s2">&quot;The player was not found.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+        <span class="n">associated_leagues</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">associated_leagues</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a member of </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">player_details</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">player_details</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
+                <span class="p">),</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> has not started yet.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">player_details</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
+                <span class="p">),</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span>
+            <span class="p">)</span>
+
+    <span class="n">lowest_rank</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;SELECT MAX(rank) FROM league_standings WHERE league_id = </span><span class="si">%s</span><span class="s2"> AND division_id = </span><span class="si">%s</span><span class="s2">;&quot;</span><span class="p">,</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_id</span><span class="p">,</span> <span class="n">player_standing</span><span class="p">[</span><span class="s2">&quot;division_id&quot;</span><span class="p">]]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span>
 
     <span class="n">player_stats</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="n">player_standing</span><span class="p">)</span>
+    <span class="n">player_stats</span><span class="p">[</span><span class="s2">&quot;lowest_rank&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lowest_rank</span>
     <span class="k">if</span> <span class="n">matches</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">matches</span> <span class="o">=</span> <span class="n">get_players_current_matches</span><span class="p">(</span>
             <span class="n">user_id</span><span class="p">,</span> <span class="n">league_id</span><span class="p">,</span> <span class="n">num_periods_before</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">num_periods_after</span><span class="o">=</span><span class="mi">0</span>
@@ -757,6 +810,21 @@
 <span class="sd">    points, mutual_opponents, head_to_head, player_form``</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">user_1_info</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">user_1_id</span><span class="p">))</span>
+    <span class="n">user_2_info</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">user_2_id</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">user_1_info</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">user_2_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;User does not exist. </span><span class="se">\</span>
+<span class="s1">        If you entered the URL manually, double-check their user ID.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">user_1_info</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;You are not a member of this league. </span><span class="se">\</span>
+<span class="s1">        If you entered the URL manually, double-check the league ID.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">user_2_info</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;User is not a member of this league. </span><span class="se">\</span>
+<span class="s1">        If you entered the URL manually, double-check the league ID.&#39;</span><span class="p">)</span>
+
+
     <span class="n">user_1_matches</span> <span class="o">=</span> <span class="n">get_players_current_matches</span><span class="p">(</span>
         <span class="n">user_1_id</span><span class="p">,</span> <span class="n">league_id</span><span class="p">,</span> <span class="n">num_periods_before</span><span class="o">=</span><span class="n">inf</span><span class="p">,</span> <span class="n">num_periods_after</span><span class="o">=</span><span class="n">inf</span>
     <span class="p">)</span>
@@ -767,6 +835,18 @@
     <span class="n">user_1_stats</span> <span class="o">=</span> <span class="n">get_players_league_stats</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">user_1_id</span><span class="p">,</span> <span class="n">matches</span><span class="o">=</span><span class="n">user_1_matches</span><span class="p">)[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span>
     <span class="n">user_2_stats</span> <span class="o">=</span> <span class="n">get_players_league_stats</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">user_2_id</span><span class="p">,</span> <span class="n">matches</span><span class="o">=</span><span class="n">user_2_matches</span><span class="p">)[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span>
 
+    <span class="c1"># Case: The users are in different divisions so comparing them doesn&#39;t make sense</span>
+    <span class="k">if</span> <span class="n">user_1_matches</span> <span class="ow">and</span> <span class="n">user_2_matches</span> <span class="ow">and</span> \
+        <span class="n">user_1_matches</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;division_id&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">user_2_matches</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;division_id&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> 
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;different_divisions&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;user_1&quot;</span><span class="p">:</span> <span class="n">user_1_stats</span><span class="p">,</span>
+                <span class="s2">&quot;user_2&quot;</span><span class="p">:</span> <span class="n">user_2_stats</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
     <span class="n">user_1_opponents</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;opponent_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">user_1_matches</span><span class="p">)</span>
     <span class="n">user_2_opponents</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;opponent_id&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">user_2_matches</span><span class="p">)</span>
 
@@ -775,7 +855,7 @@
     <span class="n">head_to_head_matches</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">user_2_id</span> <span class="ow">in</span> <span class="n">user_1_opponents</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">user_1_matches</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;opponent_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">user_2_id</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;opponent_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">user_2_id</span> <span class="ow">and</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">MATCH_STATUS_APPROVED</span><span class="p">:</span>
                 <span class="n">head_to_head_matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
 
     <span class="n">mutual_opponent_ids</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">user_1_id</span><span class="p">)</span>
@@ -784,7 +864,7 @@
     <span class="k">def</span> <span class="nf">collect_mutual_opponents</span><span class="p">(</span><span class="n">stats_obj</span><span class="p">,</span> <span class="n">matches_obj</span><span class="p">):</span>
         <span class="n">stats_obj</span><span class="p">[</span><span class="s2">&quot;mutual_opponents&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="n">matches_obj</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;opponent_id&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">mutual_opponent_ids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;opponent_id&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">mutual_opponent_ids</span> <span class="ow">and</span> <span class="n">match</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">MATCH_STATUS_APPROVED</span><span class="p">:</span>
                 <span class="n">stats_obj</span><span class="p">[</span><span class="s2">&quot;mutual_opponents&quot;</span><span class="p">][</span><span class="n">match</span><span class="p">[</span><span class="s2">&quot;opponent_id&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
 
     <span class="n">collect_mutual_opponents</span><span class="p">(</span><span class="n">user_1_stats</span><span class="p">,</span> <span class="n">user_1_matches</span><span class="p">)</span>
@@ -793,6 +873,7 @@
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
         <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;different_divisions&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
             <span class="s2">&quot;user_1&quot;</span><span class="p">:</span> <span class="n">user_1_stats</span><span class="p">,</span>
             <span class="s2">&quot;user_2&quot;</span><span class="p">:</span> <span class="n">user_2_stats</span><span class="p">,</span>
             <span class="s2">&quot;head_to_head&quot;</span><span class="p">:</span> <span class="n">head_to_head_matches</span>
@@ -895,6 +976,78 @@
         <span class="p">]</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="process_update_league_responses"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.league_model.process_update_league_responses">[docs]</a><span class="k">def</span> <span class="nf">process_update_league_responses</span><span class="p">(</span><span class="n">league_id</span><span class="p">,</span> <span class="n">user_profile</span><span class="p">,</span> <span class="n">submitted_data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param league_id: int</span>
+<span class="sd">    </span>
+<span class="sd">    The ID of this league</span>
+
+<span class="sd">    :param user_profile: dict</span>
+<span class="sd">    </span>
+<span class="sd">    Expected keys: ``user_id, league_ids``</span>
+
+<span class="sd">    :return: ``dict``</span>
+<span class="sd">    </span>
+<span class="sd">    If ``succcess`` is ``False``, ``message`` will contain a descriptive error </span>
+<span class="sd">    message. If ``success`` is ``True``, ``message`` will contain a </span>
+<span class="sd">    dict containing the updated user profile.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">get_league_info_if_joinable</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span> <span class="k">return</span> <span class="n">results</span>
+
+    <span class="n">league_info</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span>
+    <span class="n">expected_info</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;additional_questions&quot;</span><span class="p">]:</span>
+        <span class="n">expected_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">expected_info</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">submitted_data</span><span class="p">:</span> 
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Missing </span><span class="si">{}</span><span class="s2"> in the submitted form&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="n">expected_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">submitted_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="n">table_name</span> <span class="o">=</span> <span class="s2">&quot;league_responses_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+
+    <span class="n">row</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;SELECT * from </span><span class="si">{}</span><span class="s2"> WHERE user_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]],</span> 
+        <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">row</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;DELETE FROM </span><span class="si">{}</span><span class="s2"> WHERE user_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]],</span> 
+            <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+
+        <span class="p">)</span>
+
+    <span class="n">expected_info</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
+    <span class="n">expected_info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;INSERT INTO </span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">) VALUES (</span><span class="si">{}</span><span class="s2">);&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">expected_info</span><span class="p">),</span> 
+                <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;%(</span><span class="si">{}</span><span class="s2">)s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">expected_info</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">values</span><span class="o">=</span><span class="n">expected_info</span><span class="p">,</span>
+        <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="n">table_name</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Indicate on the user object that the responses were saved</span>
+    <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]:</span>
+        <span class="c1"># user_profile[&quot;league_ids&quot;].append(league_id)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;UPDATE users SET league_ids = </span><span class="si">%s</span><span class="s2"> WHERE user_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span>
+                <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;league_ids&quot;</span><span class="p">]),</span> 
+                <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">user_profile</span><span class="p">}</span></div>
 </pre></div>
 
           </div>
@@ -919,7 +1072,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>
