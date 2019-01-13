@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, "../..")
 
 from dev_scripts import simulate_users as sim
-from tiger_leagues.models import db_model
+from tiger_leagues.models import db_model, league_model
 
 db = db_model.Database()
 
@@ -23,10 +23,11 @@ def test_simulation(cleanup):
     num_leagues = db.execute("SELECT COUNT (league_id) FROM league_info;").fetchone()["count"]
     assert num_leagues == len(league_info_list)
 
-    for _ in range(5):
-        sim.populate_leagues(league_info_list, fake_users)
-        assert sim.generate_matches(league_info_list)
+    league_status = db.execute(
+        "SELECT league_status FROM league_info WHERE league_id = %s",
+        values=[league_info_list[0]["league_id"]]
+    ).fetchone()["league_status"]
+    assert league_status == league_model.LEAGUE_STAGE_ACCEPTING_USERS
 
-
-
-
+    sim.populate_leagues(league_info_list, fake_users)
+    assert sim.generate_matches(league_info_list)

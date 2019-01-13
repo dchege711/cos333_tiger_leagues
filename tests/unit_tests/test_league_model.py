@@ -52,46 +52,52 @@ def test_league_methods(cleanup):
     league_top = fake_users[1]
     league_bottom = fake_users[2]
 
-    leader_matches = league_model.get_players_current_matches(league_top["user_id"], test_league["league_id"],
-                        num_periods_before=inf, num_periods_after=inf)
+    leader_matches = league_model.get_players_current_matches(
+        league_top["user_id"], test_league["league_id"],
+        num_periods_before=inf, num_periods_after=inf
+    )
 
     for match in leader_matches:
         if match["user_1_id"] == league_top["user_id"]:
             admin_model.approve_match({
-            "score_user_1": 7, "score_user_2": 0,
-            "match_id": match["match_id"]
-        })
+                "score_user_1": 7, "score_user_2": 0,
+                "match_id": match["match_id"]
+            })
         elif match["user_2_id"] == league_top["user_id"]:
             admin_model.approve_match({
-            "score_user_1": 0, "score_user_2": 7,
-            "match_id": match["match_id"]
-        })
+                "score_user_1": 0, "score_user_2": 7,
+                "match_id": match["match_id"]
+            })
 
-    last_place_matches = league_model.get_players_current_matches(league_bottom["user_id"], test_league["league_id"],
-                        num_periods_before=inf, num_periods_after=inf)
+    last_place_matches = league_model.get_players_current_matches(
+        league_bottom["user_id"], test_league["league_id"],
+        num_periods_before=inf, num_periods_after=inf
+    )
 
     for match in last_place_matches:
         if match["user_1_id"] == league_bottom["user_id"]:
             admin_model.approve_match({
-            "score_user_1": 0, "score_user_2": 9,
-            "match_id": match["match_id"]
-        })
+                "score_user_1": 0, "score_user_2": 9,
+                "match_id": match["match_id"]
+            })
         elif match["user_2_id"] == league_bottom["user_id"]:
             admin_model.approve_match({
-            "score_user_1": 9, "score_user_2": 0,
-            "match_id": match["match_id"]
-        })
+                "score_user_1": 9, "score_user_2": 0,
+                "match_id": match["match_id"]
+            })
 
     # Check that the altered results have affected the league standings in the desired manner
     
-    leader_info = league_model.get_players_league_stats(test_league["league_id"],
-                     league_top["user_id"], matches=None, k=5)
+    leader_info = league_model.get_players_league_stats(
+        test_league["league_id"], league_top["user_id"], matches=None, k=5
+    )
 
     leader_stats = leader_info["message"]
     assert leader_stats["rank"] == 1
 
-    last_place_info = league_model.get_players_league_stats(test_league["league_id"],
-                     league_bottom["user_id"], matches=None, k=5)
+    last_place_info = league_model.get_players_league_stats(
+        test_league["league_id"], league_bottom["user_id"], matches=None, k=5
+    )
 
     last_place_stats = last_place_info["message"]
     assert last_place_stats["rank"] == last_place_stats["lowest_rank"]
@@ -102,33 +108,29 @@ def test_league_methods(cleanup):
     score_set["opponent_score"] = 4
     score_set["match_id"] = last_place_matches[0]["match_id"]
 
-    submitted_scores_1 = league_model.process_player_score_report(league_bottom["user_id"], score_set)
+    submitted_scores_1 = league_model.process_player_score_report(
+        league_bottom["user_id"], score_set
+    )
     assert submitted_scores_1["message"]["match_status"] == "pending_approval"
 
     # Check that two users submitting scores changes score status to approved
-
     if last_place_matches[0]["user_1_id"] == league_bottom["user_id"]:
         other_user = last_place_matches[0]["user_2_id"]
-
     else:
         other_user = last_place_matches[0]["user_1_id"]
 
-    submitted_scores_2 = league_model.process_player_score_report(other_user, score_set)
+    submitted_scores_2 = league_model.process_player_score_report(
+        other_user, score_set
+    )
     assert submitted_scores_2["message"]["match_status"] == "approved"
 
     # Check that comparing a player to himself produces no head to head matches
-
-
     assert league_model.get_player_comparison(
-            test_league["league_id"], league_top["user_id"],
-             league_top["user_id"])["message"]["head_to_head"] == []
+        test_league["league_id"], league_top["user_id"], league_top["user_id"]
+    )["message"]["head_to_head"] == []
 
-    
-
+    # Check that getting the stats for a non-existent player raises an exception
     with pytest.raises(exception.TigerLeaguesException):
-        league_model.get_players_league_stats(test_league["league_id"], -1, matches=None, k=5)
-
-
-
-        
-
+        league_model.get_players_league_stats(
+            test_league["league_id"], -1, matches=None, k=5
+        )
