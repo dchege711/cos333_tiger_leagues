@@ -9,10 +9,10 @@ As described on `Wikipedia
 the model is the application's dynamic data structure, independent of the user 
 interface. It directly manages the data, logic and rules of the application.
 
-.. _design_decisions_and_war_stories:
+.. _design_decisions:
 
-Design Decisions and War Stories
---------------------------------
+Design Decisions
+----------------
 
 .. _application_context:
 
@@ -67,9 +67,9 @@ We therefore developed a rudimentary notification system in which we post
 relevant updates to a user's mailbox. The system does not allow for responses. 
 We leave that for future implementations of Tiger Leagues.
 
-.. _module_documentation:
+.. _models_documentation:
 
-Module Documentation
+Models Documentation
 --------------------
 
 tiger_leagues.models.db_model
