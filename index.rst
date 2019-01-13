@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+=========================================
 Welcome to Tiger Leagues's Documentation!
 =========================================
 
@@ -13,8 +14,10 @@ The source code for this project lives in https://github.com/dchege711/cos333_ti
 
    readme.rst
    tiger_leagues/models/readme.rst
+   tiger_leagues/templates/readme.rst
    tiger_leagues/readme.rst
 
+==================
 Indices and tables
 ==================
 
