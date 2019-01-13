@@ -9,7 +9,7 @@ As described on `Wikipedia
 the model is the application's dynamic data structure, independent of the user 
 interface. It directly manages the data, logic and rules of the application.
 
-.. _design_decisions:
+.. _models_design_decisions:
 
 Design Decisions
 ----------------

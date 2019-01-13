@@ -9,7 +9,7 @@ As described on `Wikipedia
 the contoller receives the input, optionally validates it and then passes 
 the input to the model.
 
-.. _design_decisions:
+.. _controllers_design_decisions:
 
 Design Decisions
 ----------------

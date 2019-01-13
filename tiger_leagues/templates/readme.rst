@@ -8,7 +8,7 @@ As described on `Wikipedia
 <https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller#Components>`_, 
 a view is any output representation of information.
 
-.. _design_decisions:
+.. _views_design_decisions:
 
 Design Decisions
 ----------------
