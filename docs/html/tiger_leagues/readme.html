@@ -16,7 +16,7 @@
     <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="Models" href="models/readme.html" /> 
+    <link rel="prev" title="Views" href="templates/readme.html" /> 
   </head><body>
 
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
@@ -33,7 +33,7 @@
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="models/readme.html" title="Models"
+          <a href="templates/readme.html" title="Views"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">home</a>|&nbsp;</li>
         <li><a href="../search.html">search</a>|&nbsp;</li>
@@ -46,6 +46,12 @@
   <h3><a href="../index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Controllers</a><ul>
+<li><a class="reference internal" href="#design-decisions">Design Decisions</a><ul>
+<li><a class="reference internal" href="#use-of-decorators">Use of Decorators</a></li>
+<li><a class="reference internal" href="#graceful-error-handling">Graceful Error Handling</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#controllers-documentation">Controllers Documentation</a><ul>
 <li><a class="reference internal" href="#module-tiger_leagues.auth">tiger_leagues.auth</a></li>
 <li><a class="reference internal" href="#module-tiger_leagues.cas_client">tiger_leagues.cas_client</a></li>
 <li><a class="reference internal" href="#module-tiger_leagues.admin">tiger_leagues.admin</a></li>
@@ -56,10 +62,12 @@
 </ul>
 </li>
 </ul>
+</li>
+</ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="models/readme.html"
-                        title="previous chapter">Models</a></p>
+  <p class="topless"><a href="templates/readme.html"
+                        title="previous chapter">Views</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -89,9 +97,30 @@
             
   <div class="section" id="controllers">
 <span id="tiger-leagues-controllers"></span><h1>Controllers<a class="headerlink" href="#controllers" title="Permalink to this headline">¶</a></h1>
-<p>This application loosely follows the model-controller-view architecture.</p>
+<p>As described on <a class="reference external" href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller#Components">Wikipedia</a>,
+the contoller receives the input, optionally validates it and then passes
+the input to the model.</p>
+<div class="section" id="design-decisions">
+<span id="controllers-design-decisions"></span><h2>Design Decisions<a class="headerlink" href="#design-decisions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="use-of-decorators">
+<span id="id1"></span><h3>Use of Decorators<a class="headerlink" href="#use-of-decorators" title="Permalink to this headline">¶</a></h3>
+<p>We extensively used decorators, as defined in
+<a class="reference internal" href="#module-tiger_leagues.decorators" title="tiger_leagues.decorators"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.decorators</span></code></a>, to enforce access control, e.g. only
+logged in users can join a league, only admins can accept/reject league
+members, etc.</p>
+</div>
+<div class="section" id="graceful-error-handling">
+<span id="id2"></span><h3>Graceful Error Handling<a class="headerlink" href="#graceful-error-handling" title="Permalink to this headline">¶</a></h3>
+<p>Since we defined a custom exception class,
+<a class="reference internal" href="models/readme.html#module-tiger_leagues.models.exception" title="tiger_leagues.models.exception"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.models.exception</span></code></a>, we were able to set an error handler
+for any such exception. This allows us to gracefully show helpful error pages/
+responses instead of the default ones.</p>
+</div>
+</div>
+<div class="section" id="controllers-documentation">
+<span id="id3"></span><h2>Controllers Documentation<a class="headerlink" href="#controllers-documentation" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="module-tiger_leagues.auth">
-<span id="tiger-leagues-auth"></span><h2>tiger_leagues.auth<a class="headerlink" href="#module-tiger_leagues.auth" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-auth"></span><h3>tiger_leagues.auth<a class="headerlink" href="#module-tiger_leagues.auth" title="Permalink to this headline">¶</a></h3>
 <p>auth.py</p>
 <p>Handles authentication-related requests e.g. <code class="docutils literal notranslate"><span class="pre">login</span></code>, <code class="docutils literal notranslate"><span class="pre">logout</span></code>.
 Exposes a blueprint that handles requests made to the <cite>auth</cite> endpoint</p>
@@ -147,7 +176,7 @@ homepage for any of the leagues that they’re involved in.</p>
 
 </div>
 <div class="section" id="module-tiger_leagues.cas_client">
-<span id="tiger-leagues-cas-client"></span><h2>tiger_leagues.cas_client<a class="headerlink" href="#module-tiger_leagues.cas_client" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-cas-client"></span><h3>tiger_leagues.cas_client<a class="headerlink" href="#module-tiger_leagues.cas_client" title="Permalink to this headline">¶</a></h3>
 <p>cas_client.py</p>
 <p>A convenient wrapper around the central authentication system.</p>
 <p>&#64;authors: Scott Karlin, Alex Halderman, Brian Kernighan, Bob Dondero</p>
@@ -282,7 +311,7 @@ GET request contains a ticket as one of its parameters.</p>
 
 </div>
 <div class="section" id="module-tiger_leagues.admin">
-<span id="tiger-leagues-admin"></span><h2>tiger_leagues.admin<a class="headerlink" href="#module-tiger_leagues.admin" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-admin"></span><h3>tiger_leagues.admin<a class="headerlink" href="#module-tiger_leagues.admin" title="Permalink to this headline">¶</a></h3>
 <p>admin.py</p>
 <p>Exposes a blueprint that handles requests made to <cite>/admin/*</cite> endpoint.</p>
 <p>The blueprint is then registered in the <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file and made available 
@@ -605,7 +634,7 @@ JSON response contains the keys <code class="docutils literal notranslate"><span
 
 </div>
 <div class="section" id="module-tiger_leagues.league">
-<span id="tiger-leagues-league"></span><h2>tiger_leagues.league<a class="headerlink" href="#module-tiger_leagues.league" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-league"></span><h3>tiger_leagues.league<a class="headerlink" href="#module-tiger_leagues.league" title="Permalink to this headline">¶</a></h3>
 <p>league.py</p>
 <p>Exposes a blueprint that handles requests made to <cite>/league/*</cite> endpoint</p>
 <dl class="function">
@@ -857,7 +886,7 @@ a JSON object that confirms the status of the submission.</p>
 
 </div>
 <div class="section" id="module-tiger_leagues.user">
-<span id="tiger-leagues-user"></span><h2>tiger_leagues.user<a class="headerlink" href="#module-tiger_leagues.user" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-user"></span><h3>tiger_leagues.user<a class="headerlink" href="#module-tiger_leagues.user" title="Permalink to this headline">¶</a></h3>
 <p>player.py</p>
 <p>Exposes a blueprint that handles requests made to <cite>/user/*</cite> endpoint</p>
 <dl class="function">
@@ -922,7 +951,7 @@ user information such as: <code class="docutils literal notranslate"><span class
 
 </div>
 <div class="section" id="module-tiger_leagues.decorators">
-<span id="tiger-leagues-decorators"></span><h2>tiger_leagues.decorators<a class="headerlink" href="#module-tiger_leagues.decorators" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-decorators"></span><h3>tiger_leagues.decorators<a class="headerlink" href="#module-tiger_leagues.decorators" title="Permalink to this headline">¶</a></h3>
 <p>decorators.py</p>
 <p>A decorator is a function that wraps and replaces another function. If there’s 
 a functionality that you wish to extend to multiple functions, you should 
@@ -993,13 +1022,14 @@ side effect.</p>
 
 </div>
 <div class="section" id="module-tiger_leagues.wsgi">
-<span id="tiger-leagues-wsgi"></span><h2>tiger_leagues.wsgi<a class="headerlink" href="#module-tiger_leagues.wsgi" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-wsgi"></span><h3>tiger_leagues.wsgi<a class="headerlink" href="#module-tiger_leagues.wsgi" title="Permalink to this headline">¶</a></h3>
 <p>wsgi.py</p>
 <p>Expose Flask application object as the WSGI application. The WSGI app will then
 be ran by a WSGI server. Flask’s built-in server is not suitable for production.</p>
 <p>In our case, in <code class="docutils literal notranslate"><span class="pre">../Procfile</span></code>, we ask <code class="docutils literal notranslate"><span class="pre">gunicorn</span></code> to use the <code class="docutils literal notranslate"><span class="pre">app</span></code> object 
 that is exposed in the <code class="docutils literal notranslate"><span class="pre">tiger_leagues</span></code> module.</p>
 <p><a class="reference external" href="http://flask.pocoo.org/docs/1.0/deploying/">http://flask.pocoo.org/docs/1.0/deploying/</a></p>
+</div>
 </div>
 </div>
 
@@ -1019,7 +1049,7 @@ that is exposed in the <code class="docutils literal notranslate"><span class="p
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="models/readme.html" title="Models"
+          <a href="templates/readme.html" title="Views"
              >previous</a> |</li>
         <li><a href="../index.html">home</a>|&nbsp;</li>
         <li><a href="../search.html">search</a>|&nbsp;</li>

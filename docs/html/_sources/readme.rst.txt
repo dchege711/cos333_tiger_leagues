@@ -45,7 +45,7 @@ was manually updated to have ``ItsDangerous==0.24``.
 
 We're using a locally hosted database for development purposes.
 We found this `tutorial
-<https://www.codementor.io/engineerapart/getting-started-with-postgresql-on-mac-osx-are8jcopb>`_.
+<https://www.codementor.io/engineerapart/getting-started-with-postgresql-on-mac-osx-are8jcopb>`_
 useful when setting up PostgreSQL.
 
 Set the values of the environment variables defined in config.py_.

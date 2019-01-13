@@ -16,7 +16,7 @@
     <script type="text/javascript" src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Controllers" href="../readme.html" />
+    <link rel="next" title="Views" href="../templates/readme.html" />
     <link rel="prev" title="App Overview" href="../../readme.html" /> 
   </head><body>
 
@@ -34,7 +34,7 @@
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="../readme.html" title="Controllers"
+          <a href="../templates/readme.html" title="Views"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="../../readme.html" title="App Overview"
@@ -50,10 +50,13 @@
   <h3><a href="../../index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Models</a><ul>
-<li><a class="reference internal" href="#notes">Notes</a><ul>
+<li><a class="reference internal" href="#design-decisions">Design Decisions</a><ul>
 <li><a class="reference internal" href="#application-context">Application Context</a></li>
+<li><a class="reference internal" href="#league-rankings">League Rankings</a></li>
+<li><a class="reference internal" href="#keeping-the-user-updated">Keeping the User Updated</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#models-documentation">Models Documentation</a><ul>
 <li><a class="reference internal" href="#module-tiger_leagues.models.db_model">tiger_leagues.models.db_model</a></li>
 <li><a class="reference internal" href="#module-tiger_leagues.models.config">tiger_leagues.models.config</a></li>
 <li><a class="reference internal" href="#module-tiger_leagues.models.league_model">tiger_leagues.models.league_model</a></li>
@@ -63,13 +66,15 @@
 </ul>
 </li>
 </ul>
+</li>
+</ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="../../readme.html"
                         title="previous chapter">App Overview</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="../readme.html"
-                        title="next chapter">Controllers</a></p>
+  <p class="topless"><a href="../templates/readme.html"
+                        title="next chapter">Views</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -102,10 +107,10 @@
 <p>As described on <a class="reference external" href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller#Components">Wikipedia</a>,
 the model is the application’s dynamic data structure, independent of the user
 interface. It directly manages the data, logic and rules of the application.</p>
-<div class="section" id="notes">
-<span id="id1"></span><h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="design-decisions">
+<span id="models-design-decisions"></span><h2>Design Decisions<a class="headerlink" href="#design-decisions" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="application-context">
-<span id="id2"></span><h3>Application Context<a class="headerlink" href="#application-context" title="Permalink to this headline">¶</a></h3>
+<span id="id1"></span><h3>Application Context<a class="headerlink" href="#application-context" title="Permalink to this headline">¶</a></h3>
 <p>Tiger Leagues can be ran in 3 different contexts. We used environment
 variables and <a class="reference internal" href="#module-tiger_leagues.models.config" title="tiger_leagues.models.config"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.models.config</span></code></a> to switch between the
 different contexts:</p>
@@ -126,9 +131,31 @@ set up by the <code class="docutils literal notranslate"><span class="pre">.trav
 </ul>
 <p>If Tiger Leagues is running on Heroku, we use the database provided by Heroku.</p>
 </div>
+<div class="section" id="league-rankings">
+<span id="league-standings"></span><h3>League Rankings<a class="headerlink" href="#league-rankings" title="Permalink to this headline">¶</a></h3>
+<p>Initially, we’d compute the rankings of players from the matches table. This
+was motivated by reducing redundancy in the database. However, we hypothesized
+that users will view the rankings way more frequently than update scores.</p>
+<p>We therefore decided to add another table, <code class="docutils literal notranslate"><span class="pre">league_standings</span></code> that contains
+the most recent rankings that incorporate all the approved score reports.
+Although this creates some redundancy (we could determine the rankings from
+the score reports), it allows us to reduce repeated computation.</p>
 </div>
+<div class="section" id="keeping-the-user-updated">
+<span id="id2"></span><h3>Keeping the User Updated<a class="headerlink" href="#keeping-the-user-updated" title="Permalink to this headline">¶</a></h3>
+<p>Since the users are not isolated, it’s important to keep a user updated of any
+developments that involve them. For instance, a user might get their join
+request approved/denied by an admin. Or the score for a given match might have
+been reported by the other player and the admin approved of it.</p>
+<p>We therefore developed a rudimentary notification system in which we post
+relevant updates to a user’s mailbox. The system does not allow for responses.
+We leave that for future implementations of Tiger Leagues.</p>
+</div>
+</div>
+<div class="section" id="models-documentation">
+<span id="id3"></span><h2>Models Documentation<a class="headerlink" href="#models-documentation" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="module-tiger_leagues.models.db_model">
-<span id="tiger-leagues-models-db-model"></span><h2>tiger_leagues.models.db_model<a class="headerlink" href="#module-tiger_leagues.models.db_model" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-models-db-model"></span><h3>tiger_leagues.models.db_model<a class="headerlink" href="#module-tiger_leagues.models.db_model" title="Permalink to this headline">¶</a></h3>
 <p>db.py</p>
 <p>A wrapper around the database used by the ‘Tiger Leagues’ app</p>
 <dl class="class">
@@ -323,7 +350,7 @@ is unnecessary baggage.</p>
 
 </div>
 <div class="section" id="module-tiger_leagues.models.config">
-<span id="tiger-leagues-models-config"></span><h2>tiger_leagues.models.config<a class="headerlink" href="#module-tiger_leagues.models.config" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-models-config"></span><h3>tiger_leagues.models.config<a class="headerlink" href="#module-tiger_leagues.models.config" title="Permalink to this headline">¶</a></h3>
 <p>config.py</p>
 <p>The central source for variables that span the entire application. As a rule of 
 thumb, if you find yourself using <cite>os.environ</cite>, you should probably include the 
@@ -333,7 +360,7 @@ variable here instead.</p>
 <code class="docutils literal notranslate"><span class="pre">TIGER_LEAGUES_POSTGRESQL_PASSWORD</span></code></p>
 </div>
 <div class="section" id="module-tiger_leagues.models.league_model">
-<span id="tiger-leagues-models-league-model"></span><h2>tiger_leagues.models.league_model<a class="headerlink" href="#module-tiger_leagues.models.league_model" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-models-league-model"></span><h3>tiger_leagues.models.league_model<a class="headerlink" href="#module-tiger_leagues.models.league_model" title="Permalink to this headline">¶</a></h3>
 <p>league.py</p>
 <p>Exposes a blueprint that handles requests made to <cite>/league/*</cite> endpoint</p>
 <dl class="function">
@@ -916,7 +943,7 @@ To fetch the standings, call <code class="xref py py-meth docutils literal notra
 
 </div>
 <div class="section" id="module-tiger_leagues.models.admin_model">
-<span id="tiger-leagues-models-admin-model"></span><h2>tiger_leagues.models.admin_model<a class="headerlink" href="#module-tiger_leagues.models.admin_model" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-models-admin-model"></span><h3>tiger_leagues.models.admin_model<a class="headerlink" href="#module-tiger_leagues.models.admin_model" title="Permalink to this headline">¶</a></h3>
 <p>admin_model.py</p>
 <p>Exposes functions that are used by the controller for the <cite>/admin/*</cite> endpoint</p>
 <dl class="function">
@@ -1181,7 +1208,7 @@ Otherwise, <code class="docutils literal notranslate"><span class="pre">message<
 
 </div>
 <div class="section" id="module-tiger_leagues.models.user_model">
-<span id="tiger-leagues-models-user-model"></span><h2>tiger_leagues.models.user_model<a class="headerlink" href="#module-tiger_leagues.models.user_model" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-models-user-model"></span><h3>tiger_leagues.models.user_model<a class="headerlink" href="#module-tiger_leagues.models.user_model" title="Permalink to this headline">¶</a></h3>
 <p>user_model.py</p>
 <p>Exposes functions that are used by the controller for the <cite>/user/*</cite> endpoint</p>
 <dl class="function">
@@ -1384,14 +1411,15 @@ set to <code class="docutils literal notranslate"><span class="pre">None</span><
 
 </div>
 <div class="section" id="module-tiger_leagues.models.exception">
-<span id="tiger-leagues-models-exception"></span><h2>tiger_leagues.models.exception<a class="headerlink" href="#module-tiger_leagues.models.exception" title="Permalink to this headline">¶</a></h2>
+<span id="tiger-leagues-models-exception"></span><h3>tiger_leagues.models.exception<a class="headerlink" href="#module-tiger_leagues.models.exception" title="Permalink to this headline">¶</a></h3>
 <p>exception.py</p>
-<p>Allows for error pages with custom exception messages.</p>
+<p>Allows for error pages/responses with custom exception messages.</p>
 <dl class="exception">
 <dt id="tiger_leagues.models.exception.TigerLeaguesException">
-<em class="property">exception </em><code class="descclassname">tiger_leagues.models.exception.</code><code class="descname">TigerLeaguesException</code><span class="sig-paren">(</span><em>message</em>, <em>status_code=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/exception.html#TigerLeaguesException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.exception.TigerLeaguesException" title="Permalink to this definition">¶</a></dt>
-<dd><p>A catchall exception for all problems.
-Status code and message can be customized wherever it’s raised.</p>
+<em class="property">exception </em><code class="descclassname">tiger_leagues.models.exception.</code><code class="descname">TigerLeaguesException</code><span class="sig-paren">(</span><em>message</em>, <em>status_code=400</em>, <em>jsonify=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/exception.html#TigerLeaguesException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.exception.TigerLeaguesException" title="Permalink to this definition">¶</a></dt>
+<dd><p>A special exception for errors that arise due to constraints that we set on 
+the application, for instance, a user may not access the league panel for a 
+league in which they lack an admin status, etc.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1428,6 +1456,7 @@ Status code and message can be customized wherever it’s raised.</p>
 
 </div>
 </div>
+</div>
 
 
           </div>
@@ -1445,7 +1474,7 @@ Status code and message can be customized wherever it’s raised.</p>
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="../readme.html" title="Controllers"
+          <a href="../templates/readme.html" title="Views"
              >next</a> |</li>
         <li class="right" >
           <a href="../../readme.html" title="App Overview"

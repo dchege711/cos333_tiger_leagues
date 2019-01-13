@@ -9,10 +9,10 @@ As described on `Wikipedia
 the model is the application's dynamic data structure, independent of the user 
 interface. It directly manages the data, logic and rules of the application.
 
-.. _notes:
+.. _models_design_decisions:
 
-Notes
------
+Design Decisions
+----------------
 
 .. _application_context:
 
@@ -39,34 +39,65 @@ set up by the ``.travis.yml`` file at the root of the repository.
 
 If Tiger Leagues is running on Heroku, we use the database provided by Heroku.
 
+.. _league_standings:
 
+League Rankings
+^^^^^^^^^^^^^^^
+
+Initially, we'd compute the rankings of players from the matches table. This 
+was motivated by reducing redundancy in the database. However, we hypothesized 
+that users will view the rankings way more frequently than update scores.
+
+We therefore decided to add another table, ``league_standings`` that contains 
+the most recent rankings that incorporate all the approved score reports. 
+Although this creates some redundancy (we could determine the rankings from 
+the score reports), it allows us to reduce repeated computation.
+
+.. _keeping_the_user_updated:
+
+Keeping the User Updated
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Since the users are not isolated, it's important to keep a user updated of any 
+developments that involve them. For instance, a user might get their join 
+request approved/denied by an admin. Or the score for a given match might have 
+been reported by the other player and the admin approved of it.
+
+We therefore developed a rudimentary notification system in which we post 
+relevant updates to a user's mailbox. The system does not allow for responses. 
+We leave that for future implementations of Tiger Leagues.
+
+.. _models_documentation:
+
+Models Documentation
+--------------------
 
 tiger_leagues.models.db_model
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automodule:: tiger_leagues.models.db_model
    :members:
 
 tiger_leagues.models.config
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automodule:: tiger_leagues.models.config
    :members:
 
 tiger_leagues.models.league_model
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automodule:: tiger_leagues.models.league_model
    :members:
 
 tiger_leagues.models.admin_model
---------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automodule:: tiger_leagues.models.admin_model
    :members:
 
 tiger_leagues.models.user_model
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automodule:: tiger_leagues.models.user_model
    :members:
 
 tiger_leagues.models.exception
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automodule:: tiger_leagues.models.exception
    :members:

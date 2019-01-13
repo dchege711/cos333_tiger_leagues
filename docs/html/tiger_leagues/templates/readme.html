@@ -1,0 +1,217 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Views &#8212; Tiger Leagues 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Controllers" href="../readme.html" />
+    <link rel="prev" title="Models" href="../models/readme.html" /> 
+  </head><body>
+
+<div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">
+<a href="../../index.html"><h1 style="font-size: 3em;">Tiger Leagues</h1></a>
+</div>
+
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../readme.html" title="Controllers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../models/readme.html" title="Models"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">home</a>|&nbsp;</li>
+        <li><a href="../../search.html">search</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Views</a><ul>
+<li><a class="reference internal" href="#design-decisions">Design Decisions</a><ul>
+<li><a class="reference internal" href="#uniform-design">Uniform Design</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#views-documentation">Views Documentation</a><ul>
+<li><a class="reference internal" href="#base-html">base.html</a></li>
+<li><a class="reference internal" href="#error-html">error.html</a></li>
+<li><a class="reference internal" href="#admin">admin/*</a></li>
+<li><a class="reference internal" href="#auth">auth/*</a></li>
+<li><a class="reference internal" href="#league">league/*</a></li>
+<li><a class="reference internal" href="#user">user/*</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../models/readme.html"
+                        title="previous chapter">Models</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../readme.html"
+                        title="next chapter">Controllers</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/tiger_leagues/templates/readme.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="views">
+<span id="tiger-leagues-views"></span><h1>Views<a class="headerlink" href="#views" title="Permalink to this headline">¶</a></h1>
+<p>As described on <a class="reference external" href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller#Components">Wikipedia</a>,
+a view is any output representation of information.</p>
+<div class="section" id="design-decisions">
+<span id="views-design-decisions"></span><h2>Design Decisions<a class="headerlink" href="#design-decisions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="uniform-design">
+<span id="id1"></span><h3>Uniform Design<a class="headerlink" href="#uniform-design" title="Permalink to this headline">¶</a></h3>
+<p>Our application has several pages, so it’s important to keep their design
+uniform. Using the Jinja templates supported natively by Flask, we inherited
+templates whenever we felt that a group of pages should share some design.</p>
+</div>
+</div>
+<div class="section" id="views-documentation">
+<span id="id2"></span><h2>Views Documentation<a class="headerlink" href="#views-documentation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="base-html">
+<h3>base.html<a class="headerlink" href="#base-html" title="Permalink to this headline">¶</a></h3>
+<p>Serves as the overall template for all other HTML files. The header and
+footer (and any other persistent content) should be added here.</p>
+</div>
+<div class="section" id="error-html">
+<h3>error.html<a class="headerlink" href="#error-html" title="Permalink to this headline">¶</a></h3>
+<p>Used to render a custom error page.</p>
+</div>
+<div class="section" id="admin">
+<h3>admin/*<a class="headerlink" href="#admin" title="Permalink to this headline">¶</a></h3>
+<p>The HTML files found here correspond to different pages that are relevant to
+admins, e.g.</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">admin_league_panel.html</span></code> shows different actions that an admin can take</li>
+<li><code class="docutils literal notranslate"><span class="pre">approve_members.html</span></code> and <code class="docutils literal notranslate"><span class="pre">manage_members.html</span></code> show pages for managing
+league members depending on whether the league is in progress or not.</li>
+<li><code class="docutils literal notranslate"><span class="pre">start_league.html</span></code> allows the admin to allocate league divisions and
+generate fixtures.</li>
+<li><code class="docutils literal notranslate"><span class="pre">admin_league_homepage.html</span></code> allows admins to approve pending scores.</li>
+<li><code class="docutils literal notranslate"><span class="pre">delete_league.html</span></code> allows admins to delete the league.</li>
+</ul>
+</div>
+<div class="section" id="auth">
+<h3>auth/*<a class="headerlink" href="#auth" title="Permalink to this headline">¶</a></h3>
+<p>Contains HTML files related to the authentication process, e.g.</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">login.html</span></code> provides a link to Princeton’s Central Authentication System.</li>
+</ul>
+<p>Since we’re using Princeton’s CAS, other auth-related pages such as resetting
+a password, validating an email address, etc, are not necessary.</p>
+</div>
+<div class="section" id="league">
+<h3>league/*<a class="headerlink" href="#league" title="Permalink to this headline">¶</a></h3>
+<p>Contains HTML files related to a league from the viewpoint of a non-admin
+member.</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">browse.html</span></code> shows leagues that a user can request to join.</li>
+<li><code class="docutils literal notranslate"><span class="pre">create_league.html</span></code> allows a user to create a new league.</li>
+<li><code class="docutils literal notranslate"><span class="pre">join_league.html</span></code> allows a user to request to join an existing league.</li>
+<li><code class="docutils literal notranslate"><span class="pre">update_responses.html</span></code> allows a user to update the responses that they
+had submitted to the league.</li>
+<li><code class="docutils literal notranslate"><span class="pre">league_base.html</span></code> provides an inheritable template that has league header
+information at the top.</li>
+<li><code class="docutils literal notranslate"><span class="pre">league_homepage.html</span></code> shows the current standings and upcoming matches of
+the logged in user.</li>
+<li><code class="docutils literal notranslate"><span class="pre">member_stats/league_comparison_base.html</span></code> provides an inheritable
+template for displaying a player(s) stats within a league.</li>
+<li><code class="docutils literal notranslate"><span class="pre">member_stats/league_side_by_side_stats.html</span></code> provides a side-by-side
+comparison of the logged in user and any other comparable player.</li>
+<li><code class="docutils literal notranslate"><span class="pre">member_stats/league_single_player_stats.html</span></code> provides league stats for a
+single player (usually happens when user tries to view themselves, or a
+player who is not in the same division)</li>
+</ul>
+</div>
+<div class="section" id="user">
+<h3>user/*<a class="headerlink" href="#user" title="Permalink to this headline">¶</a></h3>
+<p>Contains HTML files related to a user’s account.</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">user_profile.html</span></code> allows a user to view and/or update their site-wide
+profile.</li>
+<li><code class="docutils literal notranslate"><span class="pre">user_notifications.html</span></code> allows a user to read the notifications that
+have been sent to their mailbox.</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../readme.html" title="Controllers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../models/readme.html" title="Models"
+             >previous</a> |</li>
+        <li><a href="../../index.html">home</a>|&nbsp;</li>
+        <li><a href="../../search.html">search</a>|&nbsp;</li>
+ 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Chege, Ivy, Rui, Obinna.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>

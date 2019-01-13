@@ -64,14 +64,15 @@
 <span></span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">exception.py</span>
 
-<span class="sd">Allows for error pages with custom exception messages.</span>
+<span class="sd">Allows for error pages/responses with custom exception messages.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="TigerLeaguesException"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.exception.TigerLeaguesException">[docs]</a><span class="k">class</span> <span class="nc">TigerLeaguesException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A catchall exception for all problems.</span>
-<span class="sd">    Status code and message can be customized wherever it&#39;s raised.</span>
+<span class="sd">    A special exception for errors that arise due to constraints that we set on </span>
+<span class="sd">    the application, for instance, a user may not access the league panel for a </span>
+<span class="sd">    league in which they lack an admin status, etc.</span>
 
 <span class="sd">    :param message: str</span>
 
@@ -83,13 +84,11 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">status_code</span> <span class="o">=</span> <span class="mi">400</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">jsonify</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="ne">Exception</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
-        <span class="k">if</span> <span class="n">status_code</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">status_code</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jsonify</span> <span class="o">=</span> <span class="n">jsonify</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">status_code</span>
 
 <div class="viewcode-block" id="TigerLeaguesException.to_dict"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.exception.TigerLeaguesException.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -98,9 +97,10 @@
 <span class="sd">        A dict representation of the exception</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">rv</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">rv</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span>
-        <span class="k">return</span> <span class="n">rv</span></div></div>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> 
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">status_code</span>
+        <span class="p">}</span></div></div>
 </pre></div>
 
           </div>
