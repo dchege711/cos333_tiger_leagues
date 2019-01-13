@@ -748,22 +748,21 @@
             <span class="p">),</span>
             <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_id</span><span class="p">,</span> <span class="n">league_id</span><span class="p">]</span>
         <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
-        <span class="n">associated_leagues</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">user_id</span><span class="p">)[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">player_details</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s2">&quot;The player was not found.&quot;</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">)</span>
+        <span class="n">associated_leagues</span> <span class="o">=</span> <span class="n">user_model</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">)[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">associated_leagues</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a member of </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">player_details</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">player_details</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
+                <span class="p">),</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">associated_leagues</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
-                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a member of </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">player_details</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">player_details</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
-                    <span class="p">),</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span>
-                <span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
-                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> has not started yet.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">player_details</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
-                    <span class="p">),</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span>
-                <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> has not started yet.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">player_details</span><span class="p">[</span><span class="s2">&quot;league_name&quot;</span><span class="p">]</span>
+                <span class="p">),</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span>
+            <span class="p">)</span>
 
     <span class="n">lowest_rank</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
         <span class="s2">&quot;SELECT MAX(rank) FROM league_standings WHERE league_id = </span><span class="si">%s</span><span class="s2"> AND division_id = </span><span class="si">%s</span><span class="s2">;&quot;</span><span class="p">,</span>
