@@ -61,5 +61,8 @@ def refresh_user_profile(f):
         prev_user_profile = session.get("user")
         if prev_user_profile is not None:
             session["user"] = user_model.get_user(prev_user_profile["net_id"])
+        # This check helps when the database has been wiped and the user is logged in
+        if session.get("user") is None:
+            return redirect(url_for("auth.cas_logout"))
         return f(*args, **kwargs)
     return decorated_function
