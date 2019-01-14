@@ -21,3 +21,17 @@ function sendHTTPRequest(method, url, payload, contentType="application/json") {
     });
     
 }
+
+/**
+ * @description Add a border around an element
+ * @param {String} elementID The ID of the element
+ */
+function highlightElement(elementID) {
+    let element = document.getElementById(elementID);
+    element.style.border = "rgb(46, 192, 192) thin solid";
+    element.style.backgroundColor = "lightblue";
+    window.setTimeout(() => {
+        element.style.border = "";
+        element.style.backgroundColor = "";
+    }, 2000);
+}
