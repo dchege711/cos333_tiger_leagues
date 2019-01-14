@@ -74,6 +74,7 @@
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">timedelta</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">league_model</span><span class="p">,</span> <span class="n">db_model</span><span class="p">,</span> <span class="n">user_model</span>
+<span class="kn">from</span> <span class="nn">.exception</span> <span class="k">import</span> <span class="n">TigerLeaguesException</span>
 
 <span class="n">db</span> <span class="o">=</span> <span class="n">db_model</span><span class="o">.</span><span class="n">Database</span><span class="p">()</span>
 
@@ -115,32 +116,53 @@
 <span class="sd">    Otherwise, ``message`` will contain an error description.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+    <span class="n">responses_table_name</span> <span class="o">=</span> <span class="s2">&quot;league_responses_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
     <span class="n">available_statuses</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_ADMIN</span><span class="p">,</span> <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_DENIED</span><span class="p">,</span> <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_MEMBER</span><span class="p">,</span> 
-        <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_PENDING</span>
+        <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_ADMIN</span><span class="p">,</span> <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_DENIED</span><span class="p">,</span> 
+        <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_MEMBER</span><span class="p">,</span> <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_PENDING</span>
     <span class="p">}</span>
-    <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">league_statuses</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available_statuses</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a valid status&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="p">}</span>
+    <span class="n">cursor</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;SELECT user_id FROM </span><span class="si">{}</span><span class="s2"> WHERE status = </span><span class="si">%s</span><span class="s2">;&quot;</span><span class="p">,</span>
+        <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="n">responses_table_name</span><span class="p">],</span>
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_ADMIN</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">existing_admins</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cursor</span><span class="p">}</span>
 
     <span class="k">for</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">user_status</span> <span class="ow">in</span> <span class="n">league_statuses</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
-            <span class="s2">&quot;UPDATE </span><span class="si">{}</span><span class="s2"> SET status=</span><span class="si">%s</span><span class="s2"> WHERE user_id=</span><span class="si">%s</span><span class="s2">;&quot;</span><span class="p">,</span>
-            <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;league_responses_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_id&quot;</span><span class="p">])],</span>
-            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_status</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
-        <span class="p">)</span>
-        <span class="n">user_model</span><span class="o">.</span><span class="n">send_notification</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="p">{</span>
-            <span class="s2">&quot;league_id&quot;</span><span class="p">:</span> <span class="n">league_id</span><span class="p">,</span>
-            <span class="s2">&quot;notification_text&quot;</span><span class="p">:</span> <span class="s2">&quot;Your status changed.</span><span class="se">\n\n</span><span class="s2">New status: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user_status</span><span class="p">)</span>
-        <span class="p">})</span>
+        <span class="k">try</span><span class="p">:</span> <span class="n">user_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span> 
+            <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a valid user ID&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">user_status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">available_statuses</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a valid league status. Valid statuses include: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">user_status</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">available_statuses</span><span class="p">)</span>
+                <span class="p">),</span> <span class="n">jsonify</span><span class="o">=</span><span class="kc">True</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">existing_admins</span> <span class="ow">and</span> <span class="n">user_status</span> <span class="o">!=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_ADMIN</span><span class="p">:</span>
+            <span class="n">existing_admins</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
 
-    <span class="n">join_requests</span> <span class="o">=</span> <span class="n">get_join_league_requests</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">existing_admins</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+            <span class="s2">&quot;The league must have at least 1 admin&quot;</span>
+        <span class="p">)</span>    
+    
     <span class="n">user_id_to_status</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">join_request</span> <span class="ow">in</span> <span class="n">join_requests</span><span class="p">:</span>
-        <span class="n">user_id_to_status</span><span class="p">[</span><span class="n">join_request</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">join_request</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">user_status</span> <span class="ow">in</span> <span class="n">league_statuses</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">update_results</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s2">&quot;UPDATE </span><span class="si">{}</span><span class="s2"> SET status=</span><span class="si">%s</span><span class="s2"> WHERE user_id=</span><span class="si">%s</span><span class="s2"> RETURNING status;&quot;</span><span class="p">,</span>
+            <span class="n">dynamic_table_or_column_names</span><span class="o">=</span><span class="p">[</span><span class="n">responses_table_name</span><span class="p">],</span>
+            <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_status</span><span class="p">,</span> <span class="n">user_id</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">update_results</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">user_model</span><span class="o">.</span><span class="n">send_notification</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="p">{</span>
+                <span class="s2">&quot;league_id&quot;</span><span class="p">:</span> <span class="n">league_id</span><span class="p">,</span>
+                <span class="s2">&quot;notification_text&quot;</span><span class="p">:</span> <span class="s2">&quot;Your status changed.</span><span class="se">\n\n</span><span class="s2">New status: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">update_results</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">])</span>
+            <span class="p">})</span>
+            <span class="n">user_id_to_status</span><span class="p">[</span><span class="n">user_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">update_results</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">user_id_to_status</span><span class="p">[</span><span class="n">user_id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">user_id_to_status</span>

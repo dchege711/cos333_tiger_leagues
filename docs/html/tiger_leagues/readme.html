@@ -452,7 +452,8 @@ indeed deleted from the server.</p>
 <dt id="tiger_leagues.admin.league_has_started">
 <code class="descclassname">tiger_leagues.admin.</code><code class="descname">league_has_started</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/admin.html#league_has_started"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.league_has_started" title="Permalink to this definition">¶</a></dt>
 <dd><p>A decorator function that asserts that a league has already started. 
-Called before approve_scores and any other functions that should only take place with a started league.</p>
+Called before approve_scores and any other functions that should only take 
+place with a started league.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -501,8 +502,9 @@ function for the request.</p>
 <dl class="function">
 <dt id="tiger_leagues.admin.league_not_started">
 <code class="descclassname">tiger_leagues.admin.</code><code class="descname">league_not_started</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tiger_leagues/admin.html#league_not_started"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.admin.league_not_started" title="Permalink to this definition">¶</a></dt>
-<dd><p>A decorator function that asserts that a league has not yet started. This function is automatically called before any of the 
-functions in the <code class="docutils literal notranslate"><span class="pre">admin</span></code> module are executed. See 
+<dd><p>A decorator function that asserts that a league has not yet started. This 
+function is automatically called before any of the functions in the 
+<code class="docutils literal notranslate"><span class="pre">admin</span></code> module are executed. See 
 <a class="reference external" href="http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request">http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request</a></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -887,7 +889,7 @@ a JSON object that confirms the status of the submission.</p>
 </div>
 <div class="section" id="module-tiger_leagues.user">
 <span id="tiger-leagues-user"></span><h3>tiger_leagues.user<a class="headerlink" href="#module-tiger_leagues.user" title="Permalink to this headline">¶</a></h3>
-<p>player.py</p>
+<p>user.py</p>
 <p>Exposes a blueprint that handles requests made to <cite>/user/*</cite> endpoint</p>
 <dl class="function">
 <dt id="tiger_leagues.user.display_user_profile">

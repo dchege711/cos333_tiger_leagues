@@ -72,7 +72,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="p">(</span>
-    <span class="n">Blueprint</span><span class="p">,</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">url_for</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">flash</span>
+    <span class="n">Blueprint</span><span class="p">,</span> <span class="n">render_template</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">url_for</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">jsonify</span>
 <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">.models</span> <span class="k">import</span> <span class="n">admin_model</span><span class="p">,</span> <span class="n">league_model</span>
@@ -113,21 +113,22 @@
 
     <span class="n">league_id</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">associated_leagues</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]</span>
-    <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">league_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">associated_leagues</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;You are not a member of this league.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;You are not a member of this league.&#39;</span><span class="p">,</span> <span class="n">jsonify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">associated_leagues</span><span class="p">[</span><span class="n">league_id</span><span class="p">][</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;admin&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;You do not have admin privileges for </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">associated_leagues</span><span class="p">[</span><span class="n">league_id</span><span class="p">][</span><span class="s2">&quot;league_name&quot;</span><span class="p">]))</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+            <span class="s1">&#39;You do not have admin privileges for </span><span class="si">{}</span><span class="s1">.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">associated_leagues</span><span class="p">[</span><span class="n">league_id</span><span class="p">][</span><span class="s2">&quot;league_name&quot;</span><span class="p">]),</span>
+            <span class="n">jsonify</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
     <span class="c1"># If nothing has been returned, the request will be passed to its handler</span>
     <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="league_not_started"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.admin.league_not_started">[docs]</a><span class="k">def</span> <span class="nf">league_not_started</span><span class="p">():</span>
-
-
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A decorator function that asserts that a league has not yet started. This function is automatically called before any of the </span>
-<span class="sd">    functions in the ``admin`` module are executed. See </span>
+<span class="sd">    A decorator function that asserts that a league has not yet started. This </span>
+<span class="sd">    function is automatically called before any of the functions in the </span>
+<span class="sd">    ``admin`` module are executed. See </span>
 <span class="sd">    http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request</span>
 
 <span class="sd">    :returns: ``flask.Response(code=302)``</span>
@@ -150,16 +151,20 @@
     <span class="n">league_info</span> <span class="o">=</span> <span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;league_in_progress&quot;</span> <span class="ow">or</span> \
-    <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;league_completed&quot;</span> <span class="ow">or</span> \
-    <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;in_playoffs&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;This league is already in progress or completed; the action cannot be performed.&#39;</span><span class="p">)</span>
+        <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;league_completed&quot;</span> <span class="ow">or</span> \
+        <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;in_playoffs&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+            <span class="s1">&#39;This league is already in progress or completed; the action cannot be performed.&#39;</span><span class="p">,</span> 
+            <span class="n">jsonify</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
     <span class="c1"># If nothing has been returned, the request will be passed to its handler</span>
     <span class="k">return</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="league_has_started"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.admin.league_has_started">[docs]</a><span class="k">def</span> <span class="nf">league_has_started</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A decorator function that asserts that a league has already started. </span>
-<span class="sd">    Called before approve_scores and any other functions that should only take place with a started league.</span>
+<span class="sd">    Called before approve_scores and any other functions that should only take </span>
+<span class="sd">    place with a started league.</span>
 
 <span class="sd">    :returns: ``flask.Response(code=302)``</span>
 
@@ -182,7 +187,10 @@
 
     <span class="k">if</span> <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;accepting_users&quot;</span> <span class="ow">or</span> \
     <span class="n">league_info</span><span class="p">[</span><span class="s2">&quot;league_status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;awaiting_admin_greenlight&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="s1">&#39;This league has not yet started; the action cannot be performed.&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span>
+            <span class="s1">&#39;This league has not yet started; the action cannot be performed.&#39;</span><span class="p">,</span> 
+            <span class="n">jsonify</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
     <span class="c1"># If nothing has been returned, the request will be passed to its handler</span>
     <span class="k">return</span> <span class="kc">None</span></div>
 
@@ -229,8 +237,11 @@
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GET&quot;</span><span class="p">:</span>
         <span class="n">join_requests</span> <span class="o">=</span> <span class="n">admin_model</span><span class="o">.</span><span class="n">get_join_league_requests</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
-            <span class="s2">&quot;/admin/approve_members.html&quot;</span><span class="p">,</span> <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span><span class="p">,</span> 
-            <span class="n">join_requests</span><span class="o">=</span><span class="n">join_requests</span>
+            <span class="s2">&quot;/admin/manage_members.html&quot;</span><span class="p">,</span> <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span><span class="p">,</span> 
+            <span class="n">join_requests</span><span class="o">=</span><span class="n">join_requests</span><span class="p">,</span> <span class="n">available_statuses</span><span class="o">=</span><span class="p">{</span>
+                <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_ADMIN</span><span class="p">,</span> <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_MEMBER</span><span class="p">,</span>
+                <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_DENIED</span><span class="p">,</span> <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_PENDING</span>
+            <span class="p">}</span>
         <span class="p">)</span>
     
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
@@ -270,7 +281,9 @@
         <span class="n">join_requests</span> <span class="o">=</span> <span class="n">admin_model</span><span class="o">.</span><span class="n">get_join_league_requests</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
             <span class="s2">&quot;/admin/manage_members.html&quot;</span><span class="p">,</span> <span class="n">league_info</span><span class="o">=</span><span class="n">league_info</span><span class="p">,</span> 
-            <span class="n">join_requests</span><span class="o">=</span><span class="n">join_requests</span>
+            <span class="n">join_requests</span><span class="o">=</span><span class="n">join_requests</span><span class="p">,</span> <span class="n">available_statuses</span><span class="o">=</span><span class="p">{</span>
+                <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_ADMIN</span><span class="p">,</span> <span class="n">league_model</span><span class="o">.</span><span class="n">STATUS_MEMBER</span>
+            <span class="p">}</span>
         <span class="p">)</span>
     
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
