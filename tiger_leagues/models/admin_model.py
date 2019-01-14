@@ -11,7 +11,7 @@ from math import ceil
 from datetime import date, timedelta
 
 from . import league_model, db_model, user_model
-from .exception import TigerLeaguesException
+from .exception import TigerLeaguesException, validate_values
 
 db = db_model.Database()
 
@@ -470,11 +470,15 @@ def get_current_matches(league_id):
 
     return current_matches
 
-def approve_match(score_info):
+def approve_match(score_info, admin_user_id):
     """
     :param score_info: dict
     
     Expected keys: ``score_user_1``, ``score_user_2``, ``match_id``
+
+    :param admin_user_id: int
+
+    The ID of the admin approving the match's results
 
     :return: ``dict``
     
@@ -483,20 +487,37 @@ def approve_match(score_info):
     update failed.
 
     """
-    if score_info["score_user_1"] is None:
-        return {"success": False, "message": "Score cannot be empty!"}
+    validate_values(
+        score_info, [
+            (
+                "score_user_1", int, None, None, "The score can't be empty!"
+            ),
+            (
+                "score_user_2", int, None, None, "The score can't be empty!"
+            ),
+            (
+                "match_id", int, None, None, "The match ID can't be empty!"
+            )
+        ], jsonify=True
+    )
 
-    elif score_info["score_user_2"] is None:
-        return {"success": False, "message": "Score cannot be empty!"}
+    previous_scores = db.execute(
+        "SELECT * FROM match_info WHERE match_id = %s", 
+        values=[score_info["match_id"]]
+    ).fetchone()
+
+    if previous_scores["score_user_1"] == score_info["score_user_1"] and \
+        previous_scores["score_user_2"] == score_info["score_user_2"]:
+        recent_updater_id = previous_scores["recent_updater_id"]
+    else:
+        recent_updater_id = admin_user_id
 
     row = db.execute(
-        "UPDATE match_info SET status = %s, score_user_1 = %s , score_user_2 = %s \
+        "UPDATE match_info SET status = %s, score_user_1 = %s , score_user_2 = %s, recent_updater_id = %s \
         WHERE match_id = %s RETURNING league_id, division_id, user_1_id, user_2_id;",
         values=[
-            league_model.MATCH_STATUS_APPROVED, 
-            score_info["score_user_1"], 
-            score_info["score_user_2"],
-            score_info["match_id"]
+            league_model.MATCH_STATUS_APPROVED, score_info["score_user_1"], 
+            score_info["score_user_2"], recent_updater_id, score_info["match_id"]
         ]
     ).fetchone()
     league_model.update_league_standings(row["league_id"], row["division_id"])

@@ -37,12 +37,12 @@ def create_and_play_league(num_players=20):
         admin_model.approve_match({
             "score_user_1": randint(0, 5), "score_user_2": randint(0, 5),
             "match_id": row["match_id"]
-        })
+        }, admin_user["user_id"])
 
-    return fake_league, fake_users
+    return fake_league, fake_users, admin_user
 
 def test_league_standings(cleanup):
-    test_league, fake_users = create_and_play_league()
+    test_league, fake_users, admin_user = create_and_play_league()
 
     # Change scores to take a player to the top of their divison
     # Change scores to take a player to the bottom of their division
@@ -60,12 +60,12 @@ def test_league_standings(cleanup):
             admin_model.approve_match({
                 "score_user_1": 7, "score_user_2": 0,
                 "match_id": match["match_id"]
-            })
+            }, admin_user["user_id"])
         elif match["user_2_id"] == league_top["user_id"]:
             admin_model.approve_match({
                 "score_user_1": 0, "score_user_2": 7,
                 "match_id": match["match_id"]
-            })
+            }, admin_user["user_id"])
 
     last_place_matches = league_model.get_players_current_matches(
         league_bottom["user_id"], test_league["league_id"],
@@ -77,12 +77,12 @@ def test_league_standings(cleanup):
             admin_model.approve_match({
                 "score_user_1": 0, "score_user_2": 9,
                 "match_id": match["match_id"]
-            })
+            }, admin_user["user_id"])
         elif match["user_2_id"] == league_bottom["user_id"]:
             admin_model.approve_match({
                 "score_user_1": 9, "score_user_2": 0,
                 "match_id": match["match_id"]
-            })
+            }, admin_user["user_id"])
 
     # Check that the altered results have affected the league standings in 
     # the desired manner
@@ -110,7 +110,7 @@ def test_league_standings_of_nonexistent_league(cleanup):
     assert league_model.get_league_standings(-1) == {}
 
 def test_score_submission(cleanup):
-    test_league, fake_users = create_and_play_league()
+    test_league, fake_users, _ = create_and_play_league()
     test_user = fake_users[-1]
 
     test_match = league_model.get_players_current_matches(
@@ -141,7 +141,7 @@ def test_score_submission(cleanup):
     assert submitted_scores_2["message"]["match_status"] == "approved"
 
 def test_self_player_comparison_produces_single_stats(cleanup):
-    test_league, fake_users = create_and_play_league()
+    test_league, fake_users, _ = create_and_play_league()
     test_user = fake_users[-1]
 
     # Check that comparing a player to himself produces no head to head matches
@@ -150,7 +150,7 @@ def test_self_player_comparison_produces_single_stats(cleanup):
     )["message"]["head_to_head"] == []
 
 def test_fetching_stats_for_nonexistent_user(cleanup):
-    test_league, _ = create_and_play_league()
+    test_league, _, _ = create_and_play_league()
     # Check that getting the stats for a non-existent player raises an exception
     with pytest.raises(exception.TigerLeaguesException):
         league_model.get_players_league_stats(

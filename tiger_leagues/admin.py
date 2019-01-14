@@ -316,7 +316,11 @@ def approve_scores(league_id):
         )
 
     if request.method == "POST":
-        return jsonify(admin_model.approve_match(request.json))
+        return jsonify(
+            admin_model.approve_match(
+                request.json, session.get("user")["user_id"]
+            )
+        )
 
 
 @bp.route("/<int:league_id>/delete-league/", methods=["GET", "POST"])
