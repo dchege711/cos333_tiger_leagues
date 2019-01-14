@@ -11,6 +11,7 @@ from math import ceil
 from datetime import date, timedelta
 
 from . import league_model, db_model, user_model
+from .exception import TigerLeaguesException
 
 db = db_model.Database()
 
@@ -52,32 +53,53 @@ def update_join_league_requests(league_id, league_statuses):
     Otherwise, ``message`` will contain an error description.
 
     """
-    league_info = league_model.get_league_info(league_id)
+    responses_table_name = "league_responses_{}".format(league_id)
     available_statuses = {
-        league_model.STATUS_ADMIN, league_model.STATUS_DENIED, league_model.STATUS_MEMBER, 
-        league_model.STATUS_PENDING
+        league_model.STATUS_ADMIN, league_model.STATUS_DENIED, 
+        league_model.STATUS_MEMBER, league_model.STATUS_PENDING
     }
-    for value in league_statuses.values():
-        if value not in available_statuses:
-            return {
-                "success": False, "message": "{} is not a valid status".format(value)
-            }
+    cursor = db.execute(
+        "SELECT user_id FROM {} WHERE status = %s;",
+        dynamic_table_or_column_names=[responses_table_name],
+        values=[league_model.STATUS_ADMIN]
+    )
+    existing_admins = {x["user_id"] for x in cursor}
 
     for user_id, user_status in league_statuses.items():
-        db.execute(
-            "UPDATE {} SET status=%s WHERE user_id=%s;",
-            dynamic_table_or_column_names=["league_responses_{}".format(league_info["league_id"])],
-            values=[user_status, user_id]
-        )
-        user_model.send_notification(user_id, {
-            "league_id": league_id,
-            "notification_text": "Your status changed.\n\nNew status: {}".format(user_status)
-        })
+        try: int(user_id)
+        except ValueError: 
+            raise TigerLeaguesException(
+                "{} is not a valid user ID".format(user_id), jsonify=True
+            )
+        if user_status not in available_statuses:
+            raise TigerLeaguesException(
+                "{} is not a valid league status. Valid statuses include: {}".format(
+                    user_status, ", ".join(available_statuses)
+                ), jsonify=True
+            )
+        if user_id in existing_admins and user_status != league_model.STATUS_ADMIN:
+            existing_admins.remove(user_id)
 
-    join_requests = get_join_league_requests(league_id)
+    if not existing_admins:
+        raise TigerLeaguesException(
+            "The league must have at least 1 admin", jsonify=True
+        )    
+    
     user_id_to_status = {}
-    for join_request in join_requests:
-        user_id_to_status[join_request["user_id"]] = join_request["status"]
+    for user_id, user_status in league_statuses.items():
+        update_results = db.execute(
+            "UPDATE {} SET status=%s WHERE user_id=%s RETURNING status;",
+            dynamic_table_or_column_names=[responses_table_name],
+            values=[user_status, user_id]
+        ).fetchone()
+        if update_results is not None:
+            user_model.send_notification(user_id, {
+                "league_id": league_id,
+                "notification_text": "Your status changed.\n\nNew status: {}".format(update_results["status"])
+            })
+            user_id_to_status[user_id] = update_results["status"]
+        else:
+            user_id_to_status[user_id] = None
 
     return {
         "success": True, "status": 200, "message": user_id_to_status
