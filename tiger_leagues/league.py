@@ -187,7 +187,7 @@ def create_league():
     if request.method == "POST":
         create_league_info = request.json
         user_profile = session.get("user")
-        results = league_model.create_league(create_league_info, user_profile)
+        results = league_model.create_league(create_league_info, user_profile["user_id"])
         if results["success"]:
             league_id = results["message"]
             results["message"] = {

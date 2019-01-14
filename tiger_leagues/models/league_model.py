@@ -413,7 +413,7 @@ def process_player_score_report(user_id, score_details):
 
     return {"success": True, "message": {"match_status": match_status}}
 
-def create_league(league_info, creator_user_profile):
+def create_league(league_info, creator_user_id):
     """
     :param league_info: dict
     
@@ -421,9 +421,9 @@ def create_league(league_info, creator_user_profile):
     ``points_per_draw``, ``points_per_loss``, ``registration_deadline``, 
     ``additional_questions``.
 
-    :param creator_user_profile: dict
+    :param creator_user_profile: int
     
-    Expected keys: ``user_id, league_ids``
+    The ID of the user creating this league
 
     :return: ``dict``
     
@@ -444,7 +444,6 @@ def create_league(league_info, creator_user_profile):
                 "success": False, "status": 200, 
                 "message": "Malformed input detected!"
             }
-    creator_user_id = creator_user_profile["user_id"]
 
     league_basics = {
         "creator_user_id": creator_user_id,
@@ -498,10 +497,14 @@ def create_league(league_info, creator_user_profile):
         ]
     )
 
+    prev_league_ids = user_model.get_user(
+        None, user_id=creator_user_id
+    )["league_ids"]
+
     db.execute(
         "UPDATE users SET league_ids = %s WHERE user_id = %s;",
         values=[
-            ", ".join(str(x) for x in creator_user_profile["league_ids"] + [league_id]),
+            ", ".join(str(x) for x in prev_league_ids + [league_id]),
             creator_user_id
         ]
     )

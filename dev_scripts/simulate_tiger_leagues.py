@@ -75,8 +75,7 @@ def create_league(creator_user_profile, league_config=None):
             "additional_questions": {}
         }
 
-    results = league_model.create_league(league_config, creator_user_profile)
-    creator_user_profile = user_model.get_user(creator_user_profile["net_id"])
+    results = league_model.create_league(league_config, creator_user_profile["user_id"])
     league_config["league_id"] = results["message"]
 
     return league_config
@@ -211,7 +210,7 @@ def main():
     }
 
     league_info = create_league(fake_users[0], league_config=league_config)
-    enroll_members(league_info, fake_users[:league_info["max_num_players"] // 2])
+    enroll_members(league_info, fake_users[1:league_info["max_num_players"] // 2])
     print("Successfully created '1v1 Basketball'...")
 
     #---------------------------------------------------------------------------
@@ -232,15 +231,19 @@ def main():
         "registration_deadline": today + timedelta(days=1),
         "additional_questions": {
             "question0": {
-                "question": "Do you own a basketball?",
-                "options": "Yes, No"
+                "question": "Which console do you have?",
+                "options": "PlayStation 4, Xbox, I don't have a console"
+            },
+            "question1": {
+                "question": "Which FIFA edition do you have?",
+                "options": "FIFA 17, FIFA 18, FIFA 19, None"
             }
         }
     }
 
-    league_info = create_league(fake_users[1], league_config=league_config)
+    league_info = create_league(fake_users[0], league_config=league_config)
     enroll_members(
-        league_info, fake_users[:(league_info["max_num_players"] - 2)]
+        league_info, fake_users[1:(league_info["max_num_players"] - 2)]
     )
     enroll_members(league_info, [main_user_profile])
     league_info["num_active_players"] = league_info["max_num_players"] - 2
@@ -282,7 +285,6 @@ def main():
         league_info, fake_users[:league_info["max_num_players"] // 2],
         status=league_model.STATUS_PENDING
     )
-    enroll_members(league_info, [main_user_profile], status=league_model.STATUS_ADMIN)
     print("Successfully created 'Badminton S2019'...")
 
     #---------------------------------------------------------------------------
@@ -313,7 +315,6 @@ def main():
     enroll_members(
         league_info, fake_users[:(league_info["max_num_players"] - 2)]
     )
-    enroll_members(league_info, [main_user_profile], status=league_model.STATUS_ADMIN)
     league_info["num_active_players"] = league_info["max_num_players"] - 2
     generate_divisions_and_fixtures(league_info)
     simulate_matches(league_info["league_id"], deadline=today)
