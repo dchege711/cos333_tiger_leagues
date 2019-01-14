@@ -10,6 +10,7 @@ from datetime import date, timedelta
 from math import ceil, inf
 from collections import defaultdict
 from functools import cmp_to_key
+import traceback
 
 from . import db_model, user_model
 from .exception import TigerLeaguesException
@@ -187,7 +188,7 @@ def get_league_standings(league_id):
     )
     if cursor is None:
         raise TigerLeaguesException('League does not exist; it may have been deleted. \
-        If you entered the URL manually, double-check the league ID.')
+        If you entered the URL manually, double-check the league ID.', jsonify=True)
 
     for row in cursor:
         all_standings[row["division_id"]].append(row)
@@ -234,7 +235,7 @@ def get_matches_in_current_window(league_id, num_periods_before=3,
     row = cursor.fetchone()
     if row is None:
         raise TigerLeaguesException('League does not exist; it may have been deleted. \
-        If you entered the URL manually, double-check the league ID.')
+        If you entered the URL manually, double-check the league ID.', jsonify=False)
     
     time_window_days = ceil(row["length_period_in_days"] / row["num_games_per_period"])
 
@@ -433,6 +434,17 @@ def create_league(league_info, creator_user_id):
     ``int`` representing the league ID
 
     """
+    # Assert that all required fields have been submitted
+    for key in [
+            "league_name", "description", "points_per_win", "points_per_draw", 
+            "points_per_loss", "max_num_players", "num_games_per_period", 
+            "length_period_in_days", "registration_deadline", "additional_questions"
+        ]:
+        if key not in league_info:
+            raise TigerLeaguesException(
+                "The following value is missing: {}".format(key), jsonify=True
+            )
+
     sanitized_additional_questions = {}
     for idx, question in enumerate(league_info["additional_questions"].values()):
         try:
@@ -440,10 +452,52 @@ def create_league(league_info, creator_user_id):
                 "question": question["question"], "options": question["options"]
             }
         except KeyError:
-            return {
-                "success": False, "status": 200, 
-                "message": "Malformed input detected!"
-            }
+            raise TigerLeaguesException(
+                "Malformed input detected in the additional questions", jsonify=True
+            )
+
+    def __validate_values(value, cast_function, error_msg, lower_limit=None, upper_limit=None):
+        try:
+            value = cast_function(value)
+            if lower_limit is not None: assert value >= lower_limit
+            if upper_limit is not None: assert value <= upper_limit
+        except:
+            traceback.print_exc()
+            raise TigerLeaguesException(error_msg, jsonify=True)
+    
+    __validate_values(
+        league_info["max_num_players"], int, 
+        "The max number of players should be an integer that is at least 2", 2
+    )
+    __validate_values(
+        league_info["num_games_per_period"], int, 
+        "The number of games per time period should be an integer that is at least 1", 1
+    )
+    __validate_values(
+        league_info["length_period_in_days"], int, 
+        "The length of a time period should be an integer that is at least 1", 1
+    )
+
+    __validate_values(
+        league_info["points_per_win"], int, 
+        "The number of points awarded for a win should be an integer value",
+    )
+
+    __validate_values(
+        league_info["points_per_draw"], int, 
+        "The number of points awarded for a draw should be an integer value",
+    )
+
+    __validate_values(
+        league_info["points_per_win"], int, 
+        "The number of points deducted after a loss should be an integer value"
+    )
+
+    __validate_values(
+        league_info["registration_deadline"], date.fromisoformat, 
+        "The registration deadline cannot be a day in the past",
+        date.today()
+    )
 
     league_basics = {
         "creator_user_id": creator_user_id,
@@ -451,11 +505,11 @@ def create_league(league_info, creator_user_id):
         "league_name": league_info["league_name"], 
         "description": league_info["description"], 
         "points_per_win": league_info["points_per_win"], 
-        "points_per_draw": league_info["points_per_draw"], 
+        "points_per_draw": league_info["points_per_draw"],
+        "points_per_loss": league_info["points_per_loss"],
         "max_num_players": league_info["max_num_players"],
         "num_games_per_period": league_info["num_games_per_period"],
         "length_period_in_days": league_info["length_period_in_days"],
-        "points_per_loss": league_info["points_per_loss"], 
         "registration_deadline": league_info["registration_deadline"],
         "additional_questions": json.dumps(sanitized_additional_questions)
     }
@@ -540,7 +594,7 @@ def get_league_info(league_id):
     
     if league_info is None:
         raise TigerLeaguesException('League does not exist; it may have been deleted. \
-        If you entered the URL manually, double-check the league ID.')
+        If you entered the URL manually, double-check the league ID.', jsonify=False)
 
     if league_info["additional_questions"]:
         league_info["additional_questions"] = json.loads(league_info["additional_questions"])
@@ -595,7 +649,7 @@ def get_league_info_if_joinable(league_id):
     # If the league doesn't exist, let the user know
     if league_info is None: 
         raise TigerLeaguesException(
-            "The league does not exist", status_code=400
+            "The league does not exist", jsonify=False
         )
 
     # If the league's deadline is already passed, communicate that to the user
@@ -605,13 +659,13 @@ def get_league_info_if_joinable(league_id):
             "The registration deadline for '{}' has passed ({})".format(
                 league_info["league_name"],
                 league_info["registration_deadline"].strftime("%A, %B %d, %Y")
-            ), status_code=400
+            ), jsonify=False
         )
 
     if league_info["league_status"] != LEAGUE_STAGE_ACCEPTING_USERS:
         raise TigerLeaguesException(
             "'{}' is no longer accepting new players".format(league_info["league_name"]), 
-            status_code=400
+            jsonify=False
         )
 
     return {"success": True, "message": league_info}
@@ -695,13 +749,13 @@ def get_players_league_stats(league_id, user_id, matches=None, k=5):
             raise TigerLeaguesException(
                 "{} is not a member of {}".format(
                     player_details["name"], player_details["league_name"]
-                ), status_code=400
+                ), jsonify=False
             )
         else:
             raise TigerLeaguesException(
                 "{} has not started yet.".format(
                     player_details["league_name"]
-                ), status_code=400
+                ), jsonify=False
             )
 
     lowest_rank = db.execute(
@@ -755,14 +809,14 @@ def get_player_comparison(league_id, user_1_id, user_2_id):
 
     if user_1_info is None or user_2_info is None:
         raise TigerLeaguesException('User does not exist. \
-        If you entered the URL manually, double-check their user ID.')
+        If you entered the URL manually, double-check their user ID.', jsonify=False)
 
     if league_id not in user_1_info["associated_leagues"]:
         raise TigerLeaguesException('You are not a member of this league. \
-        If you entered the URL manually, double-check the league ID.')
+        If you entered the URL manually, double-check the league ID.', jsonify=False)
     if league_id not in user_2_info["associated_leagues"]:
         raise TigerLeaguesException('User is not a member of this league. \
-        If you entered the URL manually, double-check the league ID.')
+        If you entered the URL manually, double-check the league ID.', jsonify=False)
 
 
     user_1_matches = get_players_current_matches(
