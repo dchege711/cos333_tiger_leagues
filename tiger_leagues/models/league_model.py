@@ -10,10 +10,9 @@ from datetime import date, timedelta
 from math import ceil, inf
 from collections import defaultdict
 from functools import cmp_to_key
-import traceback
 
 from . import db_model, user_model
-from .exception import TigerLeaguesException
+from .exception import TigerLeaguesException, validate_values
 
 generic_500_msg = {
     "success": False, "status": 500, "message": "Internal Server Error"
@@ -262,24 +261,46 @@ def get_matches_in_current_window(league_id, num_periods_before=3,
         latest_date = date.today() + timedelta(days=time_window_days * num_periods_after)
     
     if user_id is not None:
-        return db.execute(
+        matches = db.execute(
             (
-                "SELECT * FROM match_info WHERE league_id = %s "
-                "AND (user_1_id = %s OR user_2_id = %s) "
+                "SELECT match_info.*, NULL as recent_updater_name FROM match_info "
+                "WHERE league_id = %s AND (user_1_id = %s OR user_2_id = %s) "
                 "AND (user_1_id IS NOT NULL AND user_2_id IS NOT NULL) "
                 "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
             ),
             values=[league_id, user_id, user_id, earliest_date, latest_date]
-        )
-        
-    return db.execute(
+        ).fetchall()
+
+    else:  
+        matches = db.execute(
+            (
+                "SELECT match_info.*, NULL as recent_updater_name FROM match_info "
+                "WHERE league_id = %s "
+                "AND (user_1_id IS NOT NULL AND user_2_id IS NOT NULL) "
+                "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
+            ),
+            values=[league_id, earliest_date, latest_date]
+        ).fetchall()
+
+    user_name_results = db.execute(
         (
-            "SELECT * FROM match_info WHERE league_id = %s "
-            "AND (user_1_id IS NOT NULL AND user_2_id IS NOT NULL) "
-            "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
+            "SELECT users.name, users.user_id FROM users, match_info "
+            "WHERE users.user_id = match_info.recent_updater_id "
+            "AND match_info.league_id = %s AND deadline >= %s AND deadline <= %s;"
         ),
         values=[league_id, earliest_date, latest_date]
     )
+
+    user_ids_to_name_mapping = {}
+    for result in user_name_results:
+        user_ids_to_name_mapping[result["user_id"]] = result["name"]
+
+    for match in matches:
+        match["recent_updater_name"] = user_ids_to_name_mapping.get(
+            match["recent_updater_id"], None
+        )
+
+    return matches
 
 def get_players_current_matches(user_id, league_id, num_periods_before=4, 
                                 num_periods_after=4):
@@ -316,7 +337,6 @@ def get_players_current_matches(user_id, league_id, num_periods_before=4,
     ``match_id, league_id, division_id, status, deadline, my_score,  
     opponent_id, opponent_score, opponent_name``
     """
-
     relevant_matches = get_matches_in_current_window(
         league_id, user_id=user_id, num_periods_after=num_periods_after, 
         num_periods_before=num_periods_before
@@ -362,12 +382,13 @@ def process_player_score_report(user_id, score_details):
     Otherwise, ```message``` contains an explanation of what went wrong.
 
     """
-    if score_details["my_score"] is None:
-        return {"success": False, "message": "Score cannot be empty!"}
-
-    elif score_details["opponent_score"] is None:
-        return {"success": False, "message": "Score cannot be empty!"}
-
+    validate_values(
+        score_details, [
+            ("my_score", int, None, None, "Score cannot be empty!"),
+            ("opponent_score", int, None, None, "Score cannot be empty!"),
+            ("match_id", int, None, None, "Match ID cannot be empty!")
+        ]
+    )
 
     previous_match_details = db.execute(
         "SELECT * FROM match_info WHERE match_id = %s", 
@@ -455,47 +476,37 @@ def create_league(league_info, creator_user_id):
                 "Malformed input detected in the additional questions", jsonify=True
             )
 
-    def __validate_values(value, cast_function, error_msg, lower_limit=None, upper_limit=None):
-        try:
-            value = cast_function(value)
-            if lower_limit is not None: assert value >= lower_limit
-            if upper_limit is not None: assert value <= upper_limit
-        except:
-            traceback.print_exc()
-            raise TigerLeaguesException(error_msg, jsonify=True)
-    
-    __validate_values(
-        league_info["max_num_players"], int, 
-        "The max number of players should be an integer that is at least 2", 2
-    )
-    __validate_values(
-        league_info["num_games_per_period"], int, 
-        "The number of games per time period should be an integer that is at least 1", 1
-    )
-    __validate_values(
-        league_info["length_period_in_days"], int, 
-        "The length of a time period should be an integer that is at least 1", 1
-    )
-
-    __validate_values(
-        league_info["points_per_win"], int, 
-        "The number of points awarded for a win should be an integer value",
-    )
-
-    __validate_values(
-        league_info["points_per_draw"], int, 
-        "The number of points awarded for a draw should be an integer value",
-    )
-
-    __validate_values(
-        league_info["points_per_win"], int, 
-        "The number of points deducted after a loss should be an integer value"
-    )
-
-    __validate_values(
-        league_info["registration_deadline"], date.fromisoformat, 
-        "The registration deadline cannot be a day in the past",
-        date.today()
+    validate_values(
+        league_info, [
+            (
+                "max_num_players", int, 2, None, 
+                "The max number of players should be an integer that is at least 2",
+            ),
+            (
+                "num_games_per_period", int, 1, None, 
+                "The number of games per time period should be an integer that is at least 1"
+            ),
+            (
+                "length_period_in_days", int, 1, None, 
+                "The length of a time period should be an integer that is at least 1"
+            ),
+            (
+                "points_per_win", int, None, None, 
+                "The number of points awarded for a win should be an integer value"
+            ),
+            (
+                "points_per_draw", int, None, None, 
+                "The number of points awarded for a draw should be an integer value"
+            ),
+            (
+                "points_per_loss", int, None, None, 
+                "The number of points deducted after a loss should be an integer value"
+            ),
+            (
+                "registration_deadline", date.fromisoformat, date.today(), None, 
+                "The registration deadline cannot be a day in the past"
+            ),
+        ], jsonify=True
     )
 
     league_basics = {
