@@ -93,6 +93,7 @@
                         <th>Their Score</th>
                         <th>Opponent</th>
                         <th></th>
+                        <th>Updated By</th>
                     </tr>
 
                     {% for match in current_matches %}
@@ -102,14 +103,11 @@
                                 <td class="w3-center">{{match['my_score']}}</td>
                                 <td class="w3-center"><strong> - </strong></td>
                                 <td class="w3-center">{{match['opponent_score']}}</td>
-                            {% elif match["status"] == "pending_approval" %}
-                                <td contenteditable="true" class="w3-center">{{match['my_score']}}</td>
-                                <td class="w3-center"><strong> - </strong></td>
-                                <td class="w3-center" contenteditable="true">{{match['opponent_score']}}</td>
                             {% else %}
-                                <td contenteditable="true" class="w3-center"></td>
+                                <td><input id="my_score_{{match['match_id']}}" type="number" value="{{match['my_score']}}" required></td>
                                 <td class="w3-center"><strong> - </strong></td>
-                                <td class="w3-center" contenteditable="true"></td>
+                                <!-- <td class="w3-center" contenteditable="true"></td> -->
+                                <td><input id="opponent_score_{{match['match_id']}}" type="number" value="{{match['opponent_score']}}" required></td>
                             {% endif %} 
                             <td><a href="{{url_for('league.league_member', league_id=league_id, other_user_id=match['opponent_id'])}}">{{ match["opponent_name"] }}</a></td>
                             <td class="w3-center">
@@ -120,7 +118,10 @@
                                         Update
                                     </button>
                                 {% endif %}
-                            </td>     
+                            </td> 
+                            <td id="score_update_cell_{{match['match_id']}}">
+                                {% if match['recent_updater_name'] %}{{match['recent_updater_name']}}{% endif %}
+                            </td>  
                         </tr>
                     {% endfor %}
                         
@@ -152,10 +153,11 @@
         function updateReportedScores(match_id)
         {
             let matchData = document.getElementById(`match_data_${match_id}`);
+            let matchDataStatus = document.getElementById(`score_update_cell_${match_id}`);
 
             let payload = {
-                my_score: parseInt(matchData.cells[1].innerText),
-                opponent_score: parseInt(matchData.cells[3].innerText),
+                my_score: document.getElementById(`my_score_${match_id}`).value,
+                opponent_score: document.getElementById(`opponent_score_${match_id}`).value,
                 match_id: match_id
             }
             sendHTTPRequest("POST", "submit-score/", payload)
@@ -164,9 +166,7 @@
                         if (!response.success) {
                             alert(response.message);
                         } else {
-                            if (response.message.match_status == "pending_approval") {
-                                alert("Score Submitted")
-                            }
+                            matchDataStatus.innerText = `You at ${(new Date()).toTimeString().split(/\s+/)[0]}`;
                             if (response.message.match_status == "approved") {
                                 matchData.cells[4].innerHTML = `<span style="color: green">Approved</span>`;
                             }

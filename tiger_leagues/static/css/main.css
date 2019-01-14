@@ -28,6 +28,13 @@ input[type="email"] {
     width: 100%;
 }
 
+td input {
+    display: table-cell;
+    padding: 8px 8px;
+    vertical-align: top;
+    width: 100%;
+}
+
 [contenteditable="true"] {
     margin: 2%;
     background-color: white;
