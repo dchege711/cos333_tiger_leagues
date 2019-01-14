@@ -186,12 +186,13 @@ def get_league_standings(league_id):
         ),
         values=[league_id] 
     )
-    if cursor is None:
-        raise TigerLeaguesException('League does not exist; it may have been deleted. \
-        If you entered the URL manually, double-check the league ID.', jsonify=True)
-
+    
     for row in cursor:
         all_standings[row["division_id"]].append(row)
+
+    if not all_standings:
+        raise TigerLeaguesException('League does not exist; it may have been deleted. \
+        If you entered the URL manually, double-check the league ID.', jsonify=True)
 
     return all_standings
 

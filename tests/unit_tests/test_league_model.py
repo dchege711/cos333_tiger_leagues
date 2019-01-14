@@ -41,7 +41,7 @@ def create_and_play_league(num_players=20):
 
     return fake_league, fake_users
 
-def test_league_rankings(cleanup):
+def test_league_standings(cleanup):
     test_league, fake_users = create_and_play_league()
 
     # Change scores to take a player to the top of their divison
@@ -100,6 +100,15 @@ def test_league_rankings(cleanup):
 
     last_place_stats = last_place_info["message"]
     assert last_place_stats["rank"] == last_place_stats["lowest_rank"]
+
+    ranking_on_table = league_model.get_league_standings(
+        test_league["league_id"]
+    )[last_place_stats["division_id"]][-1]
+    assert ranking_on_table["user_id"] == last_place_stats["user_id"]
+
+def test_league_standings_of_nonexistent_league(cleanup):
+    with pytest.raises(TigerLeaguesException):
+        league_model.get_league_standings(-1)
 
 def test_score_submission(cleanup):
     test_league, fake_users = create_and_play_league()
