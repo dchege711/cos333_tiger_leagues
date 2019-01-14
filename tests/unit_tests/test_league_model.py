@@ -3,33 +3,37 @@ test_user_model.py
 """
 
 import sys
+from math import inf
+from random import randint
+
 import pytest
 sys.path.insert(0, "../..")
 
+
 from tiger_leagues.models import league_model, db_model, admin_model, exception
-from dev_scripts import simulate_users
-from math import inf
-from random import randint
+from dev_scripts import simulate_tiger_leagues as sim
+
 
 db = db_model.Database()
 
 def create_league():
 
-    fake_users = simulate_users.register_fake_users(num_users=4)
-    num_fake_users = db.execute("SELECT COUNT (DISTINCT user_id) FROM users;").fetchone()["count"]
-    assert num_fake_users == 4
+    fake_users = sim.register_fake_users(num_users=5)
+    num_fake_users = db.execute(
+        "SELECT COUNT (DISTINCT user_id) FROM users;"
+    ).fetchone()["count"]
+    assert num_fake_users == 5
 
     admin_user = fake_users[0]
     fake_users = fake_users[1:]
 
-    fake_leagues = simulate_users.create_leagues(admin_user, num_leagues=1)
+    fake_league = sim.create_league(admin_user)
     
-    simulate_users.populate_leagues(fake_leagues, fake_users)
-    assert simulate_users.generate_matches(fake_leagues)
+    sim.enroll_members(fake_league, fake_users)
+    fake_league["num_active_players"] = len(fake_users) + 1
+    sim.generate_divisions_and_fixtures(fake_league)
 
-    test_league = fake_leagues[0]
-
-    return test_league, fake_users
+    return fake_league, fake_users
 
 def test_league_methods(cleanup):
 
@@ -86,7 +90,8 @@ def test_league_methods(cleanup):
                 "match_id": match["match_id"]
             })
 
-    # Check that the altered results have affected the league standings in the desired manner
+    # Check that the altered results have affected the league standings in 
+    # the desired manner
     
     leader_info = league_model.get_players_league_stats(
         test_league["league_id"], league_top["user_id"], matches=None, k=5

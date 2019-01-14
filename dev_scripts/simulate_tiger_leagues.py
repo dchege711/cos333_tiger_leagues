@@ -63,8 +63,8 @@ def create_league(creator_user_profile, league_config=None):
         points_per_draw = randint(1, points_per_win - 1)
         points_per_loss = randint(0, points_per_draw - 1)
         league_config = {
-            "league_name": "League {} Pro".format(i),
-            "description": "Simulation builds character",
+            "league_name": "Simulated League",
+            "description": "I, for one, welcome our new simulation overlords",
             "points_per_win": points_per_win, 
             "points_per_draw": points_per_draw,
             "points_per_loss": points_per_loss,
