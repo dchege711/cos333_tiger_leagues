@@ -132,7 +132,7 @@ def generate_divisions_and_fixtures(league_info, desired_fixtures_config=None):
     Expected keys: ``start_date``, ``completion_deadline``
 
     """
-    start_date = date.fromisoformat(league_info["registration_deadline"]) - timedelta(weeks=5)
+    start_date = date.fromisoformat(league_info["registration_deadline"]) - timedelta(weeks=4)
     if desired_fixtures_config is None:
         # Aim for ~4 divisions...
         days_per_match = ceil(

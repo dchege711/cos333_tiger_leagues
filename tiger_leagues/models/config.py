@@ -22,7 +22,6 @@ if APP_ENV == "development":
         environ["TIGER_LEAGUES_POSTGRESQL_USERNAME"],
         environ["TIGER_LEAGUES_POSTGRESQL_PASSWORD"]
     )
-    # DATABASE_URL = "postgres://bqjksbalsnwges:74faa44e9648898b035a7055e2bf828b3568fd9ac87f2859fed7362251d82928@ec2-107-21-93-132.compute-1.amazonaws.com:5432/dchamgvat3o7rt"
 elif APP_ENV == "production":
     # ... otherwise the app is running on Heroku and the URL is already set
     DATABASE_URL = environ["DATABASE_URL"]

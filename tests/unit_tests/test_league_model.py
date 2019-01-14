@@ -11,17 +11,17 @@ import pytest
 
 sys.path.insert(0, "../..")
 from tiger_leagues.models import league_model, db_model, admin_model, exception
-from dev_scripts import simulate_tiger_leagues as sim
 from tiger_leagues.models.exception import TigerLeaguesException
+from dev_scripts import simulate_tiger_leagues as sim
 
 db = db_model.Database()
 
-def create_league():
-    fake_users = sim.register_fake_users(num_users=5)
+def create_and_play_league(num_players=20):
+    fake_users = sim.register_fake_users(num_users=num_players)
     num_fake_users = db.execute(
         "SELECT COUNT (DISTINCT user_id) FROM users;"
     ).fetchone()["count"]
-    assert num_fake_users == 5
+    assert num_fake_users == num_players
 
     admin_user = fake_users[0]
     fake_users = fake_users[1:]
@@ -32,22 +32,17 @@ def create_league():
     fake_league["num_active_players"] = len(fake_users) + 1
     sim.generate_divisions_and_fixtures(fake_league)
 
-    return fake_league, fake_users
-
-def test_league_methods(cleanup):
-
-    """
-    Generate scores and approve the matches for the provided league.
-    """
-
-    test_league, fake_users = create_league()
-
     cursor = db.execute("SELECT match_id FROM match_info;")
     for row in cursor:
         admin_model.approve_match({
             "score_user_1": randint(0, 5), "score_user_2": randint(0, 5),
             "match_id": row["match_id"]
         })
+
+    return fake_league, fake_users
+
+def test_league_rankings(cleanup):
+    test_league, fake_users = create_and_play_league()
 
     # Change scores to take a player to the top of their divison
     # Change scores to take a player to the bottom of their division
@@ -106,33 +101,48 @@ def test_league_methods(cleanup):
     last_place_stats = last_place_info["message"]
     assert last_place_stats["rank"] == last_place_stats["lowest_rank"]
 
+def test_score_submission(cleanup):
+    test_league, fake_users = create_and_play_league()
+    test_user = fake_users[-1]
+
+    test_match = league_model.get_players_current_matches(
+        test_user["user_id"], test_league["league_id"], 
+        num_periods_before=inf, num_periods_after=inf
+    )[0]
+
     # Check that submitting scores works
     score_set = {}
     score_set["my_score"] = 4
     score_set["opponent_score"] = 4
-    score_set["match_id"] = last_place_matches[0]["match_id"]
+    score_set["match_id"] = test_match["match_id"]
 
     submitted_scores_1 = league_model.process_player_score_report(
-        league_bottom["user_id"], score_set
+        test_user["user_id"], score_set
     )
     assert submitted_scores_1["message"]["match_status"] == "pending_approval"
 
-    # Check that two users submitting scores changes score status to approved
-    if last_place_matches[0]["user_1_id"] == league_bottom["user_id"]:
-        other_user = last_place_matches[0]["user_2_id"]
+    # Check that two users submitting same scores changes score status to approved
+    if test_match["user_1_id"] == test_user["user_id"]:
+        other_user_id = test_match["user_2_id"]
     else:
-        other_user = last_place_matches[0]["user_1_id"]
+        other_user_id = test_match["user_1_id"]
 
     submitted_scores_2 = league_model.process_player_score_report(
-        other_user, score_set
+        other_user_id, score_set
     )
     assert submitted_scores_2["message"]["match_status"] == "approved"
 
+def test_self_player_comparison_produces_single_stats(cleanup):
+    test_league, fake_users = create_and_play_league()
+    test_user = fake_users[-1]
+
     # Check that comparing a player to himself produces no head to head matches
     assert league_model.get_player_comparison(
-        test_league["league_id"], league_top["user_id"], league_top["user_id"]
+        test_league["league_id"], test_user["user_id"], str(test_user["user_id"])
     )["message"]["head_to_head"] == []
 
+def test_fetching_stats_for_nonexistent_user(cleanup):
+    test_league, _ = create_and_play_league()
     # Check that getting the stats for a non-existent player raises an exception
     with pytest.raises(exception.TigerLeaguesException):
         league_model.get_players_league_stats(
