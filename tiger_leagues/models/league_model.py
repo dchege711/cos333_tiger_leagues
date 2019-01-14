@@ -407,8 +407,8 @@ def process_player_score_report(user_id, score_details):
     # If the score has been approved update the standings
     if match_status == MATCH_STATUS_APPROVED:
         update_league_standings(
-            previous_match_details["division_id"], 
-            previous_match_details["league_id"]
+            previous_match_details["league_id"],
+            previous_match_details["division_id"]
         )
 
     return {"success": True, "message": {"match_status": match_status}}
