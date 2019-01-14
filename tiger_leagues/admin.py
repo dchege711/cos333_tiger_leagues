@@ -9,7 +9,7 @@ to the rest of the Flask application
 """
 
 from flask import (
-    Blueprint, render_template, session, request, url_for, redirect, jsonify, flash
+    Blueprint, render_template, session, request, url_for, redirect, jsonify
 )
 
 from .models import admin_model, league_model
@@ -50,7 +50,6 @@ def admin_status_required():
 
     league_id = parts[1].split("/")[0]
     associated_leagues = session.get("user")["associated_leagues"]
-    league_info = league_model.get_league_info(league_id)
 
     if league_id not in associated_leagues:
         raise TigerLeaguesException('You are not a member of this league.')
@@ -60,11 +59,10 @@ def admin_status_required():
     return None
 
 def league_not_started():
-
-
     """
-    A decorator function that asserts that a league has not yet started. This function is automatically called before any of the 
-    functions in the ``admin`` module are executed. See 
+    A decorator function that asserts that a league has not yet started. This 
+    function is automatically called before any of the functions in the 
+    ``admin`` module are executed. See 
     http://flask.pocoo.org/docs/1.0/api/#flask.Flask.before_request
 
     :returns: ``flask.Response(code=302)``
@@ -87,8 +85,8 @@ def league_not_started():
     league_info = league_model.get_league_info(league_id)
 
     if league_info["league_status"] == "league_in_progress" or \
-    league_info["league_status"] == "league_completed" or \
-    league_info["league_status"] == "in_playoffs":
+        league_info["league_status"] == "league_completed" or \
+        league_info["league_status"] == "in_playoffs":
         raise TigerLeaguesException('This league is already in progress or completed; the action cannot be performed.')
     # If nothing has been returned, the request will be passed to its handler
     return None
@@ -96,7 +94,8 @@ def league_not_started():
 def league_has_started():
     """
     A decorator function that asserts that a league has already started. 
-    Called before approve_scores and any other functions that should only take place with a started league.
+    Called before approve_scores and any other functions that should only take 
+    place with a started league.
 
     :returns: ``flask.Response(code=302)``
 
@@ -166,8 +165,11 @@ def league_requests(league_id):
     if request.method == "GET":
         join_requests = admin_model.get_join_league_requests(league_id)
         return render_template(
-            "/admin/approve_members.html", league_info=league_info, 
-            join_requests=join_requests
+            "/admin/manage_members.html", league_info=league_info, 
+            join_requests=join_requests, available_statuses={
+                league_model.STATUS_ADMIN, league_model.STATUS_MEMBER,
+                league_model.STATUS_DENIED, league_model.STATUS_PENDING
+            }
         )
     
     if request.method == "POST":
@@ -207,7 +209,9 @@ def manage_members(league_id):
         join_requests = admin_model.get_join_league_requests(league_id)
         return render_template(
             "/admin/manage_members.html", league_info=league_info, 
-            join_requests=join_requests
+            join_requests=join_requests, available_statuses={
+                league_model.STATUS_ADMIN, league_model.STATUS_MEMBER
+            }
         )
     
     if request.method == "POST":

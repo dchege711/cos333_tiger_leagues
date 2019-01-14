@@ -20,42 +20,39 @@
                         <th>{{league_info["additional_questions"][question_id]["question"]}}</th>
                         {% endfor %}
                         <th>Status</th>
+                        <th></th>
                     </tr>
                 </thead>
-                {% set ns = namespace(num_approved_players = 0) %}
+                <!-- {% set ns = namespace(num_approved_players = 0) %} -->
                 <tbody>
                     {% for join_request in join_requests %}
-                    {% if join_request["status"] != "pending" and join_request["status"] != "denied" %}
-                        <tr>
-                            <td>{{join_request["name"]}}</td>
-                            {% for question_id in question_ids %}
-                            <td>{{join_request[question_id]}}</td>
-                            {% endfor %}
-                            <td>
-                                <select name="{{join_request['user_id']}}" required>
-                                    {% if join_request["status"] == "member" %}
-                                        {% set ns.num_approved_players = ns.num_approved_players + 1 %}
-                                        <option value="member" selected>Member</option>
-                                    {% else %}
-                                        <option value="member">Member</option>
-                                    {% endif %}
-                                    {% if join_request["status"] == "admin" %}
-                                        {% set ns.num_approved_players = ns.num_approved_players + 1 %}
-                                        <option value="admin" selected>Admin</option>
-                                    {% else %}
-                                        <option value="admin">Admin</option>
-                                    {% endif %}
-                                </select>
-                            </td>
-                        </tr>
+                        {% if join_request["status"] in available_statuses %}
+                            <tr id="response_{{join_request['user_id']}}">
+                                <td>{{join_request["name"]}}</td>
+                                {% for question_id in question_ids %}
+                                <td>{{join_request[question_id]}}</td>
+                                {% endfor %}
+                                <td>
+                                    <select name="{{join_request['user_id']}}" onchange="updatePlayerStatus({{join_request['user_id']}}, this)" required>
+                                        {% for league_status in available_statuses %}
+                                            {% if league_status == join_request["status"] %}
+                                                <option value="{{league_status}}" selected>{{league_status | title}}</option>
+                                            {% else %}
+                                                <option value="{{league_status}}">{{league_status | title}}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td id="update_status_{{join_request['user_id']}}"></td>
+                            </tr>
                         {% endif %}
                     {% endfor %}
                 </tbody>
                 
             </table>
             <br />
-            <p><span id="num_players">{{ns.num_approved_players}}</span> active players / {{league_info["max_num_players"]}} possible players</p>
-            <br />
+            <!-- <p><span id="num_players">{{ns.num_approved_players}}</span> active players / {{league_info["max_num_players"]}} possible players</p>
+            <br /> -->
             <button onclick="document.location = './../'" class="w3-button w3-round w3-orange w3-left">Back to Admin Page</button>
             <button onclick="saveTableChanges();" class="w3-button w3-round w3-green w3-right">Save Changes</button>
 
@@ -65,38 +62,28 @@
 
     <script type="text/javascript">
 
+        let state = {payload: {}};
+
+        function updatePlayerStatus(playerID, inputElement) {
+            state.payload[playerID] = inputElement.value;
+        }
+
         function saveTableChanges() {
-            let tableElement = document.getElementById("table_join_requests");
-            let tableRows = tableElement.rows;
-            let cellIdx = tableRows[0].cells.length - 1;
-            let statusCounts = {pending: 0, admin: 0, denied: 0, member: 0};
-            let payload = {}, statusElement = null;
-            for (let rowIdx = 1; rowIdx < tableRows.length; rowIdx++) {
-                statusElement = tableRows[rowIdx].cells[cellIdx].children[0];
-                payload[statusElement.name] = statusElement.value;
-                statusCounts[statusElement.value] += 1;
-            }
-            
-            if (statusCounts.admin < 1) {
-                alert("The league must have at least 1 admin");
-                return;
-            } else {
-                sendHTTPRequest("POST", document.URL, payload)
-                    .then((response) => {
-                        response = JSON.parse(response);
-                        if (!response.success) {
-                            alert(response.message);
-                        } else {
-                            for (let rowIdx = 1; rowIdx < tableRows.length; rowIdx++) {
-                                statusElement = tableRows[rowIdx].cells[cellIdx].children[0];
-                                statusElement.value = response.message[statusElement.name];
-                            }
-                            document.getElementById("num_players").innerText = statusCounts.admin + statusCounts.member;
-                            alert("Changes updated!")
-                        }
-                    })
-                    .catch((err) => { alert(err.message); })
-            }
+            sendHTTPRequest("POST", document.URL, state.payload)
+                .then((response) => {
+                    response = JSON.parse(response);
+                    if (!response.success) {
+                        alert(response.message);
+                    } else {
+                        let updatedStatuses = response.message;
+                        Object.keys(updatedStatuses).forEach((userID) => {
+                            document.getElementById(`update_status_${userID}`).innerText = `Updated at ${(new Date()).toTimeString().split(/\s+/)[0]}`;
+                            highlightElement(`response_${userID}`);
+                        });
+                        state.payload = {};
+                    }
+                })
+                .catch((err) => { alert(err.message); });
         }
     
     </script>
