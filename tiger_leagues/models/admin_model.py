@@ -63,13 +63,13 @@ def update_join_league_requests(league_id, league_statuses):
         dynamic_table_or_column_names=[responses_table_name],
         values=[league_model.STATUS_ADMIN]
     )
-    existing_admins = {x["user_id"] for x in cursor}
+    existing_admins = {int(x["user_id"]) for x in cursor}
 
     for user_id, user_status in league_statuses.items():
-        try: int(user_id)
+        try: user_id = int(user_id)
         except ValueError: 
             raise TigerLeaguesException(
-                "{} is not a valid user ID".format(user_id), jsonify=True
+                "{} is not a valid user ID".format(user_id)
             )
         if user_status not in available_statuses:
             raise TigerLeaguesException(
@@ -82,7 +82,7 @@ def update_join_league_requests(league_id, league_statuses):
 
     if not existing_admins:
         raise TigerLeaguesException(
-            "The league must have at least 1 admin", jsonify=True
+            "The league must have at least 1 admin"
         )    
     
     user_id_to_status = {}

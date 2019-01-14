@@ -71,7 +71,7 @@ def create_league(creator_user_profile, league_config=None):
             "max_num_players": randint(10, 100),
             "num_games_per_period": randint(1, 5),
             "length_period_in_days": randint(1, 10),
-            "registration_deadline": date.today() + timedelta(weeks=randint(1, 3)),
+            "registration_deadline": (date.today() + timedelta(weeks=randint(1, 3))).isoformat(),
             "additional_questions": {}
         }
 
@@ -132,7 +132,7 @@ def generate_divisions_and_fixtures(league_info, desired_fixtures_config=None):
     Expected keys: ``start_date``, ``completion_deadline``
 
     """
-    start_date = league_info["registration_deadline"] - timedelta(weeks=5)
+    start_date = date.fromisoformat(league_info["registration_deadline"]) - timedelta(weeks=5)
     if desired_fixtures_config is None:
         # Aim for ~4 divisions...
         days_per_match = ceil(
@@ -200,7 +200,7 @@ def main():
         "points_per_win": 3, "points_per_draw": 0, "points_per_loss": 0,
         "max_num_players": 30, "num_games_per_period": 2,
         "length_period_in_days": 7,
-        "registration_deadline": today + timedelta(weeks=randint(1, 3)),
+        "registration_deadline": (today + timedelta(weeks=randint(1, 3))).isoformat(),
         "additional_questions": {
             "question0": {
                 "question": "Do you own a basketball?",
@@ -228,7 +228,7 @@ def main():
         "points_per_win": 3, "points_per_draw": 1, "points_per_loss": 0,
         "max_num_players": 40, "num_games_per_period": 1,
         "length_period_in_days": 7,
-        "registration_deadline": today + timedelta(days=1),
+        "registration_deadline": (today + timedelta(days=1)).isoformat(),
         "additional_questions": {
             "question0": {
                 "question": "Which console do you have?",
@@ -267,7 +267,7 @@ def main():
         "points_per_win": 4, "points_per_draw": 2, "points_per_loss": 0,
         "max_num_players": 30, "num_games_per_period": 2,
         "length_period_in_days": 7,
-        "registration_deadline": today + timedelta(days=3),
+        "registration_deadline": (today + timedelta(days=3)).isoformat(),
         "additional_questions": {
             "question0": {
                 "question": "Do you own a racket?",
@@ -302,7 +302,7 @@ def main():
         "points_per_win": 3, "points_per_draw": 1, "points_per_loss": 0,
         "max_num_players": 45, "num_games_per_period": 1,
         "length_period_in_days": 5,
-        "registration_deadline": today,
+        "registration_deadline": (today).isoformat(),
         "additional_questions": {
             "question0": {
                 "question": "Do you own a racket?",

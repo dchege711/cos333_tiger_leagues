@@ -52,9 +52,12 @@ def admin_status_required():
     associated_leagues = session.get("user")["associated_leagues"]
 
     if league_id not in associated_leagues:
-        raise TigerLeaguesException('You are not a member of this league.')
+        raise TigerLeaguesException('You are not a member of this league.', jsonify=False)
     if associated_leagues[league_id]["status"] != "admin":
-        raise TigerLeaguesException('You do not have admin privileges for {}.'.format(associated_leagues[league_id]["league_name"]))
+        raise TigerLeaguesException(
+            'You do not have admin privileges for {}.'.format(associated_leagues[league_id]["league_name"]),
+            jsonify=False
+        )
     # If nothing has been returned, the request will be passed to its handler
     return None
 
@@ -87,7 +90,10 @@ def league_not_started():
     if league_info["league_status"] == "league_in_progress" or \
         league_info["league_status"] == "league_completed" or \
         league_info["league_status"] == "in_playoffs":
-        raise TigerLeaguesException('This league is already in progress or completed; the action cannot be performed.')
+        raise TigerLeaguesException(
+            'This league is already in progress or completed; the action cannot be performed.', 
+            jsonify=False
+        )
     # If nothing has been returned, the request will be passed to its handler
     return None
 
@@ -118,7 +124,10 @@ def league_has_started():
 
     if league_info["league_status"] == "accepting_users" or \
     league_info["league_status"] == "awaiting_admin_greenlight":
-        raise TigerLeaguesException('This league has not yet started; the action cannot be performed.')
+        raise TigerLeaguesException(
+            'This league has not yet started; the action cannot be performed.', 
+            jsonify=False
+        )
     # If nothing has been returned, the request will be passed to its handler
     return None
 

@@ -21,7 +21,7 @@ class TigerLeaguesException(Exception):
 
     """
 
-    def __init__(self, message, status_code=400, jsonify=False):
+    def __init__(self, message, status_code=400, jsonify=True):
         Exception.__init__(self)
         self.message = message
         self.jsonify = jsonify
@@ -35,6 +35,6 @@ class TigerLeaguesException(Exception):
         
         """
         return {
-            "success": self.message, "message": self.message, 
+            "success": False, "message": self.message, 
             "status": self.status_code
         }
