@@ -5,19 +5,18 @@ test_user_model.py
 import sys
 from math import inf
 from random import randint
+from datetime import date, timedelta
 
 import pytest
+
 sys.path.insert(0, "../..")
-
-
 from tiger_leagues.models import league_model, db_model, admin_model, exception
 from dev_scripts import simulate_tiger_leagues as sim
-
+from tiger_leagues.models.exception import TigerLeaguesException
 
 db = db_model.Database()
 
 def create_league():
-
     fake_users = sim.register_fake_users(num_users=5)
     num_fake_users = db.execute(
         "SELECT COUNT (DISTINCT user_id) FROM users;"
@@ -139,3 +138,34 @@ def test_league_methods(cleanup):
         league_model.get_players_league_stats(
             test_league["league_id"], -1, matches=None, k=5
         )
+
+base_league_info = {
+    "league_name": "Dummy League", 
+    "description": "Simulation builds character", 
+    "points_per_win": 3, 
+    "points_per_draw": 1,
+    "points_per_loss": 0,
+    "max_num_players": 10,
+    "num_games_per_period": 1,
+    "length_period_in_days": 5,
+    "registration_deadline": (date.today()).isoformat(),
+    "additional_questions": {
+        "question0": {
+            "question": "Do you own a basketball?",
+            "options": "Yes, No"
+        }
+    }
+}
+
+def test_create_league_incomplete_form():
+    base_league_info.pop("league_name")
+    with pytest.raises(TigerLeaguesException):
+        league_model.create_league(base_league_info, 1)
+    base_league_info["league_name"] = "Dummy League"
+
+def test_create_league_in_the_past():
+    base_league_info["registration_deadline"] = (date.today() - timedelta(days=1)).isoformat()
+    with pytest.raises(TigerLeaguesException):
+        league_model.create_league(base_league_info, 1)
+    base_league_info["registration_deadline"] = (date.today()).isoformat()
+    
