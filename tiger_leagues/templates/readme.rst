@@ -45,8 +45,7 @@ The HTML files found here correspond to different pages that are relevant to
 admins, e.g.
 
 * ``admin_league_panel.html`` shows different actions that an admin can take
-* ``approve_members.html`` and ``manage_members.html`` show pages for managing 
-  league members depending on whether the league is in progress or not.
+* ``manage_members.html`` shows pages for managing league members.
 * ``start_league.html`` allows the admin to allocate league divisions and 
   generate fixtures.
 * ``admin_league_homepage.html`` allows admins to approve pending scores.

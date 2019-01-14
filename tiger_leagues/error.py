@@ -12,6 +12,6 @@ def report_error(tiger_leagues_exception):
     General error page
     """
     if tiger_leagues_exception.jsonify:
-        return jsonify(tiger_leagues_exception.todict())
+        return jsonify(tiger_leagues_exception.to_dict())
     return render_template("error.html", e=tiger_leagues_exception)
     

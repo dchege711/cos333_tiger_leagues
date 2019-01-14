@@ -4,3 +4,8 @@
 
 coverage run --branch --source=tiger_leagues -m py.test tests/ --disable-pytest-warnings --showlocals -vvl
 coverage html
+
+# Other notes
+
+# To run pytest with a specific file..
+# pytest -vvl /path/to/test_file.py
