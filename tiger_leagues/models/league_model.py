@@ -176,7 +176,9 @@ def get_league_standings(league_id):
     innermost is keyed by ``wins, losses, draws, games_played, goals_for, 
     goals_allowed, goal_diff, points, rank, rank_delta``
 
+    If the league doesn't exist, the dict will be empty.
     """
+
     all_standings = defaultdict(list)
     cursor = db.execute(
         (
@@ -186,13 +188,9 @@ def get_league_standings(league_id):
         ),
         values=[league_id] 
     )
-    
+
     for row in cursor:
         all_standings[row["division_id"]].append(row)
-
-    if not all_standings:
-        raise TigerLeaguesException('League does not exist; it may have been deleted. \
-        If you entered the URL manually, double-check the league ID.', jsonify=True)
 
     return all_standings
 
@@ -579,9 +577,9 @@ def get_league_info(league_id):
     ``additional_questions``, ``registration_deadline``, ``num_games_per_period``, 
     ``length_period_in_days``, ``max_num_players``
 
-    :return: ``NoneType``
+    :raise: ``TigerLeaguesException``
     
-    ``None`` is returned if the league_id is not found in the database.
+    If the league_id is not found in the database.
 
     """
     cursor = db.execute(
@@ -594,8 +592,9 @@ def get_league_info(league_id):
     league_info = cursor.fetchone()
     
     if league_info is None:
-        raise TigerLeaguesException('League does not exist; it may have been deleted. \
-        If you entered the URL manually, double-check the league ID.', jsonify=False)
+        raise TigerLeaguesException(
+            'League does not exist; it may have been deleted.', jsonify=False
+        )
 
     if league_info["additional_questions"]:
         league_info["additional_questions"] = json.loads(league_info["additional_questions"])

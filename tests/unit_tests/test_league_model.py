@@ -107,8 +107,7 @@ def test_league_standings(cleanup):
     assert ranking_on_table["user_id"] == last_place_stats["user_id"]
 
 def test_league_standings_of_nonexistent_league(cleanup):
-    with pytest.raises(TigerLeaguesException):
-        league_model.get_league_standings(-1)
+    assert league_model.get_league_standings(-1) == {}
 
 def test_score_submission(cleanup):
     test_league, fake_users = create_and_play_league()
