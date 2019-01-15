@@ -18,6 +18,7 @@
     </div>
 
     <div class="w3-container w3-card" style="flex: 2 1 0;">
+        <div class="w3-responsive">
         <table class="w3-table" style="text-align:center;">
             <tr class="w3-large">
                 <th></th>
@@ -65,11 +66,13 @@
             </tr>
 
         </table>
+        </div>
     </div>
 
     {% if head_to_head | length > 0 %}
     <div class="w3-container w3-card">
         <h5>Head to Head Stats</h5>
+        <div class="w3-responsive">
         <table class="w3-table" style="text-align:center;">
             <tr><td></td><td>You</td><td></td><td>{{other_user["name"]}}</td></tr>
             {% for match_result in head_to_head %}
@@ -85,10 +88,12 @@
                 </tr>
             {% endfor %}
         </table>
+        </div>
     </div>
     {% endif %}
 
     <div class="w3-container w3-card">
+        <div class="w3-responsive">
         <table class="w3-table" style="text-align:center;">
             <tr class="w3-large">
                 <th>Mutual Opponent</th>
@@ -121,6 +126,7 @@
             {% endfor %}
             
         </table>
+        </div>
     </div>
 
 {% endblock %}

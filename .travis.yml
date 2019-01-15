@@ -1,3 +1,7 @@
+# .travis.yml
+# Configures how the test suite will be run by Travis CI once the branch is 
+# pushed to Github
+
 language: python
 python:
   - "3.7"

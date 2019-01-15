@@ -1,5 +1,5 @@
 """
-player.py
+user.py
 
 Exposes a blueprint that handles requests made to `/user/*` endpoint
 

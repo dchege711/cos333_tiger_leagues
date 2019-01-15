@@ -11,6 +11,7 @@ from math import ceil
 from datetime import date, timedelta
 
 from . import league_model, db_model, user_model
+from .exception import TigerLeaguesException, validate_values
 
 db = db_model.Database()
 
@@ -52,32 +53,53 @@ def update_join_league_requests(league_id, league_statuses):
     Otherwise, ``message`` will contain an error description.
 
     """
-    league_info = league_model.get_league_info(league_id)
+    responses_table_name = "league_responses_{}".format(league_id)
     available_statuses = {
-        league_model.STATUS_ADMIN, league_model.STATUS_DENIED, league_model.STATUS_MEMBER, 
-        league_model.STATUS_PENDING
+        league_model.STATUS_ADMIN, league_model.STATUS_DENIED, 
+        league_model.STATUS_MEMBER, league_model.STATUS_PENDING
     }
-    for value in league_statuses.values():
-        if value not in available_statuses:
-            return {
-                "success": False, "message": "{} is not a valid status".format(value)
-            }
+    cursor = db.execute(
+        "SELECT user_id FROM {} WHERE status = %s;",
+        dynamic_table_or_column_names=[responses_table_name],
+        values=[league_model.STATUS_ADMIN]
+    )
+    existing_admins = {int(x["user_id"]) for x in cursor}
 
     for user_id, user_status in league_statuses.items():
-        db.execute(
-            "UPDATE {} SET status=%s WHERE user_id=%s;",
-            dynamic_table_or_column_names=["league_responses_{}".format(league_info["league_id"])],
-            values=[user_status, user_id]
-        )
-        user_model.send_notification(user_id, {
-            "league_id": league_id,
-            "notification_text": "Your status changed.\n\nNew status: {}".format(user_status)
-        })
+        try: user_id = int(user_id)
+        except ValueError: 
+            raise TigerLeaguesException(
+                "{} is not a valid user ID".format(user_id)
+            )
+        if user_status not in available_statuses:
+            raise TigerLeaguesException(
+                "{} is not a valid league status. Valid statuses include: {}".format(
+                    user_status, ", ".join(available_statuses)
+                ), jsonify=True
+            )
+        if user_id in existing_admins and user_status != league_model.STATUS_ADMIN:
+            existing_admins.remove(user_id)
 
-    join_requests = get_join_league_requests(league_id)
+    if not existing_admins:
+        raise TigerLeaguesException(
+            "The league must have at least 1 admin"
+        )    
+    
     user_id_to_status = {}
-    for join_request in join_requests:
-        user_id_to_status[join_request["user_id"]] = join_request["status"]
+    for user_id, user_status in league_statuses.items():
+        update_results = db.execute(
+            "UPDATE {} SET status=%s WHERE user_id=%s RETURNING status;",
+            dynamic_table_or_column_names=[responses_table_name],
+            values=[user_status, user_id]
+        ).fetchone()
+        if update_results is not None:
+            user_model.send_notification(user_id, {
+                "league_id": league_id,
+                "notification_text": "Your status changed.\n\nNew status: {}".format(update_results["status"])
+            })
+            user_id_to_status[user_id] = update_results["status"]
+        else:
+            user_id_to_status[user_id] = None
 
     return {
         "success": True, "status": 200, "message": user_id_to_status
@@ -448,11 +470,15 @@ def get_current_matches(league_id):
 
     return current_matches
 
-def approve_match(score_info):
+def approve_match(score_info, admin_user_id):
     """
     :param score_info: dict
     
     Expected keys: ``score_user_1``, ``score_user_2``, ``match_id``
+
+    :param admin_user_id: int
+
+    The ID of the admin approving the match's results
 
     :return: ``dict``
     
@@ -461,20 +487,37 @@ def approve_match(score_info):
     update failed.
 
     """
-    if score_info["score_user_1"] is None:
-        return {"success": False, "message": "Score cannot be empty!"}
+    validate_values(
+        score_info, [
+            (
+                "score_user_1", int, None, None, "The score can't be empty!"
+            ),
+            (
+                "score_user_2", int, None, None, "The score can't be empty!"
+            ),
+            (
+                "match_id", int, None, None, "The match ID can't be empty!"
+            )
+        ], jsonify=True
+    )
 
-    elif score_info["score_user_2"] is None:
-        return {"success": False, "message": "Score cannot be empty!"}
+    previous_scores = db.execute(
+        "SELECT * FROM match_info WHERE match_id = %s", 
+        values=[score_info["match_id"]]
+    ).fetchone()
+
+    if previous_scores["score_user_1"] == score_info["score_user_1"] and \
+        previous_scores["score_user_2"] == score_info["score_user_2"]:
+        recent_updater_id = previous_scores["recent_updater_id"]
+    else:
+        recent_updater_id = admin_user_id
 
     row = db.execute(
-        "UPDATE match_info SET status = %s, score_user_1 = %s , score_user_2 = %s \
+        "UPDATE match_info SET status = %s, score_user_1 = %s , score_user_2 = %s, recent_updater_id = %s \
         WHERE match_id = %s RETURNING league_id, division_id, user_1_id, user_2_id;",
         values=[
-            league_model.MATCH_STATUS_APPROVED, 
-            score_info["score_user_1"], 
-            score_info["score_user_2"],
-            score_info["match_id"]
+            league_model.MATCH_STATUS_APPROVED, score_info["score_user_1"], 
+            score_info["score_user_2"], recent_updater_id, score_info["match_id"]
         ]
     ).fetchone()
     league_model.update_league_standings(row["league_id"], row["division_id"])

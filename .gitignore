@@ -1,8 +1,12 @@
+# .gitignore
+# Contains patterns of directories and files that should be excluded from Git
+
 # Custom rules
 coverage/
 .nyc_output/
 .vscode/
 .vs
+*.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

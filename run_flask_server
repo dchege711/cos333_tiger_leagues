@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# A helper script for running the Flask server on Mac
+
 # Set variables needed by the Flask server
 export FLASK_APP=tiger_leagues
 export FLASK_ENV=development

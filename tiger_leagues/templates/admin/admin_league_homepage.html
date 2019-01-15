@@ -5,7 +5,7 @@
             
         <!-- Display Pending Scores "not played, pending, approved"-->
         <div class="w3-container">
-            <h4>Pending Scores</h4>
+            <h4>{{league_info["league_name"]}}: Approve Scores</h4>
             <hr>
 
             <ul class="nav nav-tabs">
@@ -26,11 +26,11 @@
                     {% else %}
                         <div id="division{{division_id}}" class="tab-pane fade">
                     {% endif %}
-
+                        <div class="w3-responsive">
                         <table class="w3-table-all">
                             <tr>
                                 <th>Deadline</th><th>Player 1</th><th>P1 Score</th><th></th>
-                                <th>P2 Score</th><th>Player 2</th><th>Update</th>
+                                <th>P2 Score</th><th>Player 2</th><th>Submitted By</th><th>Update</th>
                             </tr>
         
                             {% for match in reported_matches[division_id] %}
@@ -47,6 +47,9 @@
                                         <td contenteditable="true"></td>
                                     {% endif %}
                                     <td>{{ match["user_2_name"] }}</td>
+                                    <td id="score_update_status_{{match['match_id']}}">
+                                        {% if match["recent_updater_name"] %}{{match["recent_updater_name"]}}{% endif %}
+                                    </td>
                                     <td>
                                         {% if match["status"] == "approved" %}
                                             <button class="w3-button w3-circle w3-green" onclick="updatePendingScores({{match['match_id']}})">
@@ -62,6 +65,7 @@
                             {% endfor %}
         
                         </table>
+                        </div>
 
                         </div>
                             
@@ -95,7 +99,9 @@
                             alert(response.message);
                         } else 
                         {
-                            matchData.cells[6].innerHTML = `<button class="w3-button w3-circle w3-green" onclick="updatePendingScores(${match_id})">&#10004</button>`;
+                            document.getElementById(`score_update_status_${match_id}`).innerText = `You at ${(new Date()).toTimeString().split(/\s+/)[0]}`;
+                            matchData.cells[7].innerHTML = `<button class="w3-button w3-circle w3-green" onclick="updatePendingScores(${match_id})">&#10004</button>`;
+                            highlightElement(`match_data_${match_id}`);
                         }
                     })
                     .catch((err) => { alert(err.message); })

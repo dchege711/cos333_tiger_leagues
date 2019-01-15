@@ -365,7 +365,7 @@ variable here instead.</p>
 <p>Exposes a blueprint that handles requests made to <cite>/league/*</cite> endpoint</p>
 <dl class="function">
 <dt id="tiger_leagues.models.league_model.create_league">
-<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">create_league</code><span class="sig-paren">(</span><em>league_info</em>, <em>creator_user_profile</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#create_league"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.create_league" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tiger_leagues.models.league_model.</code><code class="descname">create_league</code><span class="sig-paren">(</span><em>league_info</em>, <em>creator_user_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/league_model.html#create_league"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.league_model.create_league" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -381,11 +381,11 @@ variable here instead.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>creator_user_profile</strong> – dict</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>creator_user_profile</strong> – int</td>
 </tr>
 </tbody>
 </table>
-<p>Expected keys: <code class="docutils literal notranslate"><span class="pre">user_id,</span> <span class="pre">league_ids</span></code></p>
+<p>The ID of the user creating this league</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1416,7 +1416,7 @@ set to <code class="docutils literal notranslate"><span class="pre">None</span><
 <p>Allows for error pages/responses with custom exception messages.</p>
 <dl class="exception">
 <dt id="tiger_leagues.models.exception.TigerLeaguesException">
-<em class="property">exception </em><code class="descclassname">tiger_leagues.models.exception.</code><code class="descname">TigerLeaguesException</code><span class="sig-paren">(</span><em>message</em>, <em>status_code=400</em>, <em>jsonify=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/exception.html#TigerLeaguesException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.exception.TigerLeaguesException" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="descclassname">tiger_leagues.models.exception.</code><code class="descname">TigerLeaguesException</code><span class="sig-paren">(</span><em>message</em>, <em>status_code=400</em>, <em>jsonify=True</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/exception.html#TigerLeaguesException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.exception.TigerLeaguesException" title="Permalink to this definition">¶</a></dt>
 <dd><p>A special exception for errors that arise due to constraints that we set on 
 the application, for instance, a user may not access the league panel for a 
 league in which they lack an admin status, etc.</p>

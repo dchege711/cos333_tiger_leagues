@@ -1,5 +1,17 @@
+body {
+    background-image: url("../img/default_background.png");
+    background-repeat: repeat;
+}
+
+#main_div {
+    margin: 2% 4% 4% 4%; 
+    border-radius: 5px; 
+    background-color: rgb(255, 255, 255);
+    opacity: 0.75;
+}
+
 .large_portrait_margins {
-    margin: 5% 10%;
+    margin: 2% 4%;
 }
 
 input {
@@ -13,6 +25,13 @@ input[type="text"] {
 }
 
 input[type="email"] {
+    width: 100%;
+}
+
+td input {
+    display: table-cell;
+    padding: 8px 8px;
+    vertical-align: top;
     width: 100%;
 }
 

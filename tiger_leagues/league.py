@@ -62,7 +62,7 @@ def league_homepage(league_id):
     associated_leagues = user["associated_leagues"]
     if league_id not in associated_leagues:
         raise TigerLeaguesException(
-            "You're not a member of this league", status_code=403
+            "You're not a member of this league", status_code=403, jsonify=False
         )
 
     league_info = league_model.get_league_info(league_id)
@@ -187,7 +187,7 @@ def create_league():
     if request.method == "POST":
         create_league_info = request.json
         user_profile = session.get("user")
-        results = league_model.create_league(create_league_info, user_profile)
+        results = league_model.create_league(create_league_info, user_profile["user_id"])
         if results["success"]:
             league_id = results["message"]
             results["message"] = {

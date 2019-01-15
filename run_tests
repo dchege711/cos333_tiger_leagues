@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
-# To view the code coverage of the tests, open htmlcov/index.html
+# A helper script for running the test suite on Mac
 
 coverage run --branch --source=tiger_leagues -m py.test tests/ --disable-pytest-warnings --showlocals -vvl
 coverage html
+open htmlcov/index.html
+
+# Other notes
+
+# To run pytest with a specific file..
+# pytest -vvl /path/to/test_file.py

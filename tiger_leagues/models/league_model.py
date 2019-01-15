@@ -12,7 +12,7 @@ from collections import defaultdict
 from functools import cmp_to_key
 
 from . import db_model, user_model
-from .exception import TigerLeaguesException
+from .exception import TigerLeaguesException, validate_values
 
 generic_500_msg = {
     "success": False, "status": 500, "message": "Internal Server Error"
@@ -175,7 +175,9 @@ def get_league_standings(league_id):
     innermost is keyed by ``wins, losses, draws, games_played, goals_for, 
     goals_allowed, goal_diff, points, rank, rank_delta``
 
+    If the league doesn't exist, the dict will be empty.
     """
+
     all_standings = defaultdict(list)
     cursor = db.execute(
         (
@@ -185,9 +187,6 @@ def get_league_standings(league_id):
         ),
         values=[league_id] 
     )
-    if cursor is None:
-        raise TigerLeaguesException('League does not exist; it may have been deleted. \
-        If you entered the URL manually, double-check the league ID.')
 
     for row in cursor:
         all_standings[row["division_id"]].append(row)
@@ -234,7 +233,7 @@ def get_matches_in_current_window(league_id, num_periods_before=3,
     row = cursor.fetchone()
     if row is None:
         raise TigerLeaguesException('League does not exist; it may have been deleted. \
-        If you entered the URL manually, double-check the league ID.')
+        If you entered the URL manually, double-check the league ID.', jsonify=False)
     
     time_window_days = ceil(row["length_period_in_days"] / row["num_games_per_period"])
 
@@ -262,24 +261,46 @@ def get_matches_in_current_window(league_id, num_periods_before=3,
         latest_date = date.today() + timedelta(days=time_window_days * num_periods_after)
     
     if user_id is not None:
-        return db.execute(
+        matches = db.execute(
             (
-                "SELECT * FROM match_info WHERE league_id = %s "
-                "AND (user_1_id = %s OR user_2_id = %s) "
+                "SELECT match_info.*, NULL as recent_updater_name FROM match_info "
+                "WHERE league_id = %s AND (user_1_id = %s OR user_2_id = %s) "
                 "AND (user_1_id IS NOT NULL AND user_2_id IS NOT NULL) "
                 "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
             ),
             values=[league_id, user_id, user_id, earliest_date, latest_date]
-        )
-        
-    return db.execute(
+        ).fetchall()
+
+    else:  
+        matches = db.execute(
+            (
+                "SELECT match_info.*, NULL as recent_updater_name FROM match_info "
+                "WHERE league_id = %s "
+                "AND (user_1_id IS NOT NULL AND user_2_id IS NOT NULL) "
+                "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
+            ),
+            values=[league_id, earliest_date, latest_date]
+        ).fetchall()
+
+    user_name_results = db.execute(
         (
-            "SELECT * FROM match_info WHERE league_id = %s "
-            "AND (user_1_id IS NOT NULL AND user_2_id IS NOT NULL) "
-            "AND deadline >= %s AND deadline <= %s ORDER BY deadline;"
+            "SELECT users.name, users.user_id FROM users, match_info "
+            "WHERE users.user_id = match_info.recent_updater_id "
+            "AND match_info.league_id = %s AND deadline >= %s AND deadline <= %s;"
         ),
         values=[league_id, earliest_date, latest_date]
     )
+
+    user_ids_to_name_mapping = {}
+    for result in user_name_results:
+        user_ids_to_name_mapping[result["user_id"]] = result["name"]
+
+    for match in matches:
+        match["recent_updater_name"] = user_ids_to_name_mapping.get(
+            match["recent_updater_id"], None
+        )
+
+    return matches
 
 def get_players_current_matches(user_id, league_id, num_periods_before=4, 
                                 num_periods_after=4):
@@ -316,7 +337,6 @@ def get_players_current_matches(user_id, league_id, num_periods_before=4,
     ``match_id, league_id, division_id, status, deadline, my_score,  
     opponent_id, opponent_score, opponent_name``
     """
-
     relevant_matches = get_matches_in_current_window(
         league_id, user_id=user_id, num_periods_after=num_periods_after, 
         num_periods_before=num_periods_before
@@ -362,12 +382,13 @@ def process_player_score_report(user_id, score_details):
     Otherwise, ```message``` contains an explanation of what went wrong.
 
     """
-    if score_details["my_score"] is None:
-        return {"success": False, "message": "Score cannot be empty!"}
-
-    elif score_details["opponent_score"] is None:
-        return {"success": False, "message": "Score cannot be empty!"}
-
+    validate_values(
+        score_details, [
+            ("my_score", int, None, None, "Score cannot be empty!"),
+            ("opponent_score", int, None, None, "Score cannot be empty!"),
+            ("match_id", int, None, None, "Match ID cannot be empty!")
+        ]
+    )
 
     previous_match_details = db.execute(
         "SELECT * FROM match_info WHERE match_id = %s", 
@@ -407,13 +428,13 @@ def process_player_score_report(user_id, score_details):
     # If the score has been approved update the standings
     if match_status == MATCH_STATUS_APPROVED:
         update_league_standings(
-            previous_match_details["division_id"], 
-            previous_match_details["league_id"]
+            previous_match_details["league_id"],
+            previous_match_details["division_id"]
         )
 
     return {"success": True, "message": {"match_status": match_status}}
 
-def create_league(league_info, creator_user_profile):
+def create_league(league_info, creator_user_id):
     """
     :param league_info: dict
     
@@ -421,9 +442,9 @@ def create_league(league_info, creator_user_profile):
     ``points_per_draw``, ``points_per_loss``, ``registration_deadline``, 
     ``additional_questions``.
 
-    :param creator_user_profile: dict
+    :param creator_user_profile: int
     
-    Expected keys: ``user_id, league_ids``
+    The ID of the user creating this league
 
     :return: ``dict``
     
@@ -433,6 +454,17 @@ def create_league(league_info, creator_user_profile):
     ``int`` representing the league ID
 
     """
+    # Assert that all required fields have been submitted
+    for key in [
+            "league_name", "description", "points_per_win", "points_per_draw", 
+            "points_per_loss", "max_num_players", "num_games_per_period", 
+            "length_period_in_days", "registration_deadline", "additional_questions"
+        ]:
+        if key not in league_info:
+            raise TigerLeaguesException(
+                "The following value is missing: {}".format(key), jsonify=True
+            )
+
     sanitized_additional_questions = {}
     for idx, question in enumerate(league_info["additional_questions"].values()):
         try:
@@ -440,11 +472,42 @@ def create_league(league_info, creator_user_profile):
                 "question": question["question"], "options": question["options"]
             }
         except KeyError:
-            return {
-                "success": False, "status": 200, 
-                "message": "Malformed input detected!"
-            }
-    creator_user_id = creator_user_profile["user_id"]
+            raise TigerLeaguesException(
+                "Malformed input detected in the additional questions", jsonify=True
+            )
+
+    validate_values(
+        league_info, [
+            (
+                "max_num_players", int, 2, None, 
+                "The max number of players should be an integer that is at least 2",
+            ),
+            (
+                "num_games_per_period", int, 1, None, 
+                "The number of games per time period should be an integer that is at least 1"
+            ),
+            (
+                "length_period_in_days", int, 1, None, 
+                "The length of a time period should be an integer that is at least 1"
+            ),
+            (
+                "points_per_win", int, None, None, 
+                "The number of points awarded for a win should be an integer value"
+            ),
+            (
+                "points_per_draw", int, None, None, 
+                "The number of points awarded for a draw should be an integer value"
+            ),
+            (
+                "points_per_loss", int, None, None, 
+                "The number of points deducted after a loss should be an integer value"
+            ),
+            (
+                "registration_deadline", date.fromisoformat, date.today(), None, 
+                "The registration deadline cannot be a day in the past"
+            ),
+        ], jsonify=True
+    )
 
     league_basics = {
         "creator_user_id": creator_user_id,
@@ -452,11 +515,11 @@ def create_league(league_info, creator_user_profile):
         "league_name": league_info["league_name"], 
         "description": league_info["description"], 
         "points_per_win": league_info["points_per_win"], 
-        "points_per_draw": league_info["points_per_draw"], 
+        "points_per_draw": league_info["points_per_draw"],
+        "points_per_loss": league_info["points_per_loss"],
         "max_num_players": league_info["max_num_players"],
         "num_games_per_period": league_info["num_games_per_period"],
         "length_period_in_days": league_info["length_period_in_days"],
-        "points_per_loss": league_info["points_per_loss"], 
         "registration_deadline": league_info["registration_deadline"],
         "additional_questions": json.dumps(sanitized_additional_questions)
     }
@@ -498,10 +561,14 @@ def create_league(league_info, creator_user_profile):
         ]
     )
 
+    prev_league_ids = user_model.get_user(
+        None, user_id=creator_user_id
+    )["league_ids"]
+
     db.execute(
         "UPDATE users SET league_ids = %s WHERE user_id = %s;",
         values=[
-            ", ".join(str(x) for x in creator_user_profile["league_ids"] + [league_id]),
+            ", ".join(str(x) for x in prev_league_ids + [league_id]),
             creator_user_id
         ]
     )
@@ -521,9 +588,9 @@ def get_league_info(league_id):
     ``additional_questions``, ``registration_deadline``, ``num_games_per_period``, 
     ``length_period_in_days``, ``max_num_players``
 
-    :return: ``NoneType``
+    :raise: ``TigerLeaguesException``
     
-    ``None`` is returned if the league_id is not found in the database.
+    If the league_id is not found in the database.
 
     """
     cursor = db.execute(
@@ -536,8 +603,9 @@ def get_league_info(league_id):
     league_info = cursor.fetchone()
     
     if league_info is None:
-        raise TigerLeaguesException('League does not exist; it may have been deleted. \
-        If you entered the URL manually, double-check the league ID.')
+        raise TigerLeaguesException(
+            'League does not exist; it may have been deleted.', jsonify=False
+        )
 
     if league_info["additional_questions"]:
         league_info["additional_questions"] = json.loads(league_info["additional_questions"])
@@ -592,7 +660,7 @@ def get_league_info_if_joinable(league_id):
     # If the league doesn't exist, let the user know
     if league_info is None: 
         raise TigerLeaguesException(
-            "The league does not exist", status_code=400
+            "The league does not exist", jsonify=False
         )
 
     # If the league's deadline is already passed, communicate that to the user
@@ -602,13 +670,13 @@ def get_league_info_if_joinable(league_id):
             "The registration deadline for '{}' has passed ({})".format(
                 league_info["league_name"],
                 league_info["registration_deadline"].strftime("%A, %B %d, %Y")
-            ), status_code=400
+            ), jsonify=False
         )
 
     if league_info["league_status"] != LEAGUE_STAGE_ACCEPTING_USERS:
         raise TigerLeaguesException(
             "'{}' is no longer accepting new players".format(league_info["league_name"]), 
-            status_code=400
+            jsonify=False
         )
 
     return {"success": True, "message": league_info}
@@ -692,13 +760,13 @@ def get_players_league_stats(league_id, user_id, matches=None, k=5):
             raise TigerLeaguesException(
                 "{} is not a member of {}".format(
                     player_details["name"], player_details["league_name"]
-                ), status_code=400
+                ), jsonify=False
             )
         else:
             raise TigerLeaguesException(
                 "{} has not started yet.".format(
                     player_details["league_name"]
-                ), status_code=400
+                ), jsonify=False
             )
 
     lowest_rank = db.execute(
@@ -752,14 +820,14 @@ def get_player_comparison(league_id, user_1_id, user_2_id):
 
     if user_1_info is None or user_2_info is None:
         raise TigerLeaguesException('User does not exist. \
-        If you entered the URL manually, double-check their user ID.')
+        If you entered the URL manually, double-check their user ID.', jsonify=False)
 
     if league_id not in user_1_info["associated_leagues"]:
         raise TigerLeaguesException('You are not a member of this league. \
-        If you entered the URL manually, double-check the league ID.')
+        If you entered the URL manually, double-check the league ID.', jsonify=False)
     if league_id not in user_2_info["associated_leagues"]:
         raise TigerLeaguesException('User is not a member of this league. \
-        If you entered the URL manually, double-check the league ID.')
+        If you entered the URL manually, double-check the league ID.', jsonify=False)
 
 
     user_1_matches = get_players_current_matches(
