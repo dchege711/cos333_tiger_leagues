@@ -156,20 +156,47 @@ def generate_divisions_and_fixtures(league_info, desired_fixtures_config=None):
     if results["message"] != "Fixtures successfully created!":
         raise RuntimeError(results["message"])
 
-def simulate_matches(league_id, admin_user_id, deadline=None, matches=None):
+def simulate_matches(league_id, admin_user_id, deadline=None, matches=None, by_admin=True):
     """
     Simulate the matches whose deadline has already passed.
     """
     if matches is None:
         matches = db.execute(
-            "SELECT match_id FROM match_info WHERE league_id = %s AND deadline < %s;",
+            "SELECT * FROM match_info WHERE league_id = %s AND deadline < %s;",
             values=[league_id, deadline]
         )
     for match in matches:
-        admin_model.approve_match({
-            "score_user_1": randint(0, 5), "score_user_2": randint(0, 5),
-            "match_id": match["match_id"]
-        }, admin_user_id)
+        score_1, score_2 = randint(0, 5), randint(0, 5)
+        if by_admin:
+            admin_model.approve_match({
+                "score_user_1": randint(0, 5), "score_user_2": randint(0, 5),
+                "match_id": match["match_id"]
+            }, admin_user_id)
+        else:
+            score_report_1 = {
+                "my_score": score_1, "opponent_score": score_2, "match_id": match["match_id"]
+            }
+            if randint(0, 6) <= 3: 
+                score_report_2 = score_report_1 # Probably submit a non-matching score
+            else: score_report_2 = {
+                "my_score": score_2, "opponent_score": score_1, "match_id": match["match_id"]
+            }
+            # Randomly choose who submits the score last...
+            if randint(0, 1) == 0:
+                league_model.process_player_score_report(
+                    match["user_1_id"], score_report_1
+                )
+                league_model.process_player_score_report(
+                    match["user_2_id"], score_report_2
+                )
+            else:
+                league_model.process_player_score_report(
+                    match["user_2_id"], score_report_2
+                )
+                league_model.process_player_score_report(
+                    match["user_1_id"], score_report_1
+                )
+                
 
 def main():
     """
@@ -297,7 +324,8 @@ def main():
         "league_name": "Ping Pong S2019",
         "description": (
             "Your league has been running for a while now. "
-            "Approve pending score reports. Elevate some players to admin status."
+            "Approve pending score reports. Some of the score reports are already "
+            "approved. This occurs when 2 players submit the same score."
         ),
         "points_per_win": 3, "points_per_draw": 1, "points_per_loss": 0,
         "max_num_players": 45, "num_games_per_period": 1,
@@ -317,14 +345,20 @@ def main():
     )
     league_info["num_active_players"] = league_info["max_num_players"] - 2
     generate_divisions_and_fixtures(league_info)
-    simulate_matches(league_info["league_id"], main_user_profile["user_id"], deadline=today)
+    simulate_matches(
+        league_info["league_id"], main_user_profile["user_id"],  
+        deadline=today - timedelta(days=league_config["length_period_in_days"])
+    )
 
     # Simulate some of the current set of matches
     current_matches = [x for x in league_model.get_matches_in_current_window(
-        league_info["league_id"], num_periods_before=0, num_periods_after=0
+        league_info["league_id"], num_periods_before=1, num_periods_after=0
     )]
-    matches_to_simulate = sample(current_matches, len(current_matches) // 3)
-    simulate_matches(league_info["league_id"], main_user_profile["user_id"], matches=matches_to_simulate)
+    matches_to_simulate = sample(current_matches, 2 * len(current_matches) // 3)
+    simulate_matches(
+        league_info["league_id"], main_user_profile["user_id"], 
+        matches=matches_to_simulate, by_admin=False
+    )
 
     print("Sucessfully simulated 'Ping Pong S2019'...")
 
