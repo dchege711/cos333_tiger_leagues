@@ -207,10 +207,23 @@ def main():
     except IndexError:
         raise RuntimeError("Usage: python simulate_users.py net_id")
 
+    try:
+        net_id_2 = sys.argv[2]
+    except IndexError:
+        net_id_2 = net_id + "_duplicate"
+
     main_user_profile = user_model.update_user_profile(
         None, net_id, {
             "name": net_id, "net_id": net_id, 
             "email": "{}@princeton.edu".format(net_id),
+            "phone_num": "555-555-5555", "room": "Blair A57"  
+        }
+    )
+
+    other_user_profile = user_model.update_user_profile(
+        None, net_id_2, {
+            "name": net_id_2, "net_id": net_id_2, 
+            "email": "{}@princeton.edu".format(net_id_2),
             "phone_num": "555-555-5555", "room": "Blair A57"  
         }
     )
@@ -223,7 +236,7 @@ def main():
     #---------------------------------------------------------------------------
     league_config = {
         "league_name": "1v1 Basketball",
-        "description": "Hello @{}! Please join this league and let's ball :-)".format(net_id),
+        "description": "Hello @{} and @{}! Please join this league and let's ball :-)".format(net_id, net_id_2),
         "points_per_win": 3, "points_per_draw": 0, "points_per_loss": 0,
         "max_num_players": 30, "num_games_per_period": 2,
         "length_period_in_days": 7,
@@ -270,9 +283,9 @@ def main():
 
     league_info = create_league(fake_users[0], league_config=league_config)
     enroll_members(
-        league_info, fake_users[1:(league_info["max_num_players"] - 2)]
+        league_info, fake_users[1:(league_info["max_num_players"] - 3)]
     )
-    enroll_members(league_info, [main_user_profile])
+    enroll_members(league_info, [main_user_profile, other_user_profile])
     league_info["num_active_players"] = league_info["max_num_players"] - 2
     generate_divisions_and_fixtures(league_info)
     simulate_matches(league_info["league_id"], fake_users[0]["user_id"], deadline=today)
@@ -287,7 +300,7 @@ def main():
     league_config = {
         "league_name": "Badminton S2019",
         "description": (
-            "We have made you the admin of 'Badminton S2019'. "
+            "We have made you an admin of 'Badminton S2019'. "
             "A couple of players have already requested to join. "
             "Approve/reject their requests and start the league."
         ),
@@ -311,6 +324,9 @@ def main():
     enroll_members(
         league_info, fake_users[:league_info["max_num_players"] // 2],
         status=league_model.STATUS_PENDING
+    )
+    enroll_members(
+        league_info, [other_user_profile], status=league_model.STATUS_ADMIN
     )
     print("Successfully created 'Badminton S2019'...")
 
@@ -341,7 +357,10 @@ def main():
 
     league_info = create_league(main_user_profile, league_config=league_config)
     enroll_members(
-        league_info, fake_users[:(league_info["max_num_players"] - 2)]
+        league_info, [other_user_profile], status=league_model.STATUS_ADMIN
+    )
+    enroll_members(
+        league_info, fake_users[:(league_info["max_num_players"] - 3)]
     )
     league_info["num_active_players"] = league_info["max_num_players"] - 2
     generate_divisions_and_fixtures(league_info)
