@@ -1,3 +1,6 @@
+# .gitignore
+# Contains patterns of directories and files that should be excluded from Git
+
 # Custom rules
 coverage/
 .nyc_output/

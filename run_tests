@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# A helper script for running the test suite on Mac
+
 coverage run --branch --source=tiger_leagues -m py.test tests/ --disable-pytest-warnings --showlocals -vvl
 coverage html
 open htmlcov/index.html
