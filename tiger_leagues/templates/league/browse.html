@@ -9,30 +9,35 @@
             onclick="document.location = `{{ url_for('league.create_league', _external=True) }}`">
             Create</button>
             <hr>
-            <h4>Join an Existing League</h4>
-            <div class="w3-responsive">
-            <table class="w3-table-all">
-                <tr>
-                    <th>League Name</th>
-                    <th>Creator</th>
-                    <th>Description</th>
-                    <th>Registration Deadline</th>
-                    <th></th>
-                </tr>
-                {% for league in leagues %}
+
+            {% if leagues %}
+                <h4>Join an Existing League</h4>
+                <div class="w3-responsive">
+                <table class="w3-table-all">
                     <tr>
-                        <td>{{ league["league_name"] }}</td>
-                        <td>@{{ league["net_id"] }}</td>
-                        <td><em>{{ league["description"] }}</em></td>
-                        <td>{{ league["registration_deadline"] }}</td>
-                        <td><button class="w3-button w3-btn w3-green"
-                            onclick="document.location = `{{ url_for('league.join_league', league_id=league['league_id'], _external=True) }}`">
-                            Join</button>
-                        </td> 
+                        <th>League Name</th>
+                        <th>Creator</th>
+                        <th>Description</th>
+                        <th>Registration Deadline</th>
+                        <th></th>
                     </tr>
-                {% endfor %}
-            </table>
-            </div>
+                    {% for league in leagues %}
+                        <tr>
+                            <td>{{ league["league_name"] }}</td>
+                            <td>@{{ league["net_id"] }}</td>
+                            <td><em>{{ league["description"] }}</em></td>
+                            <td>{{ league["registration_deadline"] }}</td>
+                            <td><button class="w3-button w3-btn w3-green"
+                                onclick="document.location = `{{ url_for('league.join_league', league_id=league['league_id'], _external=True) }}`">
+                                Join</button>
+                            </td> 
+                        </tr>
+                    {% endfor %}
+                </table>
+                </div>
+            {% else %}
+                <p>There are no leagues for you to join.</p>
+            {% endif %}
         </p>
     </div>
 
