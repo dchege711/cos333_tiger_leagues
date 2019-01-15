@@ -19,7 +19,12 @@ class TigerLeaguesException(Exception):
 
     :kwarg status_code: int
 
-    To specify the error code in the response. Like 400, 404, 500, etc. 
+    To specify the error code in the response. Like 400, 404, 500, etc.
+
+    :kwarg jsonify: bool
+
+    Set the ``jsonify`` attribute of the exception. The error handler can then 
+    check this value to decide how to convey the error to the user. 
 
     """
 

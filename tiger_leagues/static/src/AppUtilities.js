@@ -23,7 +23,7 @@ function sendHTTPRequest(method, url, payload, contentType="application/json") {
 }
 
 /**
- * @description Add a border around an element
+ * @description Add a temporary border around an element and highlight the element
  * @param {String} elementID The ID of the element
  */
 function highlightElement(elementID) {
