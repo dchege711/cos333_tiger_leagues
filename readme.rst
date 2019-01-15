@@ -88,6 +88,10 @@ configuration is defined in the ``.travis.yml`` file at the root. We have set
 up ``origin/master`` as a protected branch, so make sure Travis CI greenlights 
 any pull requests.
 
+For UI tests, we don't yet have automated testing. However, we do have a 
+simulator script in ``./dev_scripts/simulate_tiger_leagues.py``. This file is 
+useful for simulating the application by generating fake data.
+
 .. _generating_the_documentation:
 
 Generating the Documentation

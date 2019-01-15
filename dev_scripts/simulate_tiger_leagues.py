@@ -205,7 +205,7 @@ def main():
     try:
         net_id = sys.argv[1]
     except IndexError:
-        raise RuntimeError("Usage: python simulate_users.py net_id")
+        raise RuntimeError("Usage: python simulate_users.py net_id [net_id_2]")
 
     try:
         net_id_2 = sys.argv[2]
