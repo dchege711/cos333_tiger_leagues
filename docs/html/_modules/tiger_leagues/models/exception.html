@@ -68,6 +68,8 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">traceback</span>
+
 <div class="viewcode-block" id="TigerLeaguesException"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.exception.TigerLeaguesException">[docs]</a><span class="k">class</span> <span class="nc">TigerLeaguesException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A special exception for errors that arise due to constraints that we set on </span>
@@ -80,7 +82,12 @@
 
 <span class="sd">    :kwarg status_code: int</span>
 
-<span class="sd">    To specify the error code in the response. Like 400, 404, 500, etc. </span>
+<span class="sd">    To specify the error code in the response. Like 400, 404, 500, etc.</span>
+
+<span class="sd">    :kwarg jsonify: bool</span>
+
+<span class="sd">    Set the ``jsonify`` attribute of the exception. The error handler can then </span>
+<span class="sd">    check this value to decide how to convey the error to the user. </span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -101,6 +108,39 @@
             <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> 
             <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">status_code</span>
         <span class="p">}</span></div></div>
+
+<div class="viewcode-block" id="validate_values"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.exception.validate_values">[docs]</a><span class="k">def</span> <span class="nf">validate_values</span><span class="p">(</span><span class="n">data_obj</span><span class="p">,</span> <span class="n">constraints</span><span class="p">,</span> <span class="n">jsonify</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for validating JSON input</span>
+
+<span class="sd">    :param data_obj: dict</span>
+
+<span class="sd">    A key-value pairing that needs to be validated</span>
+
+<span class="sd">    :param constraints: list[tuple]</span>
+
+<span class="sd">    Each tuple has 5 items. In order, they are: key (str), </span>
+<span class="sd">    cast_function (function), l_limit (value), u_limit (value), error_msg (str)</span>
+
+<span class="sd">    :kwarg jsonify: bool</span>
+
+<span class="sd">    If ``True``, the raised ``TigerLeaguesException`` will have its jsonify </span>
+<span class="sd">    attribute set.</span>
+
+<span class="sd">    :raises: ``TigerLeaguesException``</span>
+
+<span class="sd">    If any of the keys don&#39;t exist or any of the values fail to meet the </span>
+<span class="sd">    constraint.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">cast_function</span><span class="p">,</span> <span class="n">l_limit</span><span class="p">,</span> <span class="n">u_limit</span><span class="p">,</span> <span class="n">error_msg</span> <span class="ow">in</span> <span class="n">constraints</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data_obj</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cast_function</span><span class="p">(</span><span class="n">data_obj</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">l_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="k">assert</span> <span class="n">data_obj</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">l_limit</span>
+            <span class="k">if</span> <span class="n">u_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="k">assert</span> <span class="n">data_obj</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">u_limit</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">TigerLeaguesException</span><span class="p">(</span><span class="n">error_msg</span><span class="p">,</span> <span class="n">jsonify</span><span class="o">=</span><span class="n">jsonify</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

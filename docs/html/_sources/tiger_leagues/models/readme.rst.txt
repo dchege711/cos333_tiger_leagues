@@ -7,7 +7,37 @@ Models
 As described on `Wikipedia 
 <https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller#Components>`_, 
 the model is the application's dynamic data structure, independent of the user 
-interface. It directly manages the data, logic and rules of the application.
+interface. It directly manages the data, logic and rules of the application. 
+We deviated a bit from the standard MVC architecture by validating our inputs 
+at this level.
+
+Here is a quick breakdown of where the higher-level application logic is handled:
+
++---------------------------------------------+--------------------------------------------------+
+| Model                                       | Application Logic                                |
++=============================================+==================================================+
+| :py:mod:`tiger_leagues.models.league_model` | - Creating a new league                          |
+|                                             | - Recording requests to join a league            |
+|                                             | - Updating league standings                      |
+|                                             | - Fetching league standings                      |
+|                                             | - Fetching league matches                        |
+|                                             | - Fetching player stats                          |
+|                                             | - Processing score reports submitted by players  |
+|                                             | - Processing player requests to leave a league   |
++---------------------------------------------+--------------------------------------------------+
+| :py:mod:`tiger_leagues.models.admin_model`  | - Adding/removing players from a league          |
+|                                             | - Allocating league divisions                    |
+|                                             | - Processing score reports submitted by admins   |
+|                                             | - Deleting a league                              |
++---------------------------------------------+--------------------------------------------------+
+| :py:mod:`tiger_leagues.models.user_model`   | - Fetch existing user profile                    |
+|                                             | - Update a user's profile                        |
+|                                             | - Post notifications to a user                   |
+|                                             | - Read user's notifications                      |
++---------------------------------------------+--------------------------------------------------+
+| :py:mod:`tiger_leagues.models.exception`    | - Raise exceptions caused by errors encountered  |
+|                                             |   when accomplishing any of the above logic      |
++---------------------------------------------+--------------------------------------------------+
 
 .. _models_design_decisions:
 

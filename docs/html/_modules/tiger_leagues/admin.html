@@ -375,11 +375,16 @@
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;GET&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">render_template</span><span class="p">(</span>
             <span class="s2">&quot;/admin/admin_league_homepage.html&quot;</span><span class="p">,</span>
+            <span class="n">league_info</span><span class="o">=</span><span class="n">league_model</span><span class="o">.</span><span class="n">get_league_info</span><span class="p">(</span><span class="n">league_id</span><span class="p">),</span> 
             <span class="n">reported_matches</span><span class="o">=</span><span class="n">admin_model</span><span class="o">.</span><span class="n">get_current_matches</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
         <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;POST&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">admin_model</span><span class="o">.</span><span class="n">approve_match</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span>
+            <span class="n">admin_model</span><span class="o">.</span><span class="n">approve_match</span><span class="p">(</span>
+                <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">,</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;user&quot;</span><span class="p">)[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="delete_league"><a class="viewcode-back" href="../../tiger_leagues/readme.html#tiger_leagues.admin.delete_league">[docs]</a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/&lt;int:league_id&gt;/delete-league/&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>

@@ -74,7 +74,7 @@
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">timedelta</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">league_model</span><span class="p">,</span> <span class="n">db_model</span><span class="p">,</span> <span class="n">user_model</span>
-<span class="kn">from</span> <span class="nn">.exception</span> <span class="k">import</span> <span class="n">TigerLeaguesException</span>
+<span class="kn">from</span> <span class="nn">.exception</span> <span class="k">import</span> <span class="n">TigerLeaguesException</span><span class="p">,</span> <span class="n">validate_values</span>
 
 <span class="n">db</span> <span class="o">=</span> <span class="n">db_model</span><span class="o">.</span><span class="n">Database</span><span class="p">()</span>
 
@@ -533,11 +533,15 @@
 
     <span class="k">return</span> <span class="n">current_matches</span></div>
 
-<div class="viewcode-block" id="approve_match"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.admin_model.approve_match">[docs]</a><span class="k">def</span> <span class="nf">approve_match</span><span class="p">(</span><span class="n">score_info</span><span class="p">):</span>
+<div class="viewcode-block" id="approve_match"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.admin_model.approve_match">[docs]</a><span class="k">def</span> <span class="nf">approve_match</span><span class="p">(</span><span class="n">score_info</span><span class="p">,</span> <span class="n">admin_user_id</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    :param score_info: dict</span>
 <span class="sd">    </span>
 <span class="sd">    Expected keys: ``score_user_1``, ``score_user_2``, ``match_id``</span>
+
+<span class="sd">    :param admin_user_id: int</span>
+
+<span class="sd">    The ID of the admin approving the match&#39;s results</span>
 
 <span class="sd">    :return: ``dict``</span>
 <span class="sd">    </span>
@@ -546,20 +550,37 @@
 <span class="sd">    update failed.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;score_user_1&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Score cannot be empty!&quot;</span><span class="p">}</span>
+    <span class="n">validate_values</span><span class="p">(</span>
+        <span class="n">score_info</span><span class="p">,</span> <span class="p">[</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;score_user_1&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;The score can&#39;t be empty!&quot;</span>
+            <span class="p">),</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;score_user_2&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;The score can&#39;t be empty!&quot;</span>
+            <span class="p">),</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;match_id&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;The match ID can&#39;t be empty!&quot;</span>
+            <span class="p">)</span>
+        <span class="p">],</span> <span class="n">jsonify</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
 
-    <span class="k">elif</span> <span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;score_user_2&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Score cannot be empty!&quot;</span><span class="p">}</span>
+    <span class="n">previous_scores</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s2">&quot;SELECT * FROM match_info WHERE match_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> 
+        <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;match_id&quot;</span><span class="p">]]</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">previous_scores</span><span class="p">[</span><span class="s2">&quot;score_user_1&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;score_user_1&quot;</span><span class="p">]</span> <span class="ow">and</span> \
+        <span class="n">previous_scores</span><span class="p">[</span><span class="s2">&quot;score_user_2&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;score_user_2&quot;</span><span class="p">]:</span>
+        <span class="n">recent_updater_id</span> <span class="o">=</span> <span class="n">previous_scores</span><span class="p">[</span><span class="s2">&quot;recent_updater_id&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">recent_updater_id</span> <span class="o">=</span> <span class="n">admin_user_id</span>
 
     <span class="n">row</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
-        <span class="s2">&quot;UPDATE match_info SET status = </span><span class="si">%s</span><span class="s2">, score_user_1 = </span><span class="si">%s</span><span class="s2"> , score_user_2 = </span><span class="si">%s</span><span class="s2"> </span><span class="se">\</span>
+        <span class="s2">&quot;UPDATE match_info SET status = </span><span class="si">%s</span><span class="s2">, score_user_1 = </span><span class="si">%s</span><span class="s2"> , score_user_2 = </span><span class="si">%s</span><span class="s2">, recent_updater_id = </span><span class="si">%s</span><span class="s2"> </span><span class="se">\</span>
 <span class="s2">        WHERE match_id = </span><span class="si">%s</span><span class="s2"> RETURNING league_id, division_id, user_1_id, user_2_id;&quot;</span><span class="p">,</span>
         <span class="n">values</span><span class="o">=</span><span class="p">[</span>
-            <span class="n">league_model</span><span class="o">.</span><span class="n">MATCH_STATUS_APPROVED</span><span class="p">,</span> 
-            <span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;score_user_1&quot;</span><span class="p">],</span> 
-            <span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;score_user_2&quot;</span><span class="p">],</span>
-            <span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;match_id&quot;</span><span class="p">]</span>
+            <span class="n">league_model</span><span class="o">.</span><span class="n">MATCH_STATUS_APPROVED</span><span class="p">,</span> <span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;score_user_1&quot;</span><span class="p">],</span> 
+            <span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;score_user_2&quot;</span><span class="p">],</span> <span class="n">recent_updater_id</span><span class="p">,</span> <span class="n">score_info</span><span class="p">[</span><span class="s2">&quot;match_id&quot;</span><span class="p">]</span>
         <span class="p">]</span>
     <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
     <span class="n">league_model</span><span class="o">.</span><span class="n">update_league_standings</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;league_id&quot;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;division_id&quot;</span><span class="p">])</span>

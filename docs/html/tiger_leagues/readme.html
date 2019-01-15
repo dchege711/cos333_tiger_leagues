@@ -100,6 +100,75 @@
 <p>As described on <a class="reference external" href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller#Components">Wikipedia</a>,
 the contoller receives the input, optionally validates it and then passes
 the input to the model.</p>
+<p>Unlike the typical MVC model, we validated our most of our input in the models.
+We did this because our test suite focused on the models.</p>
+<p>Here is a quick breakdown of the input handled by the controllers:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="47%" />
+<col width="53%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Controller</th>
+<th class="head">Input to Relay to the Model</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><p class="first"><a class="reference internal" href="#module-tiger_leagues.auth" title="tiger_leagues.auth"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.auth</span></code></a></p>
+<p class="last">(This controller uses
+<a class="reference internal" href="#module-tiger_leagues.cas_client" title="tiger_leagues.cas_client"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.cas_client</span></code></a> to
+complete its tasks)</p>
+</td>
+<td><ul class="first last simple">
+<li>Results of CAS authentication for login</li>
+<li>Request to log out the user</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#module-tiger_leagues.league" title="tiger_leagues.league"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.league</span></code></a></td>
+<td><ul class="first last simple">
+<li>Creating a new league</li>
+<li>Recording requests to join a league</li>
+<li>Updating league standings</li>
+<li>Fetching league standings</li>
+<li>Fetching league matches</li>
+<li>Fetching player stats</li>
+<li>Processing score reports submitted by players</li>
+<li>Processing player requests to leave a league</li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p class="first"><a class="reference internal" href="#module-tiger_leagues.admin" title="tiger_leagues.admin"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.admin</span></code></a></p>
+<p class="last">(This controller also checks that the
+logged in user has admin privileges)</p>
+</td>
+<td><ul class="first last simple">
+<li>Adding/removing players from a league</li>
+<li>Allocating league divisions</li>
+<li>Processing score reports submitted by admins</li>
+<li>Deleting a league</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#module-tiger_leagues.user" title="tiger_leagues.user"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.user</span></code></a></td>
+<td><ul class="first last simple">
+<li>Fetch existing user profile</li>
+<li>Update a user’s profile</li>
+<li>Post notifications to a user</li>
+<li>Read user’s notifications</li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#module-tiger_leagues.decorators" title="tiger_leagues.decorators"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.decorators</span></code></a></td>
+<td><p class="first">Used as middleware</p>
+<ul class="last simple">
+<li>Confirm that user is logged in</li>
+<li>Refresh a user’s notifications</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <div class="section" id="design-decisions">
 <span id="controllers-design-decisions"></span><h2>Design Decisions<a class="headerlink" href="#design-decisions" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="use-of-decorators">

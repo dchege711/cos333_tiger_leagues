@@ -2,6 +2,8 @@
    sphinx-quickstart on Thu Dec 27 23:01:49 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
+   
+.. This file acts as the starting point for the documentation.
 
 =========================================
 Welcome to Tiger Leagues's Documentation!

@@ -106,7 +106,61 @@
 <span id="tiger-leagues-models"></span><h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
 <p>As described on <a class="reference external" href="https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller#Components">Wikipedia</a>,
 the model is the application’s dynamic data structure, independent of the user
-interface. It directly manages the data, logic and rules of the application.</p>
+interface. It directly manages the data, logic and rules of the application.
+We deviated a bit from the standard MVC architecture by validating our inputs
+at this level.</p>
+<p>Here is a quick breakdown of where the higher-level application logic is handled:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="47%" />
+<col width="53%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Model</th>
+<th class="head">Application Logic</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><a class="reference internal" href="#module-tiger_leagues.models.league_model" title="tiger_leagues.models.league_model"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.models.league_model</span></code></a></td>
+<td><ul class="first last simple">
+<li>Creating a new league</li>
+<li>Recording requests to join a league</li>
+<li>Updating league standings</li>
+<li>Fetching league standings</li>
+<li>Fetching league matches</li>
+<li>Fetching player stats</li>
+<li>Processing score reports submitted by players</li>
+<li>Processing player requests to leave a league</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#module-tiger_leagues.models.admin_model" title="tiger_leagues.models.admin_model"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.models.admin_model</span></code></a></td>
+<td><ul class="first last simple">
+<li>Adding/removing players from a league</li>
+<li>Allocating league divisions</li>
+<li>Processing score reports submitted by admins</li>
+<li>Deleting a league</li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#module-tiger_leagues.models.user_model" title="tiger_leagues.models.user_model"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.models.user_model</span></code></a></td>
+<td><ul class="first last simple">
+<li>Fetch existing user profile</li>
+<li>Update a user’s profile</li>
+<li>Post notifications to a user</li>
+<li>Read user’s notifications</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#module-tiger_leagues.models.exception" title="tiger_leagues.models.exception"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tiger_leagues.models.exception</span></code></a></td>
+<td><ul class="first last simple">
+<li>Raise exceptions caused by errors encountered
+when accomplishing any of the above logic</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 <div class="section" id="design-decisions">
 <span id="models-design-decisions"></span><h2>Design Decisions<a class="headerlink" href="#design-decisions" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="application-context">
@@ -428,11 +482,11 @@ decriptive error message. Otherwise, the <code class="docutils literal notransla
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">NoneType</span></code></td>
+<tr class="field-odd field"><th class="field-name">Raise:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">TigerLeaguesException</span></code></td>
 </tr>
 </tbody>
 </table>
-<p><code class="docutils literal notranslate"><span class="pre">None</span></code> is returned if the league_id is not found in the database.</p>
+<p>If the league_id is not found in the database.</p>
 </dd></dl>
 
 <dl class="function">
@@ -484,6 +538,7 @@ information needed to join the league.</p>
 The <code class="docutils literal notranslate"><span class="pre">list[dict]</span></code> is sorted by points and then by goal difference. This 
 innermost is keyed by <code class="docutils literal notranslate"><span class="pre">wins,</span> <span class="pre">losses,</span> <span class="pre">draws,</span> <span class="pre">games_played,</span> <span class="pre">goals_for,</span> 
 <span class="pre">goals_allowed,</span> <span class="pre">goal_diff,</span> <span class="pre">points,</span> <span class="pre">rank,</span> <span class="pre">rank_delta</span></code></p>
+<p>If the league doesn’t exist, the dict will be empty.</p>
 </dd></dl>
 
 <dl class="function">
@@ -983,7 +1038,7 @@ Otherwise, <code class="docutils literal notranslate"><span class="pre">message<
 
 <dl class="function">
 <dt id="tiger_leagues.models.admin_model.approve_match">
-<code class="descclassname">tiger_leagues.models.admin_model.</code><code class="descname">approve_match</code><span class="sig-paren">(</span><em>score_info</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/admin_model.html#approve_match"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.admin_model.approve_match" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tiger_leagues.models.admin_model.</code><code class="descname">approve_match</code><span class="sig-paren">(</span><em>score_info</em>, <em>admin_user_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/admin_model.html#approve_match"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.admin_model.approve_match" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -993,6 +1048,15 @@ Otherwise, <code class="docutils literal notranslate"><span class="pre">message<
 </tbody>
 </table>
 <p>Expected keys: <code class="docutils literal notranslate"><span class="pre">score_user_1</span></code>, <code class="docutils literal notranslate"><span class="pre">score_user_2</span></code>, <code class="docutils literal notranslate"><span class="pre">match_id</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>admin_user_id</strong> – int</td>
+</tr>
+</tbody>
+</table>
+<p>The ID of the admin approving the match’s results</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1438,6 +1502,16 @@ league in which they lack an admin status, etc.</p>
 </tbody>
 </table>
 <p>To specify the error code in the response. Like 400, 404, 500, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jsonify</strong> – bool</td>
+</tr>
+</tbody>
+</table>
+<p>Set the <code class="docutils literal notranslate"><span class="pre">jsonify</span></code> attribute of the exception. The error handler can then 
+check this value to decide how to convey the error to the user.</p>
 <dl class="method">
 <dt id="tiger_leagues.models.exception.TigerLeaguesException.to_dict">
 <code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/exception.html#TigerLeaguesException.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.exception.TigerLeaguesException.to_dict" title="Permalink to this definition">¶</a></dt>
@@ -1452,6 +1526,51 @@ league in which they lack an admin status, etc.</p>
 <p>A dict representation of the exception</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="function">
+<dt id="tiger_leagues.models.exception.validate_values">
+<code class="descclassname">tiger_leagues.models.exception.</code><code class="descname">validate_values</code><span class="sig-paren">(</span><em>data_obj</em>, <em>constraints</em>, <em>jsonify=True</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/tiger_leagues/models/exception.html#validate_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tiger_leagues.models.exception.validate_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function for validating JSON input</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data_obj</strong> – dict</td>
+</tr>
+</tbody>
+</table>
+<p>A key-value pairing that needs to be validated</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>constraints</strong> – list[tuple]</td>
+</tr>
+</tbody>
+</table>
+<p>Each tuple has 5 items. In order, they are: key (str), 
+cast_function (function), l_limit (value), u_limit (value), error_msg (str)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jsonify</strong> – bool</td>
+</tr>
+</tbody>
+</table>
+<p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the raised <code class="docutils literal notranslate"><span class="pre">TigerLeaguesException</span></code> will have its jsonify 
+attribute set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">TigerLeaguesException</span></code></td>
+</tr>
+</tbody>
+</table>
+<p>If any of the keys don’t exist or any of the values fail to meet the 
+constraint.</p>
 </dd></dl>
 
 </div>

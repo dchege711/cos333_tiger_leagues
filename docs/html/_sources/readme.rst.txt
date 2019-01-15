@@ -65,6 +65,8 @@ Tiger Leagues uses the `Model-View-Controller
 <https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller>`_ 
 architectural pattern.
 
+.. image:: ./img/mvc_architecture.png
+
 For more detailed documentation and design decisions made at each level see:
 
 * `Models <tiger_leagues/models/readme.html>`_
