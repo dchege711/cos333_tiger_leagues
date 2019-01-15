@@ -42,3 +42,4 @@
 \contentsline {subsection}{\numberline {4.2.7}tiger\_leagues.wsgi}{29}{subsection.4.2.7}
 \contentsline {chapter}{\numberline {5}Indices and tables}{31}{chapter.5}
 \contentsline {chapter}{Python Module Index}{33}{section*.75}
+\contentsline {chapter}{Index}{35}{section*.76}

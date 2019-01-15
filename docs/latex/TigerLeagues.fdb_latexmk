@@ -1,11 +1,11 @@
 # Fdb version 3
-["makeindex TigerLeagues.idx"] 0 "TigerLeagues.idx" "TigerLeagues.ind" "TigerLeagues" 0
-  "TigerLeagues.idx" 0 -1 0 ""
+["makeindex TigerLeagues.idx"] 1547536544 "TigerLeagues.idx" "TigerLeagues.ind" "TigerLeagues" 1547536544
+  "TigerLeagues.idx" 1547533989 13515 f3c13bebe00a8c248d853c184a17bc31 ""
   (generated)
-  "TigerLeagues.ind"
   "TigerLeagues.ilg"
-["pdflatex"] 1547533962 "TigerLeagues.tex" "TigerLeagues.pdf" "TigerLeagues" 1547533962
-  "/Users/dchege711/tiger_leagues/docs/doctrees/images/da419489ddbba68d29dd3328da2a8bd6c8ba4638/cos333_tiger_leagues.svg" 1547551863 724 af3359b6a330e8be6d21e0274c77bc30 ""
+  "TigerLeagues.ind"
+["pdflatex"] 1547536545 "TigerLeagues.tex" "TigerLeagues.pdf" "TigerLeagues" 1547536545
+  "/Users/dchege711/tiger_leagues/docs/doctrees/images/da419489ddbba68d29dd3328da2a8bd6c8ba4638/cos333_tiger_leagues.svg" 1547552482 724 af3359b6a330e8be6d21e0274c77bc30 ""
   "/usr/local/texlive/2017/texmf-dist/fonts/enc/dvips/base/8r.enc" 1480098666 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2017/texmf-dist/fonts/map/fontname/texfonts.map" 1480098670 3287 e6b82fe08f5336d4d5ebc73fb1152e87 ""
   "/usr/local/texlive/2017/texmf-dist/fonts/tfm/adobe/courier/pcrb8r.tfm" 1480098688 1292 3059476c50a24578715759f22652f3d0 ""
@@ -155,21 +155,22 @@
   "/usr/local/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1495593472 2350277 a699055bee05bf8a40b0504752487295 ""
   "/usr/local/texlive/2017/texmf-var/web2c/pdftex/pdflatex.fmt" 1495593487 4129592 0e6cfee100d68e6d96b92c0258f2ff73 ""
   "/usr/local/texlive/2017/texmf.cnf" 1495593465 577 2b71d4d888f9e5560b2e99985915a9fa ""
-  "TigerLeagues.aux" 1547533962 8 a94a2480d3289e625eea47cd1b285758 ""
-  "TigerLeagues.ind" 0 -1 0 "makeindex TigerLeagues.idx"
-  "TigerLeagues.out" 0 -1 0 ""
+  "TigerLeagues.aux" 1547533989 23592 d90a67d9755b2f7fe5e69d67d4d19fbe ""
+  "TigerLeagues.ind" 1547536545 9237 143aa6a5204b576e5b8668f07c3496fa "makeindex TigerLeagues.idx"
+  "TigerLeagues.out" 1547533989 2375 971ba3fa810fd5da8ba225926d59fd89 ""
   "TigerLeagues.tex" 1547533931 118813 16f4053c9ddcd0941c6e834e6572c566 ""
+  "TigerLeagues.toc" 0 -1 0 ""
   "footnotehyper-sphinx.sty" 1545966456 8888 1bbd7bdeae8c8bed1d10d551bddb1cc9 ""
   "mvc_architecture.png" 1547528923 43266 55d07424d565265a4b06127be1c317ba ""
   "sphinx.sty" 1545966456 74103 c4ef0df5246ad96d119efabac2b2709c ""
-  "sphinxhighlight.sty" 1547533961 8137 38a433148fcb7611515a989ff1750dd5 ""
+  "sphinxhighlight.sty" 1547536544 8137 38a433148fcb7611515a989ff1750dd5 ""
   "sphinxmanual.cls" 1545966456 3606 fe67088d27cb5a0826fd3cdce3caff30 ""
   "sphinxmulticell.sty" 1545966456 14618 0defbdc8536ad2e67f1eac6a1431bc55 ""
   "tiger_leagues_components.png" 1547408187 80278 8f6ac3e4372430df70724a6b7aa7f5f7 ""
   (generated)
   "TigerLeagues.out"
-  "TigerLeagues.aux"
   "TigerLeagues.pdf"
+  "TigerLeagues.toc"
+  "TigerLeagues.aux"
   "TigerLeagues.idx"
   "TigerLeagues.log"
-  "TigerLeagues.toc"

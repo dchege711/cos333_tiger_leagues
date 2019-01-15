@@ -1,0 +1,183 @@
+\begin{sphinxtheindex}
+\let\bigletter\sphinxstyleindexlettergroup
+\let\spxpagem \sphinxstyleindexpagemain
+\let\spxentry \sphinxstyleindexentry
+\let\spxextra \sphinxstyleindexextra
+
+  \bigletter A
+  \item \spxentry{admin\_status\_required()}\spxextra{in module tiger\_leagues.admin}, 
+		\hyperpage{23}
+  \item \spxentry{allocate\_league\_divisions()}\spxextra{in module tiger\_leagues.admin}, 
+		\hyperpage{24}
+  \item \spxentry{allocate\_league\_divisions()}\spxextra{in module tiger\_leagues.models.admin\_model}, 
+		\hyperpage{14}
+  \item \spxentry{approve\_match()}\spxextra{in module tiger\_leagues.models.admin\_model}, 
+		\hyperpage{14}
+  \item \spxentry{approve\_scores()}\spxextra{in module tiger\_leagues.admin}, \hyperpage{24}
+  \item \spxentry{authenticate()}\spxextra{tiger\_leagues.cas\_client.CASClient method}, 
+		\hyperpage{23}
+
+  \indexspace
+  \bigletter B
+  \item \spxentry{browse\_leagues()}\spxextra{in module tiger\_leagues.league}, \hyperpage{26}
+
+  \indexspace
+  \bigletter C
+  \item \spxentry{cas\_login()}\spxextra{in module tiger\_leagues.auth}, \hyperpage{22}
+  \item \spxentry{cas\_logout()}\spxextra{in module tiger\_leagues.auth}, \hyperpage{22}
+  \item \spxentry{CASClient}\spxextra{class in tiger\_leagues.cas\_client}, \hyperpage{23}
+  \item \spxentry{create\_league()}\spxextra{in module tiger\_leagues.league}, \hyperpage{26}
+  \item \spxentry{create\_league()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{10}
+
+  \indexspace
+  \bigletter D
+  \item \spxentry{Database}\spxextra{class in tiger\_leagues.models.db\_model}, \hyperpage{8}
+  \item \spxentry{delete\_league()}\spxextra{in module tiger\_leagues.admin}, \hyperpage{24}
+  \item \spxentry{delete\_league()}\spxextra{in module tiger\_leagues.models.admin\_model}, 
+		\hyperpage{14}
+  \item \spxentry{disconnect()}\spxextra{tiger\_leagues.models.db\_model.Database method}, 
+		\hyperpage{8}
+  \item \spxentry{display\_user\_profile()}\spxextra{in module tiger\_leagues.user}, \hyperpage{27}
+
+  \indexspace
+  \bigletter E
+  \item \spxentry{execute()}\spxextra{tiger\_leagues.models.db\_model.Database method}, 
+		\hyperpage{8}
+  \item \spxentry{execute\_many()}\spxextra{tiger\_leagues.models.db\_model.Database method}, 
+		\hyperpage{9}
+
+  \indexspace
+  \bigletter F
+  \item \spxentry{fixture\_generator()}\spxextra{in module tiger\_leagues.models.admin\_model}, 
+		\hyperpage{15}
+
+  \indexspace
+  \bigletter G
+  \item \spxentry{generate\_league\_fixtures()}\spxextra{in module tiger\_leagues.models.admin\_model}, 
+		\hyperpage{15}
+  \item \spxentry{get\_current\_matches()}\spxextra{in module tiger\_leagues.models.admin\_model}, 
+		\hyperpage{15}
+  \item \spxentry{get\_join\_league\_requests()}\spxextra{in module tiger\_leagues.models.admin\_model}, 
+		\hyperpage{15}
+  \item \spxentry{get\_league\_info()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{10}
+  \item \spxentry{get\_league\_info\_if\_joinable()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{10}
+  \item \spxentry{get\_league\_standings()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{10}
+  \item \spxentry{get\_leagues\_not\_yet\_joined()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{11}
+  \item \spxentry{get\_matches\_in\_current\_window()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{11}
+  \item \spxentry{get\_player\_comparison()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{11}
+  \item \spxentry{get\_players\_current\_matches()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{12}
+  \item \spxentry{get\_players\_league\_stats()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{12}
+  \item \spxentry{get\_previous\_responses()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{12}
+  \item \spxentry{get\_registration\_stats()}\spxextra{in module tiger\_leagues.models.admin\_model}, 
+		\hyperpage{15}
+  \item \spxentry{get\_user()}\spxextra{in module tiger\_leagues.models.user\_model}, 
+		\hyperpage{16}
+
+  \indexspace
+  \bigletter I
+  \item \spxentry{index()}\spxextra{in module tiger\_leagues.auth}, \hyperpage{22}
+  \item \spxentry{index()}\spxextra{in module tiger\_leagues.league}, \hyperpage{26}
+  \item \spxentry{iterator()}\spxextra{tiger\_leagues.models.db\_model.Database method}, 
+		\hyperpage{9}
+
+  \indexspace
+  \bigletter J
+  \item \spxentry{join\_league()}\spxextra{in module tiger\_leagues.league}, \hyperpage{26}
+
+  \indexspace
+  \bigletter L
+  \item \spxentry{launch()}\spxextra{tiger\_leagues.models.db\_model.Database method}, 
+		\hyperpage{9}
+  \item \spxentry{league\_has\_started()}\spxextra{in module tiger\_leagues.admin}, \hyperpage{24}
+  \item \spxentry{league\_homepage()}\spxextra{in module tiger\_leagues.admin}, \hyperpage{25}
+  \item \spxentry{league\_homepage()}\spxextra{in module tiger\_leagues.league}, \hyperpage{26}
+  \item \spxentry{league\_member()}\spxextra{in module tiger\_leagues.league}, \hyperpage{27}
+  \item \spxentry{league\_not\_started()}\spxextra{in module tiger\_leagues.admin}, \hyperpage{25}
+  \item \spxentry{league\_requests()}\spxextra{in module tiger\_leagues.admin}, \hyperpage{25}
+  \item \spxentry{leave\_league()}\spxextra{in module tiger\_leagues.league}, \hyperpage{27}
+  \item \spxentry{login\_required()}\spxextra{in module tiger\_leagues.decorators}, \hyperpage{28}
+
+  \indexspace
+  \bigletter M
+  \item \spxentry{manage\_members()}\spxextra{in module tiger\_leagues.admin}, \hyperpage{25}
+  \item \spxentry{modify\_notification\_status()}\spxextra{in module tiger\_leagues.user}, 
+		\hyperpage{28}
+
+  \indexspace
+  \bigletter P
+  \item \spxentry{process\_join\_league\_request()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{13}
+  \item \spxentry{process\_leave\_league\_request()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{13}
+  \item \spxentry{process\_player\_score\_report()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{13}
+  \item \spxentry{process\_score\_submit()}\spxextra{in module tiger\_leagues.league}, 
+		\hyperpage{27}
+  \item \spxentry{process\_update\_league\_responses()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{13}
+
+  \indexspace
+  \bigletter R
+  \item \spxentry{read\_notifications()}\spxextra{in module tiger\_leagues.models.user\_model}, 
+		\hyperpage{16}
+  \item \spxentry{refresh\_user\_profile()}\spxextra{in module tiger\_leagues.decorators}, 
+		\hyperpage{28}
+
+  \indexspace
+  \bigletter S
+  \item \spxentry{send\_notification()}\spxextra{in module tiger\_leagues.models.user\_model}, 
+		\hyperpage{16}
+  \item \spxentry{start\_league()}\spxextra{in module tiger\_leagues.admin}, \hyperpage{25}
+  \item \spxentry{strip\_ticket()}\spxextra{tiger\_leagues.cas\_client.CASClient method}, 
+		\hyperpage{23}
+
+  \indexspace
+  \bigletter T
+  \item \spxentry{tiger\_leagues.admin}\spxextra{module}, \hyperpage{23}
+  \item \spxentry{tiger\_leagues.auth}\spxextra{module}, \hyperpage{22}
+  \item \spxentry{tiger\_leagues.cas\_client}\spxextra{module}, \hyperpage{22}
+  \item \spxentry{tiger\_leagues.decorators}\spxextra{module}, \hyperpage{28}
+  \item \spxentry{tiger\_leagues.league}\spxextra{module}, \hyperpage{26}
+  \item \spxentry{tiger\_leagues.models.admin\_model}\spxextra{module}, \hyperpage{14}
+  \item \spxentry{tiger\_leagues.models.config}\spxextra{module}, \hyperpage{10}
+  \item \spxentry{tiger\_leagues.models.db\_model}\spxextra{module}, \hyperpage{8}
+  \item \spxentry{tiger\_leagues.models.exception}\spxextra{module}, \hyperpage{17}
+  \item \spxentry{tiger\_leagues.models.league\_model}\spxextra{module}, \hyperpage{10}
+  \item \spxentry{tiger\_leagues.models.user\_model}\spxextra{module}, \hyperpage{16}
+  \item \spxentry{tiger\_leagues.user}\spxextra{module}, \hyperpage{27}
+  \item \spxentry{tiger\_leagues.wsgi}\spxextra{module}, \hyperpage{29}
+  \item \spxentry{TigerLeaguesException}, \hyperpage{17}
+  \item \spxentry{to\_dict()}\spxextra{tiger\_leagues.models.exception.TigerLeaguesException method}, 
+		\hyperpage{18}
+
+  \indexspace
+  \bigletter U
+  \item \spxentry{update\_join\_league\_requests()}\spxextra{in module tiger\_leagues.models.admin\_model}, 
+		\hyperpage{16}
+  \item \spxentry{update\_league\_standings()}\spxextra{in module tiger\_leagues.models.league\_model}, 
+		\hyperpage{14}
+  \item \spxentry{update\_notification\_status()}\spxextra{in module tiger\_leagues.models.user\_model}, 
+		\hyperpage{17}
+  \item \spxentry{update\_responses()}\spxextra{in module tiger\_leagues.league}, \hyperpage{27}
+  \item \spxentry{update\_user\_profile()}\spxextra{in module tiger\_leagues.models.user\_model}, 
+		\hyperpage{17}
+  \item \spxentry{update\_user\_profile()}\spxextra{in module tiger\_leagues.user}, \hyperpage{28}
+
+  \indexspace
+  \bigletter V
+  \item \spxentry{validate()}\spxextra{tiger\_leagues.cas\_client.CASClient method}, \hyperpage{23}
+  \item \spxentry{validate\_values()}\spxextra{in module tiger\_leagues.models.exception}, 
+		\hyperpage{18}
+  \item \spxentry{view\_notifications()}\spxextra{in module tiger\_leagues.user}, \hyperpage{28}
+
+\end{sphinxtheindex}
