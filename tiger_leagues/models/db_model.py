@@ -31,6 +31,7 @@ class Database:
         else:
             self.__connection = connect(connection_uri)
         self.launch()
+        self.execute("SET TIME ZONE 'EST';")
         atexit.register(self.disconnect)
 
     def disconnect(self):
