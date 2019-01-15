@@ -980,8 +980,13 @@
             <span class="p">}</span>
         <span class="n">expected_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">submitted_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
+    <span class="c1"># Maintain the user&#39;s league status</span>
+    <span class="k">if</span> <span class="n">league_id</span> <span class="ow">in</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">]:</span>
+        <span class="n">expected_info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;associated_leagues&quot;</span><span class="p">][</span><span class="n">league_id</span><span class="p">][</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">expected_info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">STATUS_PENDING</span>
+        
     <span class="n">expected_info</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span>
-    <span class="n">expected_info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">STATUS_PENDING</span>
     <span class="n">table_name</span> <span class="o">=</span> <span class="s2">&quot;league_responses_</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">league_id</span><span class="p">)</span>
     <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
         <span class="s2">&quot;DELETE FROM </span><span class="si">{}</span><span class="s2"> WHERE user_id = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="p">[</span><span class="n">user_profile</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]],</span> 

@@ -94,6 +94,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__connection</span> <span class="o">=</span> <span class="n">connect</span><span class="p">(</span><span class="n">connection_uri</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">launch</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SET TIME ZONE &#39;EST&#39;;&quot;</span><span class="p">)</span>
         <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Database.disconnect"><a class="viewcode-back" href="../../../tiger_leagues/models/readme.html#tiger_leagues.models.db_model.Database.disconnect">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
