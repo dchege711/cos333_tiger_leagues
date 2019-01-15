@@ -193,7 +193,7 @@
                 .then((response) => {
                     let responseObject = JSON.parse(response);
                     if (responseObject.success) {
-                        alert(`League created. Invite Link: ${responseObject.message.invite_url}`);
+                        alert(`League created. Registration Link: ${responseObject.message.invite_url}. (Works only for logged in users.)`);
                         window.location = `/league/${responseObject.message.league_id}/update-responses/`;
                     } else {
                         alert(`Error: ${responseObject.message}`);

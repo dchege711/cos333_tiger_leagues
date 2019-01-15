@@ -21,7 +21,7 @@
             <p>Frequency: {{league_info["num_games_per_period"]}} game(s) every {{league_info["length_period_in_days"]}} day(s).</p>
             <br />
             {% if league_info["league_status"] == "accepting_users" %}
-            <p>Registration Link: <a href='{{url_for("league.join_league", league_id=league_info["league_id"], _external=True)}}' target="_blank">{{url_for("league.join_league", league_id=league_info["league_id"], _external=True)}}</a></p>
+            <p>Registration Link: <a href='{{url_for("league.join_league", league_id=league_info["league_id"], _external=True)}}'>{{url_for("league.join_league", league_id=league_info["league_id"], _external=True)}}</a></p>
             {% endif %}
             
             <hr />

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Join {{league_info}}["league_name"]{% endblock %}
+{% block title %}Join {{league_info["league_name"]}}{% endblock %}
 {% block content %}
     <div class="w3-container large_portrait_margins w3-center">
 
@@ -25,10 +25,15 @@
         <form class="w3-container" method="POST">
 
             {% if league_info["additional_questions"] %}
-
-            <hr />
-
-            <p>Please answer the following questions:</p>
+            
+            <p>
+            {% if session.get("user")["associated_leagues"][league_info["league_id"]] %}
+                Welcome back! Your league status ({{session.get("user")["associated_leagues"][league_info["league_id"]]["status"]}}) 
+                will be maintained, but your previous responses to the questions below will be overwritten.
+            {% else %}
+                Please answer the following questions:
+            {% endif %}
+            </p>
 
             <hr />
 
