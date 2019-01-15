@@ -917,8 +917,13 @@ def process_join_league_request(league_id, user_profile, submitted_data):
             }
         expected_info[key] = submitted_data[key]
 
+    # Maintain the user's league status
+    if league_id in user_profile["associated_leagues"]:
+        expected_info["status"] = user_profile["associated_leagues"][league_id]["status"]
+    else:
+        expected_info["status"] = STATUS_PENDING
+        
     expected_info["user_id"] = user_profile["user_id"]
-    expected_info["status"] = STATUS_PENDING
     table_name = "league_responses_{}".format(league_id)
     db.execute(
         "DELETE FROM {} WHERE user_id = %s", values=[user_profile["user_id"]], 

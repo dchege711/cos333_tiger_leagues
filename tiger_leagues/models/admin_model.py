@@ -534,7 +534,7 @@ def approve_match(score_info, admin_user_id):
         user_model.send_notification(
             user_obj["user_id"], {
                 "league_id": row["league_id"],
-                "notification_text": "Score updated: {}".format(score_text)
+                "notification_text": "Score approved: {}".format(score_text)
             }
         )
 
