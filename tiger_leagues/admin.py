@@ -312,6 +312,7 @@ def approve_scores(league_id):
     if request.method == "GET":
         return render_template(
             "/admin/admin_league_homepage.html",
+            league_info=league_model.get_league_info(league_id), 
             reported_matches=admin_model.get_current_matches(league_id)
         )
 
