@@ -53,7 +53,7 @@
                                         {% endif %}
                                     </td>
                                     <td><a href="{{url_for('league.league_member', league_id=league_id, other_user_id=standing['user_id'])}}">{{ standing["name"] }}</a></td>
-                                    <td>{{ standing["wins"] }} + {{ standing["draws"] }} + {{ standing["losses"] }}</td>
+                                    <td>{{ standing["wins"] + standing["draws"] + standing["losses"] }}</td>
                                     <td>{{ standing["wins"] }}</td>
                                     <td>{{ standing["draws"] }}</td>
                                     <td>{{ standing["losses"] }}</td>
