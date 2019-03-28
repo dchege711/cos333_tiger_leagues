@@ -7,7 +7,7 @@ Exposes functions that are used by the controller for the `/admin/*` endpoint
 
 from collections import defaultdict, OrderedDict
 from random import shuffle
-from math import ceil
+from math import ceil, inf
 from datetime import date, timedelta
 
 from . import league_model, db_model, user_model
@@ -452,7 +452,7 @@ def get_current_matches(league_id):
 
     """
     relevant_matches = league_model.get_matches_in_current_window(
-        league_id, num_periods_before=1, num_periods_after=0
+        league_id, num_periods_before=inf, num_periods_after=0
     )
     current_matches = defaultdict(list)
     mapping = {"user_1_id": "user_1_name", "user_2_id": "user_2_name"}
